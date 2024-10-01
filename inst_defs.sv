@@ -1,10 +1,17 @@
 // INCLUDE HEADERS!!!!!!
 
+`ifndef DEFINITIONS
+`define DEFINITIONS
+
+// ===============================
+
+`define MAX_32 32'hFFFFFFFF // might move to different file
+
 // ===============================
 
 // OPCODE DEFINITIONS
 `define OP_SIZE 7
-`define OP_RANGE OP_SIZE-1:0
+`define OP_RANGE `OP_SIZE-1:0
 `define OP_FIELD 6:0
 
 `define OP_IMM 7'b0010011
@@ -23,7 +30,7 @@
 
 // FUNCT3 DEFINITIONS
 `define FUNCT_3_SIZE 3
-`define FUNCT_3_RANGE FUNCT_3_SIZE-1:0
+`define FUNCT_3_RANGE `FUNCT_3_SIZE-1:0
 `define FUNCT_3_FIELD 14:12
 
 // IMM DEFINITIONS
@@ -66,11 +73,21 @@
 `define SH 3'b001
 `define SW 3'b010
 
+// M DEFINITIONS
+`define MUL 3'b000
+`define MULH 3'b001
+`define MULHSU 3'b010
+`define MULHU 3'b011
+`define DIV 3'b100
+`define DIVU 3'b101
+`define REM 3'b110
+`define REMU 3'b111
+
 // ===============================
 
 // FUNCT7 DEFINITIONS
 `define FUNCT_7_SIZE 7
-`define FUNCT_7_RANGE FUNCT_7_SIZE-1:0
+`define FUNCT_7_RANGE `FUNCT_7_SIZE-1:0
 `define FUNCT_7_FIELD 31:25
 
 `define DEFAULT_7 7'b0000000
@@ -89,12 +106,15 @@
 // ===============================
 
 // REGISTER DEFINITIONS
-`define REG_SIZE 5
-`define REG_RANGE REG_SIZE-1:0
+`define REG_FIELD_SIZE 5
+`define REG_FIELD_RANGE `REG_FIELD_SIZE-1:0
 
 `define REG_RD 11:7
 `define REG_RS1 19:15
 `define REG_RS2 24:20
+
+`define REG_SIZE 32
+`define REG_RANGE `REG_SIZE-1:0
 
 // ===============================
 
@@ -105,11 +125,11 @@
 `define IMM_SIZE_U 20
 `define IMM_SIZE_J 21
 
-`define IMM_RANGE_I IMM_SIZE_I-1:0
-`define IMM_RANGE_S IMM_SIZE_S-1:0
-`define IMM_RANGE_B IMM_SIZE_B-1:0
-`define IMM_RANGE_U IMM_SIZE_U-1:0
-`define IMM_RANGE_J IMM_SIZE_J-1:0
+`define IMM_RANGE_I `IMM_SIZE_I-1:0
+`define IMM_RANGE_S `IMM_SIZE_S-1:0
+`define IMM_RANGE_B `IMM_SIZE_B-1:0
+`define IMM_RANGE_U `IMM_SIZE_U-1:0
+`define IMM_RANGE_J `IMM_SIZE_J-1:0
 
 `define IMM_FIELD_I 31:20
 `define IMM_FIELD_S_U 31:25
@@ -120,3 +140,5 @@
 `define IMM_FIELD_J 31:12
 
 // ===============================
+
+`endif
