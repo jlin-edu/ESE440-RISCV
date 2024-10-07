@@ -34,49 +34,49 @@ module arithmatic_tb;
         op1 = 10;
         immediate = 5;
         #10;
-        $display("ADDI: op1 = %b | %d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
+        $display($time, ,"ADDI: op1 = %b |%d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
 
         // Test SLTI
         funct3 = `SLTI;
         op1 = 10;
         immediate = 15;
         #10;
-        $display("SLTI: op1 = %b | %d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
+        $display($time, ,"SLTI: op1 = %b |%d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
 
         // Test SLTIU
         funct3 = `SLTIU;
         op1 = 10;
         immediate = 15;
         #10;
-        $display("SLTIU: op1 = %b | %d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
+        $display($time, ,"SLTIU: op1 = %b |%d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
 
         // Test XORI
         funct3 = `XORI;
         op1 = 10;
         immediate = 5;
         #10;
-        $display("XORI: op1 = %b | %d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
+        $display($time, ,"XORI: op1 = %b |%d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
 
         // Test ORI
         funct3 = `ORI;
         op1 = 10;
         immediate = 5;
         #10;
-        $display("ORI: op1 = %b | %d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
+        $display($time, ,"ORI: op1 = %b |%d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
 
         // Test ANDI
         funct3 = `ANDI;
         op1 = 10;
         immediate = 5;
         #10;
-        $display("ANDI: op1 = %b | %d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
+        $display($time, ,"ANDI: op1 = %b |%d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
 
         // Test SLLI
         funct3 = `SLLI;
         op1 = 10;
         immediate = 3;
         #10;
-        $display("SLLI: op1 = %b | %d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
+        $display($time, ,"SLLI: op1 = %b |%d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
 
         // Test SRLI
         funct3 = `SRLI_SRAI;
@@ -84,12 +84,12 @@ module arithmatic_tb;
         op1 = 10;
         immediate = 3;
         #10;
-        $display("SRLI: op1 = %b | %d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
+        $display($time, ,"SRLI: op1 = %b |%d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
 
         // Test SRAI
         funct7 = `SRAI;
         #10;
-        $display("SRAI: op1 = %b | %d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
+        $display($time, ,"SRAI: op1 = %b |%d, immediate = %b | %d , result = %b | %d", op1, op1, immediate, immediate, result, result);
 
         // Test ADD
         IMM_Type_flag = 0;
@@ -98,54 +98,54 @@ module arithmatic_tb;
         op1 = 10;
         op2 = 5;
         #10;
-        $display("ADD: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"ADD: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         // Test SUB
         funct7 = ~`DEFAULT_7;
         #10;
-        $display("SUB: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"SUB: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         // Test SRL
         funct3 = `SRL;
         op1 = 10;
         op2 = 3;
         #10;
-        $display("SRL: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"SRL: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         // Test SRA
         funct3 = `SRA;
         #10;
-        $display("SRA: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"SRA: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         // Test SLL
         funct3 = `SLL;
         #10;
-        $display("SLL: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"SLL: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         // Test SLT
         funct3 = `SLT;
         #10;
-        $display("SLT: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"SLT: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         // Test SLTU
         funct3 = `SLTU;
         #10;
-        $display("SLTU: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"SLTU: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         // Test XOR
         funct3 = `XOR;
         #10;
-        $display("XOR: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"XOR: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         // Test OR
         funct3 = `OR;
         #10;
-        $display("OR: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"OR: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         // Test AND
         funct3 = `AND;
         #10;
-        $display("AND: op1 = %b | %d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
+        $display($time, ,"AND: op1 = %b |%d, op2 = %b | %d, result = %b | %d", op1, op1, op2, op2, result, result);
 
         $finish;
     end
