@@ -19,7 +19,7 @@ module inst_decoder (
 
         case (op)
             `OP_LUI:    imm = inst[`IMM_FIELD_U];
-            `OP_AUIinst:  imm = inst[`IMM_FIELD_U];
+            `OP_AUIPC:  imm = inst[`IMM_FIELD_U];
             `OP_JAL:    imm = {inst[`IMM_FIELD_J_20], inst[`IMM_FIELD_J_19_12], inst[`IMM_FIELD_J_11], inst[`IMM_FIELD_J_10_1], 1'b0};
             `OP_JALR:   imm = inst[`IMM_FIELD_I];
             `OP_BR:     imm = {inst[`IMM_FIELD_B_12], inst[`IMM_FIELD_B_11], inst[`IMM_FIELD_B_10_5], inst[`IMM_FIELD_B_4_1], 1'b0};
