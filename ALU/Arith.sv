@@ -19,7 +19,7 @@
 `define OR 3'b110
 `define AND 3'b111
 */
- module arithmatic (
+module arithmatic (
     input signed [`REG_RANGE] op1, op2,         
     input [`FUNCT_3_RANGE] funct3,              // 3-bit funct3 field
     input logic [`FUNCT_7_RANGE] funct7,        // 7-bit funct7 field  
