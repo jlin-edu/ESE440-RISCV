@@ -17,7 +17,9 @@ module InstructionMem #(
             data_out <= 0;
         end
         else begin
-            data_out <= InstMemmem[PC];
+            if (write_enable) begin 
+                data_out <= InstMemmem[PC];
+            end   
         end
     end
     

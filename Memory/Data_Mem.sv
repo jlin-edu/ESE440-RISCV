@@ -59,10 +59,14 @@ module Data_Mem #(
                 `OP_ST: begin
                     case(funct3)
                         `SW: begin
-                            DATAmem[write_addr] <= data_in;
+                            if (write_enable) begin
+                                DATAmem[write_addr] <= data_in;
+                            end 
                         end
                         `SH: begin
-                            DATAmem[write_addr][15:0] <= data_in;
+                            if (write_enable) begin
+                                DATAmem[write_addr][15:0] <= data_in;
+                            end 
                         end
                     endcase
                 end
