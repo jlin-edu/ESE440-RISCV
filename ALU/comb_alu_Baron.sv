@@ -75,6 +75,37 @@ module alu(
 
 endmodule
 
+module BJ_LS_tb();
+    logic signed  [`REG_RANGE]     in1, in2;
+    logic         [`OP_RANGE]      op;
+    logic         [`FUNCT_3_RANGE] funct_3;
+    logic         [`FUNCT_7_RANGE] funct_7;
+    logic signed  [`REG_RANGE]     out;       
+    logic                          pc_sel;
+
+    alu dut();
+
+    initial begin
+        $monitor();
+
+        in1 = 0; in2 = 0;
+        for (int op = 0; op < 8; op = op + 1) begin
+            for (int i = 0; i < `MAX_32; i = i + 1) begin
+                for (int j = 0; j < `MAX_32; j = j + 1) begin
+                    op1 = i;
+                    op2 = j;
+                    funct = op;
+                    #1;
+                end
+            end
+        end
+
+        $finish;
+    end
+    
+endmodule
+
+/*
 module immediate_rearranger(
     input               [`REG_RANGE] instruction,
     output logic signed [`REG_RANGE] immediate
@@ -83,3 +114,4 @@ module immediate_rearranger(
     
 
 endmodule
+*/
