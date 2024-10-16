@@ -12,7 +12,7 @@ module InstructionMem #(
     logic [SIZE-1:0][WIDTH-1:0] InstMem;
 
     // it should take the address and return the data
-    always_ff @( posedge clk ) begin : Instruction_Mem_block
+    always_comb begin : Instruction_Mem_block
         if (reset) begin
             data_out <= 0;
         end

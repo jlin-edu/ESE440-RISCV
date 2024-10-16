@@ -28,7 +28,7 @@ module Data_Mem #(
 // SW (Store Word)
 
     // it should take the address and return the data
-    always_ff @( posedge clk ) begin : data_mem_block
+    always_comb begin : data_mem_block
         if (reset) begin
             data_out <= 0;
         end
@@ -66,6 +66,11 @@ module Data_Mem #(
                         `SH: begin
                             if (write_enable) begin
                                 DATAmem[write_addr][15:0] <= data_in;
+                            end 
+                        end
+                        `SB: begin
+                            if (write_enable) begin
+                                DATAmem[write_addr][7:0] <= data_in;
                             end 
                         end
                     endcase
