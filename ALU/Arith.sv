@@ -37,13 +37,13 @@
                 `XORI:   result = op1 ^ immediate;
                 `ORI:    result = op1 | immediate;
                 `ANDI:   result = op1 & immediate;
-                `SLLI:   result = op1 << immediate[`IMM_RANGE_I];        // Shift amount is lower 7 bits
+                `SLLI:   result = op1 << immediate[5:0];        // Shift amount is lower 5 bits
                 `SRLI_SRAI: begin
                     if (funct7 == `SRLI) begin
-                        result = op1 >> immediate[`IMM_RANGE_I];        // Shift amount is lower 7 bits
+                        result = op1 >> immediate[5:0];        // Shift amount is lower 5 bits
                     end
                     else if (funct7 == `SRAI) begin
-                        result = op1 >>> immediate[`IMM_RANGE_I];       // Shift amount is lower 7 bits
+                        result = op1 >>> immediate[5:0];       // Shift amount is lower 5 bits
                     end
                 end
                 default: result = 0;
