@@ -11,9 +11,10 @@ module RegFile #(
     logic [SIZE-1:0][WIDTH-1:0] RegisterFile;
 
     // it should take the address and return the data
-    always_comb begin : Register_File_block
+    always_ff (@posedge clk) begin : Register_File_block
         if (reset) begin                    // Reset state
-            read_data_out <= 0;
+            read_data_out1 <= 0;
+            read_data_out2 <= 0;
             write_data_out <= 0;
         end
         else if (write_enable) begin            // Write operation
