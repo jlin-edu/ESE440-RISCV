@@ -1,7 +1,11 @@
 # Simple assembler for the Dire-WolVes RISC-V Processor
 # TODO: Labels and jump address calculation
-# TODO: pseudo instructions
 ################ INSTRUCTIONS SYNTAX #######################
+#
+# MNEMONICS ARE NOT CASE SENSITVE
+# REGISTER x1 IS USED FOR RETURN ADDRESSES IN THE JR AND RET INSTRUCTIONS
+#
+# PHYSICAL INSTRUCTIONS:
 # LUI rd, imm
 # AUIPC rd, offset
 # JAL rd, offset
@@ -48,6 +52,9 @@
 # REM rd, rs1, rs2
 # REMU rd, rs1, rs2
 #
+# pseudo INSTRUCTIONS
+# NOP
+#
 ############################################################
 #               ASSEMBLER PROCEDURE                        #
 ############################################################
@@ -59,12 +66,12 @@
 # TO RUN ASSEMBLER: python asm.py FILE_NAME_HERE.rsc
 #
 # OPTIONS:
-#   -o : CHOOSE OUTPUT FILE NAME, DEFAULT IS rsc_out.txt
+#   -o : CHOOSE OUTPUT FILE NAME, DEFAULT IS rsc_out
+#   -b : OUTPUT FILE AS BINARY, DEFAULT IS PLAIN TEXT
 #
 
 import sys
 from enum import Enum
-from collections import deque
 
 ###############################################################
 #
@@ -93,13 +100,14 @@ OP_JALR  = "1100111"
 #
 ###############################################################
 
-TokenType = Enum("TokenType", ["MNEMONIC", "REG", "IMM"])
+TokenType = Enum("TokenType", ["MNEMONIC", "REG", "IMM", "NULL"])
 
 class Token:
     
-    def __init__(self, value, token_type):
+    def __init__(self, value = None, token_type = TokenType.NULL, line_number = -1):
         self.value = value
         self.type = token_type
+        self.line = line_number
         
     def __str__(self):
         return f"Token - Value: {self.value}, Type: {self.type}"
@@ -111,8 +119,8 @@ class Token:
 #
 #                         DICTIONARIES
 #   
-#     DICTIONARIES TO STORE REGISTER BINARY AND INSTRUCTION
-#     FORMAT.
+#     DICTIONARIES TO STORE REGISTER BINARY, INSTRUCTION
+#     FORMAT, AND PSEUDO INSTRUCTIONS.
 #
 ###############################################################
 
@@ -197,6 +205,40 @@ instruction_dict = {
     "REMU"      : [OP_R3,    "111", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]]
 }
 
+
+
+PFORMAT = 0
+PMAP = 1
+PTRANSLATE = 2
+
+
+# FORMAT: [[PFORMAT], [MAPPING], [TRANSLATION], [FORMAT]]        MAPPING = FOLLOWS INDICES OF TRANSLATION, CONTAINS INDICES OF PFORMAT (START AT 1 SINCE MNEMONIC IGNORED)
+pseudo_instruction_dict = {
+    "NOP" : [[None], [None], ["ADDI", "zero", "zero", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "LI" : [],
+    "LA" : [],
+    "MV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG, 0], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
+    "NOT" : [[TokenType.REG, TokenType.REG], [1, 2], ["XORI", TokenType.REG, TokenType.REG, -1], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "NEG" : [[TokenType.REG, TokenType.REG], [1, 2], ["SUB", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG]],
+    "SEQZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTIU", TokenType.REG, TokenType.REG, 1], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "SNEZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTU", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG]],
+    "SLTZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLT", TokenType.REG, TokenType.REG, "x0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG]],
+    "SGTZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLT", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG]],
+    "BEQZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BEQ", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "BNEZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BNE", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "BLEZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BGE", "x0", TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "BGEZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BGE", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "BLTZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BLT", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "BGTZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BLT", "x0", TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "BGT" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLT", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "BLE" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BGE", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "BGTU" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLTU", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "BLEU" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLTU", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "J" : [[TokenType.IMM], [1], ["JAL", "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.IMM]],
+    "JR" : [[TokenType.IMM], [1], ["JAL", "x1", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.IMM]],
+    "RET" : [[None], [None], ["JALR", "x0", "x1", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]]
+}
+
 ###############################################################
 #
 #                  PARSE INSTRUCTIONS IN FILE
@@ -205,6 +247,8 @@ instruction_dict = {
 #  OUTPUT: LIST OF LIST OF STRINGS
 #  NOTES: THE OUTPUT IS A LIST OF LISTS, WITH EACH INTERNAL
 #         LIST HOLDING EACH PART OF A SINGLE INSTRUCTION
+#         ALSO PARSES PSEUDO INSTRUCTIONS, REPLACING WITH
+#         INSTRUCTION EQUIVALENT
 #
 #  EXAMPLE:
 #  NEXT INSTRUCTION READ: ADD x1, x2, x3
@@ -212,17 +256,16 @@ instruction_dict = {
 #
 ###############################################################
 
-def parse(input_file):
+def parse(instruction_lines):
     instruction_list = []
-    instruction = input_file.readline()
-    while (instruction != ""):
+    for i in range(len(instruction_lines)):
+        instruction = instruction_lines[i]
         instruction_split = instruction.split(" ")
         parsed_instruction = []
-        for i, component in enumerate(instruction_split):
+        for component in instruction_split:
             parsed_component = component.replace(",", "").replace("\n", "").replace(")", "").split("(")
             parsed_instruction.extend(parsed_component)
         instruction_list.append(parsed_instruction)
-        instruction = input_file.readline()
     return instruction_list
 
 ###############################################################
@@ -239,21 +282,26 @@ def parse(input_file):
 #
 ###############################################################
 
-def tokenize(instructions_list):
+def tokenize(instructions_list, instruction_lines):
     token_list = []
-    for instruction in instructions_list:
+    for idx, instruction in enumerate(instructions_list):
         tokens = []
+        if instruction[0] == "": continue
         for operand in instruction:
-            if (register_dict.get(operand, -1) != -1):
-                tokens.append(Token(operand, TokenType.REG))
-            elif(instruction_dict.get(operand, -1) != -1):
-                tokens.append(Token(operand, TokenType.MNEMONIC))
+            if (register_dict.get(operand) != None):
+                tokens.append(Token(operand, TokenType.REG, idx))
+            elif(instruction_dict.get(operand.upper()) != None or pseudo_instruction_dict.get(operand.upper()) != None):
+                tokens.append(Token(operand.upper(), TokenType.MNEMONIC, idx))
             elif(operand.isnumeric()):
-                tokens.append(Token(int(operand), TokenType.IMM))
+                tokens.append(Token(int(operand), TokenType.IMM, idx))
             else:
-                print("\nERROR: INVALID OPERAND\n")
+                instruction_line = instruction_lines[idx]
+                op_type = "MNEMONIC" if instruction.index(operand) == 0 else "OPERAND"
+                pos = 27 + len(f"{idx}") + instruction_line.find(operand) + len(op_type)
+                print(f"\nERROR: INVALID {op_type} - line {idx}: {instruction_line}")
+                print("^\n".rjust(pos))
                 sys.exit()
-                # INVALID TODO: POTENTIALLY ADD LABELS FOR JUMPS
+            # INVALID TODO: POTENTIALLY ADD LABELS FOR JUMPS
         token_list.append(tokens)
     return token_list
 
@@ -264,33 +312,42 @@ def tokenize(instructions_list):
 #  INPUT: LIST OF LIST OF TOKENS
 #  OUTPUT: NONE
 #  NOTES: HAS NO OUTPUT, BUT RAISES ERRORS WHEN TOKENS
-#         DON'T MEET THE INSTRUCTION REQUIREMENTS
+#         DON'T MEET THE INSTRUCTION REQUIREMENTS. ALSO
+#         VERIFIES pseudo INSTRUCTION SYNTAX.
 #
 #  EXAMPLE:
 #  NEXT TOKEN LIST: [T(ADD), T(x1), T(x2), T(x3)]
-#  OUTPUTS VALID
+#  OUTPUT: NOTHING
 #
 ###############################################################
-def validate(token_list):
+def validate(token_list, instruction_lines):
     for tokens in token_list:
+        idx = tokens[0].line
+        instruction_line = instruction_lines[idx]
+        
         mnemonic = tokens[0]
-        if mnemonic.type != TokenType.MNEMONIC:
-            print("\nERROR: INVALID MNEMONIC\n") # TODO: HAVE ERROR POINT TO LINE WITH ISSUE
-            sys.exit()
-            
-        inst_format = instruction_dict[mnemonic.value][FORMAT]
+        if (pseudo_instruction_dict.get(mnemonic.value) != None):
+            inst_format = pseudo_instruction_dict[mnemonic.value][PFORMAT]
+        else:
+            inst_format = instruction_dict[mnemonic.value][FORMAT]
+        
         operands = tokens[1:]
-        if len(operands) != len(inst_format):
-            print("\nERROR: INVALID OPERAND COUNT\n") # TODO: HAVE ERROR POINT TO LINE WITH ISSUE TODO: ERROR HANDLING FUNCTION WITH ERROR CODES
-            sys.exit()
-            
-        for position in zip(operands, inst_format):
-            operand, op_format = position
-            if operand.type == TokenType.IMM and op_format == TokenType.REG and operand.value < 32:
-                operand.type = TokenType.REG
-            elif operand.type != op_format:
-                print(f"\nERROR: INVALID OPERAND TYPE\nEXPECTED {op_format}, GOT {operand.type}\n")
+        if (inst_format[0] != None):
+            if len(operands) != len(inst_format):
+                pos = 40 + len(f"{idx}") + len(instruction_line)
+                print(f"\nERROR: INVALID OPERAND COUNT - line {idx}: {instruction_line}")
+                print("^\n".rjust(pos))
                 sys.exit()
+                
+            for operand, op_format in zip(operands, inst_format):
+                if operand.type == TokenType.IMM and op_format == TokenType.REG and operand.value < 32:
+                    operand.type = TokenType.REG
+                elif operand.type != op_format:
+                    pos = 9 + len(f"{idx}") + instruction_line.find(f"{operand.value}")
+                    print(f"\nERROR: INVALID OPERAND TYPE - EXPECTED {op_format}, GOT {operand.type}")
+                    print(f"line {idx}: {instruction_line}")
+                    print("^\n".rjust(pos))
+                    sys.exit()
             
 ###############################################################
 #
@@ -309,6 +366,25 @@ def translate(token_list):
     for tokens in token_list:
         mnemonic = tokens[0]
         
+        if pseudo_instruction_dict.get(mnemonic.value) != None:
+            pseudo_instruction = pseudo_instruction_dict[mnemonic.value]
+            pseudo_translation = pseudo_instruction[PTRANSLATE]
+            pseudo_format = pseudo_instruction[FORMAT]
+            pseudo_mapping = pseudo_instruction[PMAP]
+            pseudo_tokens = [Token() for i in range(len(pseudo_format))]
+
+            idx = 0;
+            for i in range(len(pseudo_format)):
+                if isinstance(pseudo_translation[i], str) or isinstance(pseudo_translation[i], int):
+                    pseudo_tokens[i].value = pseudo_translation[i]
+                    pseudo_tokens[i].type = pseudo_format[i]
+                    pseudo_tokens[i].line = mnemonic.line
+                else:
+                    pseudo_tokens[i] = (tokens[pseudo_mapping[idx]])
+                    idx = idx + 1;
+            tokens = pseudo_tokens
+            mnemonic = pseudo_tokens[0]
+        
         fields = instruction_dict[mnemonic.value]
         opcode = fields[OPCODE]
         funct3 = fields[FUNCT3]
@@ -319,7 +395,8 @@ def translate(token_list):
         inst_registers = []
         for token in tokens:
             if token.type == TokenType.IMM:
-                immediate = format(token.value, f'0{imm_size}b') # TODO: CHECK IMMEDIATE SIZES AND JUMP CALCULATIONS
+                imm_val = token.value if token.value > 0 else 2**imm_size + token.value
+                immediate = format(imm_val, f'0{imm_size}b') # TODO: CHECK IMMEDIATE SIZES AND JUMP CALCULATIONS
             elif token.type == TokenType.REG:
                 inst_registers.append(token.value)
         
@@ -357,45 +434,75 @@ def translate(token_list):
         machine_code.append(inst_code) 
     return machine_code
 
+# AVAILABLE OPTIONS FOR THE ASSEMBLER
+options = ["-o", "-b"]
 
 if __name__ == "__main__":
-    
-    option = None
     
     if len(sys.argv) <= 1:
         print("\nERROR: NO FILE SPECIFIED\n")
         sys.exit()
         
     in_file_name = sys.argv[1]
-    if in_file_name[-4:] != ".rsc":
-        print("\nERROR: INVALID INPUT FILE FORMAT\n") # TODO: HANDLE BETTER ERROR REPORTING WITH FILE NAME
+    in_extension = in_file_name[in_file_name.find("."):]
+    if in_extension != ".rsc":
+        print(f"\nERROR: INVALID INPUT FILE FORMAT, EXPECTED A .rsc FILE. GOT A {in_extension} FILE\n")
         sys.exit()
     
+    out_file_name = "rsc_out"
+    out_extension = ".txt"
+    out_mode = "w+"
     if len(sys.argv) > 2:
-        option = sys.argv[2]
-        
-        if option != "-o":
-            print("\nERROR: INVALID OPTION\n")
-            sys.exit()
+        idx = 2
+        while idx < len(sys.argv):
+            option = sys.argv[idx]
+            if not option in options:
+                pos = 32 + sum(len(arg) for arg in sys.argv[:idx + 1]) + len(sys.argv) - 1
+                print(f"\nERROR: INVALID OPTION - python {' '.join(sys.argv)}")
+                print("^\n".rjust(pos))
+                sys.exit()
+                
+            if option == "-o":
+                idx = idx + 1
+                if idx == len(sys.argv):
+                    print("\nERROR: NO OUTPUT FILE NAME PROVIDED\n")
+                    sys.exit()
+                    
+                out_file_name = sys.argv[idx]
+                if not out_file_name[0].isalpha():
+                    pos = 32 + sum(len(arg) for arg in sys.argv[:idx + 1]) + len(sys.argv) - 1
+                    print(f"\nERROR: INVALID FILE NAME - python {' '.join(sys.argv)}")
+                    print("^\n".rjust(pos))
+                    sys.exit()
             
-        if len(sys.argv) < 4:
-            print("\nERROR: NO OUTPUT FILE NAME PROVIDED\n")
-            sys.exit()
+            elif option == "-b":
+                out_extension = ".bin"
+                out_mode = "wb+"
             
+            idx = idx + 1
     
-    out_file_name = "rsc_out.txt" # TODO: ADD OPTION TO OUTPUT A BINARY FILE -b
-    if option != None:
-        out_file_name = sys.argv[3]
+    if out_file_name[out_file_name.find("."):] == out_extension:
+        out_file_name = out_file_name[:out_file_name.find(".")]
+    elif out_file_name.find(".") != -1:
+        pos = 47 + sum(len(arg) for arg in sys.argv[:sys.argv.index(out_file_name)]) + len(sys.argv) + out_file_name.find(".")
+        print(f"\nERROR: INVALID OUTPUT FILE EXTENSION - python {' '.join(sys.argv)}")
+        print("^\n".rjust(pos))
+        sys.exit()
     
     try:
         with open(in_file_name, "r") as inst_file:
-            with open(out_file_name, "w+") as output_file:      
-                instructions = parse(inst_file)
-                tokens = tokenize(instructions)
-                validate(tokens)
+            with open(out_file_name + out_extension, out_mode) as output_file:  
+                file_instructions = inst_file.readlines()    
+                instructions = parse(file_instructions)
+                tokens = tokenize(instructions, file_instructions)
+                validate(tokens, file_instructions)
                 machine_code = translate(tokens)
                 for code in machine_code:
-                    output_file.write(f"{code}\n")
+                    if out_mode == "wb+":
+                        code = bytes(int(code[i:i+8], 2) for i in range(0, len(code), 8))
+                        output_file.write(code)
+                    else:
+                        output_file.write(f"{code}\n")
     except FileNotFoundError:
         print(f"\nERROR: FILE {in_file_name} DOES NOT EXIST\n")
         sys.exit()
