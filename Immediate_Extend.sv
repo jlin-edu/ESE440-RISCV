@@ -67,6 +67,4 @@ end
 else if (word_enable) begin         // If word enable is set, the 32 bits are used
     result = result[31:0];
 end
-end
-end 
 endmodule
