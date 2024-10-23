@@ -1,5 +1,5 @@
 module RegFile #(
-    parameter WIDTH = 32, SIZE = 256
+    parameter WIDTH = 32, SIZE = 32
     ) (
 ) (
     input logic clk, reset, write_enable,
