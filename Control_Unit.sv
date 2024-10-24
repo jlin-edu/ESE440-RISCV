@@ -9,6 +9,7 @@ module control_unit (
     output logic pc_rs1_sel,                       // MUX between PC (only used by auipc instruction) and rs1 
     output logic imm_rs2_sel,                       // Immediate source select flag
     output logic sign_extend[2:0],                       // Sign extend flag (3 bits for 4 types of sign extension)
+    
     // immediate unit flags -----------------------
     output logic byte_enable,                                // Byte enable flag from the control unit
     output logic halfword_enable,                            // Halfword enable flag from the control unit
@@ -21,7 +22,6 @@ module control_unit (
 
     // ----------------- MEM stage controls ---------------------------
     output logic mem_write_enable,                       // Write enable flag
-
     output logic register_write_select,                      // Register write select flag
     output logic extend_flag,                       // Sign extend flag  
     output logic store_ctrl,                       // Store control flag (utilized by the memory to determine what bit range to fill when storing)
@@ -30,6 +30,22 @@ module control_unit (
     );
 
     always_comb begin : control_unit_block
+        // Default values to avoid latches
+        registerfile_write_enable = 0;
+        pc_rs1_sel = 0;
+        imm_rs2_sel = 0;
+        sign_extend = 3'b000;
+        jump_branch_sel = 0;
+        mem_write_enable = 0;
+        register_write_select = 0;
+        extend_flag = 0;
+        store_ctrl = 0;
+        load_ctrl = 0;
+        reg_write_ctrl = 0;
+        byte_enable = 0;
+        halfword_enable = 0;
+        word_enable = 0;
+
     // check fo funct7 for multiplications and divisions
         case (opcode)
             `OP_IMM: begin
@@ -47,26 +63,26 @@ module control_unit (
                     `ADDI: begin
                         sign_extend = 3'b001;
                     end
-                    `SLTI: begin
+                    `SLTI: begin            
                         sign_extend = 3'b001;
                     end
-                    `SLTIU: begin
-                        sign_extend = 3'b010;
+                    `SLTIU: begin               // Needs to be zero extended
+                        sign_extend = 3'b001;
                     end
                     `XORI: begin
-                        sign_extend = 3'b100;
+                        sign_extend = 3'b001;
                     end
                     `ORI: begin;
-                        sign_extend = 3'b010;
+                        sign_extend = 3'b001;
                     end
                     `ANDI: begin
-                        sign_extend = 3'b100;
+                        sign_extend = 3'b001;
                     end
                     `SLLI: begin
                         sign_extend = 3'b001;
                     end
-                    `SRLI_SRAI: begin
-                        sign_extend = 3'b100;
+                    `SRLI_SRAI: begin           // SRAI is msb extended
+                        sign_extend = 3'b001;
                     end
                 endcase
             end
