@@ -33,19 +33,40 @@ module control_unit (
     // check fo funct7 for multiplications and divisions
         case (opcode)
             `OP_IMM: begin
-                case (funct3)       //     pc_rs1_sel always comb get
+                registefile_write_enable = 1;
+                pc_rs1_sel = 0;
+                imm_rs2_sel = 1;
+                jump_branch_sel = 0;
+                mem_write_enable = 0;
+                register_write_select = 1;
+                extend_flag = 1;
+                store_ctrl = 0;
+                load_ctrl = 0;
+                reg_write_ctrl = 1;
+                case (funct3)      
                     `ADDI: begin
-                        registefile_write_enable = 1;
-                        pc_rs1_sel = 0;
-                        imm_rs2_sel = 1;
                         sign_extend = 3'b001;
-                        jump_branch_sel = 0;
-                        mem_write_enable = 0;
-                        register_write_select = 1;
-                        extend_flag = 1;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
-                        reg_write_ctrl = 0;
+                    end
+                    `SLTI: begin
+                        sign_extend = 3'b001;
+                    end
+                    `SLTIU: begin
+                        sign_extend = 3'b010;
+                    end
+                    `XORI: begin
+                        sign_extend = 3'b100;
+                    end
+                    `ORI: begin;
+                        sign_extend = 3'b010;
+                    end
+                    `ANDI: begin
+                        sign_extend = 3'b100;
+                    end
+                    `SLLI: begin
+                        sign_extend = 3'b001;
+                    end
+                    `SRLI_SRAI: begin
+                        sign_extend = 3'b100;
                     end
                 endcase
             end
