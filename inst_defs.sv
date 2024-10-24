@@ -24,7 +24,7 @@
 `define OP_AUIPC 7'b0010111 
 
 `define OP_JAL 7'b1101111
-`define OP_JALR 'b1100111
+`define OP_JALR 7'b1100111
 
 // ===============================
 
@@ -132,12 +132,21 @@
 `define IMM_RANGE_J `IMM_SIZE_J-1:0
 
 `define IMM_FIELD_I 31:20
+
 `define IMM_FIELD_S_U 31:25
 `define IMM_FIELD_S_L 11:7
-`define IMM_FIELD_B_U 31:25
-`define IMM_FIELD_B_L 11:7
+
+`define IMM_FIELD_B_12 31
+`define IMM_FIELD_B_10_5 30:25
+`define IMM_FIELD_B_11 5
+`define IMM_FIELD_B_4_1 11:6
+
 `define IMM_FIELD_U 31:12
-`define IMM_FIELD_J 31:12
+
+`define IMM_FIELD_J_20 31
+`define IMM_FIELD_J_19_12 19:12
+`define IMM_FIELD_J_11 20
+`define IMM_FIELD_J_10_1 30:21
 
 // ===============================
 
