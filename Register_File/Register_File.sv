@@ -9,6 +9,7 @@ module RegFile #(
 
     // Memory array
     logic [SIZE-1:0][WIDTH-1:0] RegisterFile;
+    assign RgisterFile[00000] = 32'h00000000;
 
     // it should take the address and return the data
     always_ff (@posedge clk) begin : Register_File_block
@@ -18,7 +19,9 @@ module RegFile #(
             write_data_out <= 0;
         end
         else if (write_enable) begin            // Write operation
-            RegisterFile[write_addr] <= write_data_out;
+            if (write_addr != 5'b00000) begin
+                RegisterFile[write_addr] <= write_data_out;
+            end
         end
         else begin                              // Read operation
             read_data_out1 <= RegisterFile[read_addr];

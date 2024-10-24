@@ -30,9 +30,10 @@ module control_unit (
     );
 
     always_comb begin : control_unit_block
+    // check fo funct7 for multiplications and divisions
         case (opcode)
             `OP_IMM: begin
-                case (funct3)
+                case (funct3)       //     pc_rs1_sel always comb get
                     `ADDI: begin
                         registefile_write_enable = 1;
                         pc_rs1_sel = 0;
