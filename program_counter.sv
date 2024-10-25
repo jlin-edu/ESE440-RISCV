@@ -10,7 +10,7 @@ module PC (
         pc_4 = pc + 4;
     end
 
-    always_ff @(posedge clk or reset) begin
+    always_ff @(posedge clk) begin
         if (reset) begin
             pc <= 0;
         end else if (pc_sel) begin
