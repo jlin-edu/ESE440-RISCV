@@ -13,7 +13,9 @@ module pc_tb ();
         reset = 0;
 		new_pc = 0;
 		pc_sel = 0;
-    end
+    end		   
+	
+	always #5 clk = ~clk;
 	
     initial begin
         $monitor($time,, "pc=%b, reset=%b", out_pc, reset);
@@ -25,21 +27,15 @@ module pc_tb ();
 		#5				 
 		
 		$display("TEST: RUNNING CLOCK");
-		for (integer i = 0; i < 4; i += 1) begin
-			#5 clk = ~clk;
-			#5 clk = ~clk;	 
-		end
-		#5
+		#(10 * 4)
 		
 		$display("TEST: LOADING ADDRESS");
 		new_pc = 32'h0000FFFF; 
-		pc_sel = 1;
-		#5 clk = ~clk;
-		#5 clk = ~clk; 
+		pc_sel = 1; 
 		#5
 		
 		#5 
-        $finish;
+		$finish;
     end	  
 
 endmodule
