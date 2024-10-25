@@ -1,8 +1,8 @@
 `include "inst_defs.sv"
 
 module PC (
-    input [`REG_RANGE] jmp_addr,
-    input pc_sel, clk,
+    input [`REG_RANGE] jump_addr,
+    input pc_sel, clk, reset,
     output logic [`REG_RANGE] pc, pc_4
 );
 
@@ -10,8 +10,10 @@ module PC (
         pc_4 = pc + 4;
     end
 
-    always_ff @(posedge clk) begin
-        if (pc_sel) begin
+    always_ff @(posedge clk or reset) begin
+        if (reset) begin
+            pc <= 0;
+        end else if (pc_sel) begin
             pc <= jump_addr;
         end else begin
             pc <= pc_4;

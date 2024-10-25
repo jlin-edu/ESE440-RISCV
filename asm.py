@@ -178,7 +178,7 @@ instruction_dict = {
     "SW"        : [OP_ST,    "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0]],
     "ADDI"      : [OP_IMM,   "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
     "SLTI"      : [OP_IMM,   "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "SLTIU"     : [OP_IMM,   "011", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
+    "SLTUI"     : [OP_IMM,   "011", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
     "XORI"      : [OP_IMM,   "100", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
     "ORI"       : [OP_IMM,   "110", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
     "ANDI"      : [OP_IMM,   "111", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
@@ -210,7 +210,6 @@ instruction_dict = {
 PFORMAT = 0
 PMAP = 1
 PTRANSLATE = 2
-
 
 # FORMAT: [[PFORMAT], [MAPPING], [TRANSLATION], [FORMAT]]        MAPPING = FOLLOWS INDICES OF TRANSLATION, CONTAINS INDICES OF PFORMAT (START AT 1 SINCE MNEMONIC IGNORED)
 pseudo_instruction_dict = {
@@ -323,13 +322,16 @@ def tokenize(instructions_list, instruction_lines):
 def validate(token_list, instruction_lines):
     for tokens in token_list:
         idx = tokens[0].line
-        instruction_line = instruction_lines[idx]
+        instruction_line = instruction_lines[idx].replace("\n", "")
         
         mnemonic = tokens[0]
-        if (pseudo_instruction_dict.get(mnemonic.value) != None):
-            inst_format = pseudo_instruction_dict[mnemonic.value][PFORMAT]
+        mnemonic_name = mnemonic.value
+        if (pseudo_instruction_dict.get(mnemonic_name) != None):
+            inst_format = pseudo_instruction_dict[mnemonic_name][PFORMAT]
+            mnemonic_name = pseudo_instruction_dict[mnemonic_name][PTRANSLATE][0]
         else:
-            inst_format = instruction_dict[mnemonic.value][FORMAT]
+            inst_format = instruction_dict[mnemonic_name][FORMAT]
+        opcode = instruction_dict[mnemonic_name][OPCODE]
         
         operands = tokens[1:]
         if (inst_format[0] != None):
@@ -342,6 +344,15 @@ def validate(token_list, instruction_lines):
             for operand, op_format in zip(operands, inst_format):
                 if operand.type == TokenType.IMM and op_format == TokenType.REG and operand.value < 32:
                     operand.type = TokenType.REG
+                elif operand.type == TokenType.IMM and op_format == TokenType.IMM:
+                    imm_size = immediate_sizes[opcode]
+                    max_imm = 2**imm_size - 1
+                    if operand.value > max_imm:
+                        pos = 40 + len(f"{idx}") + instruction_line.find(f"{operand.value}")
+                        print(f"\nERROR: INVALID IMMEDIATE SIZE - line {idx}: {instruction_line}")
+                        print("^".rjust(pos))
+                        print(f"MAX IMM SIZE: {max_imm}\n")
+                        sys.exit()
                 elif operand.type != op_format:
                     pos = 9 + len(f"{idx}") + instruction_line.find(f"{operand.value}")
                     print(f"\nERROR: INVALID OPERAND TYPE - EXPECTED {op_format}, GOT {operand.type}")
