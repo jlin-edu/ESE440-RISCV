@@ -50,7 +50,7 @@ module control_unit (
         case (opcode)
             `OP_IMM: begin
                 registefile_write_enable = 1;
-                pc_rs1_sel = 0;
+                pc_rs1_sel = pc_4;
                 imm_rs2_sel = 1;
                 jump_branch_sel = 0;
                 mem_write_enable = 0;
@@ -88,9 +88,9 @@ module control_unit (
             end
             `OP_R3: begin
                 case (funct3)
+                pc_rs1_sel = pc_4;
                     `ADD_SUB: begin
                         registefile_write_enable = 1;
-                        pc_rs1_sel = 0;
                         imm_rs2_sel = 0;
                         sign_extend = 3'b000;
                         jump_branch_sel = 0;
@@ -101,9 +101,106 @@ module control_unit (
                         load_ctrl = 0;
                         reg_write_ctrl = 0;
                     end
+                    `SLL: begin
+
+                    end
+                    `SLT: begin
+
+                    end
+                    `SLTU: begin
+
+                    end
+                    `XOR: begin
+
+                    end
+                    `SRL_SRA: begin
+
+                    end
+                    `OR: begin
+
+                    end
+                    `AND: begin
+
+                    end
                 endcase
             end
+            `OP_LD: begin 
+                pc_rs1_sel = pc_4;
+                case(funct3)
 
+                    `LB: begin
+                        byte_enable = 1;
+                    end
+                    `LH: begin
+                        halfword_enable = 1;
+                    end
+                    `LW: begin
+                        word_enable = 1;
+                    end
+                    `LBU: begin
+                        byte_enable = 1;
+                    end
+
+            end
+            `OP_ST: begin
+                pc_rs1_sel = pc_4;
+                case(funct3)
+                    `SB: begin
+                        
+                    end
+                    `SH: begin
+                        
+                    end
+                    `SW: begin
+                        
+                    end
+
+            end
+            `OP_BR: begin
+                registerfile_write_enable = 0;
+                pc_rs1_sel = 0;
+                imm_rs2_sel = 0;
+                sign_extend = 3'b000;
+                jump_branch_sel = 1;
+                mem_write_enable = 0;
+                register_write_select = 0;
+                extend_flag = 0;
+                store_ctrl = 0;
+                load_ctrl = 0;
+                reg_write_ctrl = 0;
+                case(funct3)
+                    `BEQ: begin
+                        
+                    end
+                    `BNE: begin
+
+                    end
+                    `BLT: begin
+
+                    end
+                    `BGE: begin
+
+                    end
+                    `BLTU: begin
+
+                    end
+                    `BGEU: begin
+
+                    end
+                endcase
+            end
+            `OP_LUI: begin
+
+            end
+            `OP_AUIPC: begin
+
+            end
+            `OP_JAL: begin
+
+            end
+            `OP_JALR: begin
+
+            end
         endcase 
     end 
 
