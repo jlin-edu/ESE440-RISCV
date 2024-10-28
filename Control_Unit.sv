@@ -160,11 +160,11 @@ module control_unit (
                 registerfile_write_enable = 0;
                 pc_rs1_sel = 0;
                 imm_rs2_sel = 0;
-                sign_extend = 3'b000;
+                sign_extend = 3'b001;
                 jump_branch_sel = 1;
                 mem_write_enable = 0;
                 register_write_select = 0;
-                extend_flag = 0;
+                extend_flag = 1;
                 store_ctrl = 0;
                 load_ctrl = 0;
                 reg_write_ctrl = 0;
@@ -189,18 +189,22 @@ module control_unit (
                     end
                 endcase
             end
+
             `OP_LUI: begin
 
             end
             `OP_AUIPC: begin
 
             end
+
             `OP_JAL: begin
 
             end
+
             `OP_JALR: begin
 
             end
+            
         endcase 
     end 
 
