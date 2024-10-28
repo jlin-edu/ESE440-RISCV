@@ -50,7 +50,7 @@ module control_unit (
         case (opcode)
             `OP_IMM: begin
                 registefile_write_enable = 1;
-                pc_rs1_sel = pc_4;
+                pc_rs1_sel = pc;
                 imm_rs2_sel = 1;
                 jump_branch_sel = 0;
                 mem_write_enable = 0;
@@ -86,7 +86,7 @@ module control_unit (
                     end
                 endcase
             end
-            `OP_R3: begin
+            `OP_R3: begin           // Same control signals for all R3 type instructions
                 case (funct3)
                 pc_rs1_sel = pc;
                     `ADD_SUB: begin
@@ -102,63 +102,155 @@ module control_unit (
                         reg_write_ctrl = 0;
                     end
                     `SLL: begin
-
+                        registefile_write_enable = 1;
+                        imm_rs2_sel = 0;
+                        sign_extend = 3'b000;
+                        jump_branch_sel = 0;
+                        mem_write_enable = 0;
+                        register_write_select = 1;
+                        extend_flag = 0;
+                        store_ctrl = 0;
+                        load_ctrl = 0;
+                        reg_write_ctrl = 0;
                     end
                     `SLT: begin
+                        registefile_write_enable = 1;
+                        imm_rs2_sel = 0;
+                        sign_extend = 3'b000;
+                        jump_branch_sel = 0;
+                        mem_write_enable = 0;
+                        register_write_select = 1;
+                        extend_flag = 0;
+                        store_ctrl = 0;
+                        load_ctrl = 0;
+                        reg_write_ctrl = 0;
 
                     end
                     `SLTU: begin
-
+                        registefile_write_enable = 1;
+                        imm_rs2_sel = 0;
+                        sign_extend = 3'b000;
+                        jump_branch_sel = 0;
+                        mem_write_enable = 0;
+                        register_write_select = 1;
+                        extend_flag = 0;
+                        store_ctrl = 0;
+                        load_ctrl = 0;
+                        reg_write_ctrl = 0;
                     end
                     `XOR: begin
-
+                        registefile_write_enable = 1;
+                        imm_rs2_sel = 0;
+                        sign_extend = 3'b000;
+                        jump_branch_sel = 0;
+                        mem_write_enable = 0;
+                        register_write_select = 1;
+                        extend_flag = 0;
+                        store_ctrl = 0;
+                        load_ctrl = 0;
+                        reg_write_ctrl = 0;
                     end
                     `SRL_SRA: begin
-
+                        registefile_write_enable = 1;
+                        imm_rs2_sel = 0;
+                        sign_extend = 3'b000;
+                        jump_branch_sel = 0;
+                        mem_write_enable = 0;
+                        register_write_select = 1;
+                        extend_flag = 0;
+                        store_ctrl = 0;
+                        load_ctrl = 0;
+                        reg_write_ctrl = 0;
                     end
                     `OR: begin
-
+                        registefile_write_enable = 1;
+                        imm_rs2_sel = 0;
+                        sign_extend = 3'b000;
+                        jump_branch_sel = 0;
+                        mem_write_enable = 0;
+                        register_write_select = 1;
+                        extend_flag = 0;
+                        store_ctrl = 0;
+                        load_ctrl = 0;
+                        reg_write_ctrl = 0;
                     end
                     `AND: begin
-
+                        registefile_write_enable = 1;
+                        imm_rs2_sel = 0;
+                        sign_extend = 3'b000;
+                        jump_branch_sel = 0;
+                        mem_write_enable = 0;
+                        register_write_select = 1;
+                        extend_flag = 0;
+                        store_ctrl = 0;
+                        load_ctrl = 0;
+                        reg_write_ctrl = 0;
                     end
                 endcase
             end
             `OP_LD: begin 
+<<<<<<< HEAD
                 pc_rs1_sel = pc;
+=======
+                pc_rs1_sel = 0;
+                registefile_write_enable = 1;
+                imm_rs2_sel = 1;
+                sign_extend = 3'b000;
+                jump_branch_sel = 0;
+                mem_write_enable = 0;
+                register_write_select = 1;
+                extend_flag = 1;
+                store_ctrl = 0;
+                load_ctrl = 1;
+                reg_write_ctrl = 0;                
+>>>>>>> 174076e (Changes to Control Unit)
                 case(funct3)
-
                     `LB: begin
-                        byte_enable = 1;
+                        // byte_enable = 1;
+                        sign_extend = 3'b001;
                     end
                     `LH: begin
-                        halfword_enable = 1;
+                        // halfword_enable = 1;
+                        sign_extend = 3'b010;
                     end
                     `LW: begin
-                        word_enable = 1;
+                        // word_enable = 1;
+                        sign_extend = 3'b100;
                     end
                     `LBU: begin
-                        byte_enable = 1;
+                        // halfword_enable = 1;
+                        sign_extend = 3'b010;
                     end
+                endcase
 
             end
             `OP_ST: begin
-                pc_rs1_sel = pc_4;
                 case(funct3)
+                    pc_rs1_sel = 0;
+                    registefile_write_enable = 0;
+                    imm_rs2_sel = 1;
+                    jump_branch_sel = 0;
+                    mem_write_enable = 1;
+                    register_write_select = 0;
+                    extend_flag = 1;
+                    store_ctrl = 1;
+                    load_ctrl = 0;
+                    reg_write_ctrl = 0;   
                     `SB: begin
-                        
+                        sign_extend = 3'b001;
                     end
                     `SH: begin
-                        
+                        sign_extend = 3'b010;
                     end
                     `SW: begin
-                        
+                        sign_extend = 3'b100;
                     end
+                endcase
 
             end
             `OP_BR: begin
+                // pc_rs1_sel = 0;
                 registerfile_write_enable = 0;
-                pc_rs1_sel = 0;
                 imm_rs2_sel = 0;
                 sign_extend = 3'b001;
                 jump_branch_sel = 1;
@@ -170,7 +262,7 @@ module control_unit (
                 reg_write_ctrl = 0;
                 case(funct3)
                     `BEQ: begin
-                        
+                        // Branch if rs1 == rs2       
                     end
                     `BNE: begin
 
@@ -187,22 +279,63 @@ module control_unit (
                     `BGEU: begin
 
                     end
+                    pc_rs1_sel = 1;
                 endcase
             end
 
-            `OP_LUI: begin
-
+            `OP_LUI: begin                      
+                pc_rs1_sel = 0;
+                registerfile_write_enable = 1;
+                imm_rs2_sel = 1;
+                sign_extend = 3'b001;               // Extend 12 bits to 32 bits
+                jump_branch_sel = 0;
+                mem_write_enable = 0;
+                register_write_select = 1;
+                extend_flag = 1;
+                store_ctrl = 0;
+                load_ctrl = 0;
+                reg_write_ctrl = 1;
             end
             `OP_AUIPC: begin
-
+                pc_rs1_sel = 0;
+                registerfile_write_enable = 1;
+                imm_rs2_sel = 1;
+                sign_extend = 3'b001;               // Extend 12 bits to 32 bits
+                jump_branch_sel = 0;
+                mem_write_enable = 0;
+                register_write_select = 1;
+                extend_flag = 1;
+                store_ctrl = 0;
+                load_ctrl = 0;
+                reg_write_ctrl = 1;
             end
 
-            `OP_JAL: begin
-
+            `OP_JAL: begin              // J-type instruction
+                pc_rs1_sel = 1;                  // PC + 4
+                registerfile_write_enable = 1;
+                imm_rs2_sel = 1;
+                sign_extend = 3'b100;               // Extend 12 bits to 32 bits
+                jump_branch_sel = 1;
+                mem_write_enable = 0;
+                register_write_select = 1;
+                extend_flag = 1;
+                store_ctrl = 0;
+                load_ctrl = 0;
+                reg_write_ctrl = 1;
             end
 
-            `OP_JALR: begin
-
+            `OP_JALR: begin             // I-type instruction
+                pc_rs1_sel = 1;                  // PC + 4
+                registerfile_write_enable = 1;
+                imm_rs2_sel = 1;
+                sign_extend = 3'b001;               // Extend 12 bits to 32 bits
+                jump_branch_sel = 1;
+                mem_write_enable = 0;
+                register_write_select = 1;
+                extend_flag = 1;
+                store_ctrl = 0;
+                load_ctrl = 0;
+                reg_write_ctrl = 1;
             end
             
         endcase 
