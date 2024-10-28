@@ -18,7 +18,7 @@ module InstructionMem #(
         end else if (write_enable) begin
             InstMem[write_addr] = write_data;
         end
-        data_out = InstMem[PC];   
+        data_out = InstMem[PC] & 32'hFFFFFFFC;   
     end
     
 endmodule
