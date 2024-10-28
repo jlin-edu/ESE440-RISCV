@@ -1,7 +1,7 @@
 `include "inst_defs.sv"
 
 module InstructionMem #(
-    parameter WIDTH = 8, SIZE = 256 // USE THIS IF SPACE AVAILABLE SINCE PC IS 32 BITS SO 2^32 ADDRESSES
+    parameter WIDTH = 8, SIZE = 1024 // USE THIS IF SPACE AVAILABLE SINCE PC IS 32 BITS SO 2^32 ADDRESSES
     ) (
     input logic [`REG_RANGE] PC, write_data, write_addr,
     input logic clk, reset, write_enable,
