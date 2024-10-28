@@ -33,7 +33,7 @@ initial begin
 	reset_tb = 1;
 	#5 reset_tb = 0;
 	$display("READING MEMORY");
-	for (int i = 0; i < 256; i++) begin
+	for (int i = 0; i < 256; i += 4) begin
 		#10 PC_tb = i;
 	end	
 	#5;
@@ -44,11 +44,11 @@ initial begin
         $sscanf(line, "%b\n", write_data_tb);
         we_tb = 1;
         #5 we_tb = 0;
-        write_addr_tb++;
+        write_addr_tb += 4;
         #5;
     end	  
 	$display("READING MEMORY");
-	for (int i = 0; i < 256; i++) begin
+	for (int i = 0; i < 256; i += 4) begin
 		#10 PC_tb = i;
 	end	
     $fclose(fd);
