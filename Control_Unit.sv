@@ -88,11 +88,7 @@ module control_unit (
             end
             `OP_R3: begin           // Same control signals for all R3 type instructions
                 case (funct3)
-<<<<<<< HEAD
                 pc_rs1_sel = pc;
-=======
-                pc_rs1_sel = 0;
->>>>>>> 174076e2451bc90c5e28493d226e34fe4120860e
                     `ADD_SUB: begin
                         registefile_write_enable = 1;
                         imm_rs2_sel = 0;
