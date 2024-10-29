@@ -11,8 +11,8 @@ string line;
 
 InstructionMem #() UUT (
     .PC(PC_tb), .write_data(write_data_tb), .write_addr(write_addr_tb),
-    .clk(clk_tb), .reset(reset_tb), .write_enable(we_tb),
-    .data_out(data_out_tb)
+    .clk(clk_tb), .reset(reset_tb), .write_enable(we_tb), .debug_en(0),
+    .data_out(data_out_tb), .debug_pc(0), .debug_out(0), .w_clk(0)
 );
 
 initial begin
@@ -31,27 +31,27 @@ initial begin
 	#1;
 	$display("RESET TEST");
 	reset_tb = 1;
-	#5 reset_tb = 0;
+	#10 reset_tb = 0;
 	$display("READING MEMORY");
-	for (int i = 0; i < 256; i += 4) begin
+	for (int i = 0; i < 1024; i += 4) begin
 		#10 PC_tb = i;
 	end	
-	#5;
+	#10;
     $display("WRITING TO INSTRUCTION MEMORY....");
     fd = $fopen("test_instructions.txt", "r");
-    while (!$feof(fd)) begin
+    while (!$feof(fd)) begin				 
         $fgets(line, fd);
-        $sscanf(line, "%b\n", write_data_tb);
+        $sscanf(line, "%b\n", write_data_tb);  
         we_tb = 1;
         #5 we_tb = 0;
         write_addr_tb += 4;
         #5;
-    end	  
+    end	
+	$fclose(fd);
 	$display("READING MEMORY");
-	for (int i = 0; i < 256; i += 4) begin
+	for (int i = 0; i < 1024; i += 4) begin
 		#10 PC_tb = i;
 	end	
-    $fclose(fd);
     $finish;
 end
 
