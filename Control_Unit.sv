@@ -212,7 +212,7 @@ module control_unit (
             end
             `OP_ST: begin
                 case(funct3)
-                    pc_rs1_sel = 0;
+                    pc_rs1_sel = pc;
                     registefile_write_enable = 0;
                     imm_rs2_sel = 1;
                     jump_branch_sel = 0;
@@ -235,7 +235,7 @@ module control_unit (
 
             end
             `OP_BR: begin
-                // pc_rs1_sel = 0;
+                pc_rs1_sel = pc;
                 registerfile_write_enable = 0;
                 imm_rs2_sel = 0;
                 sign_extend = 3'b001;
@@ -270,7 +270,7 @@ module control_unit (
             end
 
             `OP_LUI: begin                      
-                pc_rs1_sel = 0;
+                pc_rs1_sel = pc;
                 registerfile_write_enable = 1;
                 imm_rs2_sel = 1;
                 sign_extend = 3'b001;               // Extend 12 bits to 32 bits
@@ -283,7 +283,7 @@ module control_unit (
                 reg_write_ctrl = 1;
             end
             `OP_AUIPC: begin
-                pc_rs1_sel = 0;
+                pc_rs1_sel = pc;
                 registerfile_write_enable = 1;
                 imm_rs2_sel = 1;
                 sign_extend = 3'b001;               // Extend 12 bits to 32 bits
@@ -297,7 +297,7 @@ module control_unit (
             end
 
             `OP_JAL: begin              // J-type instruction
-                pc_rs1_sel = 1;                  // PC + 4
+                pc_rs1_sel = pc;                  // PC + 4
                 registerfile_write_enable = 1;
                 imm_rs2_sel = 1;
                 sign_extend = 3'b100;               // Extend 12 bits to 32 bits
