@@ -88,7 +88,7 @@ module control_unit (
             end
             `OP_R3: begin
                 case (funct3)
-                pc_rs1_sel = pc_4;
+                pc_rs1_sel = pc;
                     `ADD_SUB: begin
                         registefile_write_enable = 1;
                         imm_rs2_sel = 0;
@@ -125,7 +125,7 @@ module control_unit (
                 endcase
             end
             `OP_LD: begin 
-                pc_rs1_sel = pc_4;
+                pc_rs1_sel = pc;
                 case(funct3)
 
                     `LB: begin
