@@ -1,202 +1,110 @@
 `include("inst_defs.sv")
-// TODO: FIX THIS MESS, MAKE A TABLE TO SEE WHAT VALUES CHANGE WHEN
+
 module control_unit (
     // ----------------- ID stage controls ---------------------------
-    input logic [`OP_RANGE] opcode,     
+    input [`REG_RANGE] opcode,     
     input logic [`FUNCT_3_RANGE] funct3,              // 3-bit funct3 field
     input logic [`FUNCT_7_RANGE] funct7,        // 7-bit funct7 field  
-
-    output logic registerfile_write_enable,                       // Read enable flag
-    output logic pc_rs1_sel,                       // MUX between PC (only used by auipc instruction) and rs1 
-    output logic imm_rs2_sel,                       // Immediate source select flag
-
+    output logic reg_wr_en,                       // Register file write enable flag
+    output logic pc_rs1_sel,                       // 0 rs1, 1 for pc
+    output logic imm_rs2_sel,                       // 0 for rs2, 1 for imm
     // ----------------- EX stage controls ---------------------------
-
-    // input logic pc_sel,                       // Program counter select flag
-    output logic jump_branch_sel,                       // Jump/Branch select flag
+    output logic jump_branch_sel,                       // 0 for ALU, 1 for sum of pc and imm
 
     // ----------------- MEM stage controls ---------------------------
-    output logic mem_write_enable,                       // Write enable flag
-    output logic [1:0] reg_write_ctrl,                       // Register write control flag (selects muxes between PC+4(used by JAL or JALR) (1), read data from memory (for loading) (2), and ALU result (0))
+    output logic mem_wr_en,                       // Write enable flag
+    // ----------------- WB stage controls ---------------------------
+    output logic [1:0] reg_write_ctrl                       // 0 for ALU output, 1 is for pc+4, 2 is for memory
     );
 
     always_comb begin : control_unit_block
         // Default values to avoid latches
-        registerfile_write_enable = 0;
+        reg_wr_en = 0;
         pc_rs1_sel = 0;
         imm_rs2_sel = 0;
         jump_branch_sel = 0;
-        mem_write_enable = 0;
-        reg_write_ctrl = 3'b000;
-        byte_enable = 0;
-        halfword_enable = 0;
-        word_enable = 0;
+        mem_wr_en = 0;
+        reg_write_ctrl = 0;
 
     // check fo funct7 for multiplications and divisions
         case (opcode)
-            `OP_IMM: begin
-                registefile_write_enable = 1;
-                pc_rs1_sel = pc;
+            `OP_IMM: begin         // I-type instruction    
+                reg_wr_en = 1;
+                //pc_rs1_sel = 0;
                 imm_rs2_sel = 1;
-                jump_branch_sel = 0;
-                mem_write_enable = 0;
-                store_ctrl = 0;
-                load_ctrl = 0;
-                reg_write_ctrl = 3'b000;
+                //jump_branch_sel = 0;
+                //mem_wr_en = 0;
+                reg_write_ctrl = 1;
             end
-            `OP_R3: begin           // Same control signals for all R3 type instructions
-                pc_rs1_sel = pc;
-                case (funct3)
-                    `ADD_SUB: begin
-                        registefile_write_enable = 1;
-                        imm_rs2_sel = 0;
-                        jump_branch_sel = 0;
-                        mem_write_enable = 0;
-                        reg_write_ctrl = 0;
-                    end
-                    `SLL: begin
-                        registefile_write_enable = 1;
-                        imm_rs2_sel = 0;
-                        jump_branch_sel = 0;
-                        mem_write_enable = 0;
-                        register_write_select = 1;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
-                        reg_write_ctrl = 0;
-                    end
-                    `SLT: begin
-                        registefile_write_enable = 1;
-                        imm_rs2_sel = 0;
-                        jump_branch_sel = 0;
-                        mem_write_enable = 0;
-                        register_write_select = 1;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
-                        reg_write_ctrl = 0;
-                    end
-                    `SLTU: begin
-                        registefile_write_enable = 1;
-                        imm_rs2_sel = 0;
-                        jump_branch_sel = 0;
-                        mem_write_enable = 0;
-                        register_write_select = 1;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
-                        reg_write_ctrl = 0;
-                    end
-                    `XOR: begin
-                        registefile_write_enable = 1;
-                        imm_rs2_sel = 0;
-                        jump_branch_sel = 0;
-                        mem_write_enable = 0;
-                        register_write_select = 1;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
-                        reg_write_ctrl = 0;
-                    end
-                    `SRL_SRA: begin
-                        registefile_write_enable = 1;
-                        imm_rs2_sel = 0;
-                        jump_branch_sel = 0;
-                        mem_write_enable = 0;
-                        register_write_select = 1;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
-                        reg_write_ctrl = 0;
-                    end
-                    `OR: begin
-                        registefile_write_enable = 1;
-                        imm_rs2_sel = 0;
-                        jump_branch_sel = 0;
-                        mem_write_enable = 0;
-                        register_write_select = 1;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
-                        reg_write_ctrl = 0;
-                    end
-                    `AND: begin
-                        registefile_write_enable = 1;
-                        imm_rs2_sel = 0;
-                        jump_branch_sel = 0;
-                        mem_write_enable = 0;
-                        register_write_select = 1;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
-                        reg_write_ctrl = 0;
-                    end
-                endcase
+            `OP_R3: begin         // R-type instruction
+                // pc_rs1_sel = 0;
+                reg_wr_en = 1;
+                // imm_rs2_sel = 0;
+                // jump_branch_sel = 0;
+                // mem_wr_en = 0;
+                // reg_write_ctrl = 0;
+
             end
-            `OP_LD: begin 
-                pc_rs1_sel = pc;
-            end
-            `OP_ST: begin
-                pc_rs1_sel = pc;
-                registefile_write_enable = 0;
+            `OP_LD: begin               // I-type instruction
+                // pc_rs1_sel = 0;
+                reg_wr_en = 1;
                 imm_rs2_sel = 1;
-                jump_branch_sel = 0;
-                mem_write_enable = 1;
-                register_write_select = 0;
-                store_ctrl = 1;
-                load_ctrl = 0;
-                reg_write_ctrl = 2;   
+                // jump_branch_sel = 0;
+                // mem_wr_en = 0;
+                reg_write_ctrl = 2;
+
             end
-            `OP_BR: begin
-                pc_rs1_sel = pc;
-                registerfile_write_enable = 0;
-                imm_rs2_sel = 0;
-                jump_branch_sel = 1;
-                mem_write_enable = 0;
-                register_write_select = 0;
-                store_ctrl = 0;
-                load_ctrl = 0;
-                reg_write_ctrl = 0;
+            `OP_ST: begin               // S-type instruction
+                // pc_rs1_sel = 0;
+                // reg_wr_en = 0;
+                imm_rs2_sel = 1;
+                // jump_branch_sel = 0;
+                mem_wr_en = 1;
+                // reg_write_ctrl = 0;   
+
+            end
+            `OP_BR: begin               // B-type instruction
                 pc_rs1_sel = 1;
+                // reg_wr_en = 0;
+                imm_rs2_sel = 1;
+                jump_branch_sel = 1;
+                // mem_wr_en = 0;
+                // reg_write_ctrl = 0;
             end
 
-            `OP_LUI: begin                      
-                pc_rs1_sel = pc;
-                registerfile_write_enable = 1;
+            `OP_LUI: begin                                // U-type instruction
+                // pc_rs1_sel = 0;
+                reg_wr_en = 1;
                 imm_rs2_sel = 1;
-                jump_branch_sel = 0;
-                mem_write_enable = 0;
-                register_write_select = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
-                reg_write_ctrl = 0;
+                // jump_branch_sel = 0;
+                // mem_wr_en = 0;
+                reg_write_ctrl = 1;
             end
-            `OP_AUIPC: begin
-                pc_rs1_sel = pc;
-                registerfile_write_enable = 1;
+
+            `OP_AUIPC: begin                // U-type instruction
+                pc_rs1_sel = 1;
+                reg_wr_en = 1;
                 imm_rs2_sel = 1;
-                jump_branch_sel = 0;
-                mem_write_enable = 0;
-                register_write_select = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
-                reg_write_ctrl = 0;
+                // jump_branch_sel = 0;
+                // mem_wr_en = 0;
+                reg_write_ctrl = 1;
             end
 
             `OP_JAL: begin              // J-type instruction
-                pc_rs1_sel = pc;                  // PC + 4
-                registerfile_write_enable = 1;
+                pc_rs1_sel = 1;                  
+                reg_wr_en = 1;
                 imm_rs2_sel = 1;
                 jump_branch_sel = 1;
-                mem_write_enable = 0;
-                register_write_select = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
+                // mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
 
             `OP_JALR: begin             // I-type instruction
-                pc_rs1_sel = 1;                  // PC + 4
-                registerfile_write_enable = 1;
+                // pc_rs1_sel = 0;                  
+                reg_wr_en = 1;
                 imm_rs2_sel = 1;
                 jump_branch_sel = 1;
-                mem_write_enable = 0;
-                register_write_select = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
+                // mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
             
