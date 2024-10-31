@@ -28,6 +28,7 @@ module InstructionMem #(
     end
 
     // Only write/reset on clock pulse and with appropriate signals
+    // TODO: CHANGE TO COMB WRITE FOR TESTING, AND NO RESET NEEDED
 	assign base_w_addr = write_addr & 32'hFFFFFFFC;
     always_ff @(posedge clk or posedge w_clk) begin
         if (reset) begin
