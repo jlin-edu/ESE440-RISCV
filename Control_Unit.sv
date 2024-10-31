@@ -14,7 +14,7 @@ module control_unit (
     // ----------------- MEM stage controls ---------------------------
     output logic mem_write_enable,                       // Write enable flag
     // ----------------- WB stage controls ---------------------------
-    input logic [2:0] reg_write_ctrl                       // 0 for alu output, 1 is for pc+4, 2 is for memory
+    output logic [2:0] reg_write_ctrl                       // 0 for ALU output, 1 is for pc+4, 2 is for memory
     );
 
     always_comb begin : control_unit_block
