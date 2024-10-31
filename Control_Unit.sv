@@ -2,18 +2,18 @@
 
 module control_unit (
     // ----------------- ID stage controls ---------------------------
-    input signed [`REG_RANGE] opcode,     
+    input [`REG_RANGE] opcode,     
     input logic [`FUNCT_3_RANGE] funct3,              // 3-bit funct3 field
     input logic [`FUNCT_7_RANGE] funct7,        // 7-bit funct7 field  
     output logic registefile_write_enable,                       // Read enable flag
     output logic pc_rs1_sel,                       // MUX between PC (only used by auipc instruction) and rs1 
     output logic imm_rs2_sel,                       // Immediate source select flag
-    output logic sign_extend[2:0],                       // Sign extend flag (3 bits for 4 types of sign extension)
+    // output logic sign_extend[2:0],                       // Sign extend flag (3 bits for 4 types of sign extension)
     
     // immediate unit flags -----------------------
-    output logic byte_enable,                                // Byte enable flag from the control unit
-    output logic halfword_enable,                            // Halfword enable flag from the control unit
-    output logic word_enable,                                // Word enable flag from the control unit
+    // output logic byte_enable,                                // Byte enable flag from the control unit
+    // output logic halfword_enable,                            // Halfword enable flag from the control unit
+    // output logic word_enable,                                // Word enable flag from the control unit
 
     // ----------------- EX stage controls ---------------------------
 
@@ -22,11 +22,11 @@ module control_unit (
 
     // ----------------- MEM stage controls ---------------------------
     output logic mem_write_enable,                       // Write enable flag
-    output logic register_write_select,                      // Register write select flag
-    output logic extend_flag,                       // Sign extend flag  
+    // output logic register_write_select,                      // Register write select flag
+    // output logic extend_flag,                       // Sign extend flag  
     // output logic store_ctrl,                       // Store control flag (utilized by the memory to determine what bit range to fill when storing)
     // output logic load_ctrl,                       // Load control flag (determines how to mask or to extend the value read from the memory when loading)
-    output logic reg_write_ctrl,                       // Register write control flag (selects muxes between PC+4(used by JAL or JALR), read data from memory (for loading), and ALU result)
+    output logic [2:0] reg_write_ctrl,                       // 0 for alu output, 1 is for pc+4, 2 is for memory
     );
 
     always_comb begin : control_unit_block
@@ -317,7 +317,7 @@ module control_unit (
             end
 
             `OP_JALR: begin             // I-type instruction
-                pc_rs1_sel = 1;                  // PC + 4
+                pc_rs1_sel = 1;                  
                 registerfile_write_enable = 1;
                 imm_rs2_sel = 1;
                 sign_extend = 3'b001;               // Extend 12 bits to 32 bits
