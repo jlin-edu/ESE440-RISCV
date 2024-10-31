@@ -52,14 +52,36 @@
 # REM rd, rs1, rs2
 # REMU rd, rs1, rs2
 #
-# pseudo INSTRUCTIONS
+# PSUEDO INSTRUCTIONS:
 # NOP
+# LI rd, imm
+# LA rd, imm
+# MV rd, rs1
+# NOT rd, rs1
+# NEG rd, rs1
+# SEQZ rd, rs1
+# SNEZ rd, rs1
+# SLTZ rd, rs1
+# SGTZ rd, rs1
+# BEQZ rs1, imm
+# BNEZ rs1, imm
+# BLEZ rs1, imm
+# BGEZ rs1, imm
+# BLTZ rs1, imm
+# BGTZ rs1, imm
+# BGT rs1, rs2, imm
+# BLE rs1, rs2, imm
+# BGTU rs1, rs2, imm
+# BLEU rs1, rs2, imm
+# J imm
+# JR imm
+# RET
 #
 ############################################################
 #               ASSEMBLER PROCEDURE                        #
 ############################################################
 #                                                          #
-#           PARSE -> TOKENIZE -> TRANSLATE                 #
+#     SYMBOL SCAN -> PARSE -> TOKENIZE -> TRANSLATE        #
 #                                                          #
 ############################################################
 #
@@ -240,6 +262,19 @@ pseudo_instruction_dict = {
 
 ###############################################################
 #
+#                       SYMBOL SCAN
+#
+#  INPUT: FILE TO READ
+#  OUTPUT: SYMBOL TABLE
+#  NOTES: A SYMBOL TABLE IS A DICTIONARY THAT PAIRS SYMBOLS
+#         WITH THEIR CORRESPONDING LINE NUMBER.
+#
+###############################################################
+
+# TODO: FIGURE OUT HOW TO KEEP LINE NUMBERS FOR ERRORS WHILE MODIFYING LINES TO REMOVE SYMBOLS (SEPARATE THE ERROR HANDLING FROM THE REST?)
+
+###############################################################
+#
 #                  PARSE INSTRUCTIONS IN FILE
 #
 #  INPUT: FILE TO READ
@@ -257,12 +292,26 @@ pseudo_instruction_dict = {
 
 def parse(instruction_lines):
     instruction_list = []
-    for i in range(len(instruction_lines)):
-        instruction = instruction_lines[i]
+    for idx in range(len(instruction_lines)):
+        instruction = instruction_lines[idx].replace("\n", "")
+        p_count = 0
+        for i in range(len(instruction)):
+            p_count += 1 if instruction[i] == '(' else 0
+            p_count -= 1 if instruction[i] == ')' else 0
+            if p_count < 0:
+                pos = 46 + len(f"{idx}") + i
+                print(f"\nERROR: MISSING OPENING PARENTHESIS - line {idx}: {instruction}")
+                print("^\n".rjust(pos))
+                sys.exit()
+        if (p_count > 0):
+            pos = 46 + len(f"{idx}") + len(instruction)
+            print(f"\nERROR: MISSING CLOSING PARENTHESIS - line {idx}: {instruction}")
+            print("^\n".rjust(pos))
+            sys.exit()
         instruction_split = instruction.split(" ")
         parsed_instruction = []
         for component in instruction_split:
-            parsed_component = component.replace(",", "").replace("\n", "").replace(")", "").split("(")
+            parsed_component = component.replace(",", "").replace(")", "").split("(")
             parsed_instruction.extend(parsed_component)
         instruction_list.append(parsed_instruction)
     return instruction_list
@@ -377,7 +426,7 @@ def translate(token_list):
     for tokens in token_list:
         mnemonic = tokens[0]
         
-        if pseudo_instruction_dict.get(mnemonic.value) != None:
+        if pseudo_instruction_dict.get(mnemonic.value) != None: # TODO: HANDLE LI AND LA (1 -> 2 line instructions)
             pseudo_instruction = pseudo_instruction_dict[mnemonic.value]
             pseudo_translation = pseudo_instruction[PTRANSLATE]
             pseudo_format = pseudo_instruction[FORMAT]
@@ -476,7 +525,7 @@ if __name__ == "__main__":
             if option == "-o":
                 idx = idx + 1
                 if idx == len(sys.argv):
-                    print("\nERROR: NO OUTPUT FILE NAME PROVIDED\n")
+                    print("\nERROR: NO OUTPUT FILE NAME PROVIDED\n") # TODO: MAYBE ALLOW NO NAME TO BE PROVIDED, DEFAULT IS SAME NAME AS INPUT FILE
                     sys.exit()
                     
                 out_file_name = sys.argv[idx]
@@ -504,6 +553,7 @@ if __name__ == "__main__":
         with open(in_file_name, "r") as inst_file:
             with open(out_file_name + out_extension, out_mode) as output_file:  
                 file_instructions = inst_file.readlines()    
+                #symbols = symbol_scan(file_instructions)
                 instructions = parse(file_instructions)
                 tokens = tokenize(instructions, file_instructions)
                 validate(tokens, file_instructions)
