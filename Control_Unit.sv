@@ -72,7 +72,7 @@ module control_unit (
                 // reg_write_ctrl = 0;
             end
 
-            `OP_LUI: begin                      
+            `OP_LUI: begin                                // U-type instruction
                 // pc_rs1_sel = 0;
                 reg_wr_en = 1;
                 imm_rs2_sel = 1;
@@ -80,7 +80,8 @@ module control_unit (
                 // mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
-            `OP_AUIPC: begin
+
+            `OP_AUIPC: begin                // U-type instruction
                 pc_rs1_sel = 1;
                 reg_wr_en = 1;
                 imm_rs2_sel = 1;
