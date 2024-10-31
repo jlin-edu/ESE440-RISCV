@@ -24,8 +24,8 @@ module control_unit (
     output logic mem_write_enable,                       // Write enable flag
     output logic register_write_select,                      // Register write select flag
     output logic extend_flag,                       // Sign extend flag  
-    output logic store_ctrl,                       // Store control flag (utilized by the memory to determine what bit range to fill when storing)
-    output logic load_ctrl,                       // Load control flag (determines how to mask or to extend the value read from the memory when loading)
+    // output logic store_ctrl,                       // Store control flag (utilized by the memory to determine what bit range to fill when storing)
+    // output logic load_ctrl,                       // Load control flag (determines how to mask or to extend the value read from the memory when loading)
     output logic reg_write_ctrl,                       // Register write control flag (selects muxes between PC+4(used by JAL or JALR), read data from memory (for loading), and ALU result)
     );
 
@@ -39,8 +39,8 @@ module control_unit (
         mem_write_enable = 0;
         register_write_select = 0;
         extend_flag = 0;
-        store_ctrl = 0;
-        load_ctrl = 0;
+        // store_ctrl = 0;
+        // load_ctrl = 0;
         reg_write_ctrl = 0;
         byte_enable = 0;
         halfword_enable = 0;
@@ -56,8 +56,8 @@ module control_unit (
                 mem_write_enable = 0;
                 register_write_select = 1;
                 extend_flag = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
+                // store_ctrl = 0;
+                // load_ctrl = 0;
                 reg_write_ctrl = 1;
                 case (funct3)      
                     `ADDI: begin
@@ -97,8 +97,8 @@ module control_unit (
                         mem_write_enable = 0;
                         register_write_select = 1;
                         extend_flag = 0;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
+                        // store_ctrl = 0;
+                        // load_ctrl = 0;
                         reg_write_ctrl = 0;
                     end
                     `SLL: begin
@@ -109,8 +109,8 @@ module control_unit (
                         mem_write_enable = 0;
                         register_write_select = 1;
                         extend_flag = 0;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
+                        // store_ctrl = 0;
+                        // load_ctrl = 0;
                         reg_write_ctrl = 0;
                     end
                     `SLT: begin
@@ -121,8 +121,8 @@ module control_unit (
                         mem_write_enable = 0;
                         register_write_select = 1;
                         extend_flag = 0;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
+                        // store_ctrl = 0;
+                        // load_ctrl = 0;
                         reg_write_ctrl = 0;
 
                     end
@@ -134,8 +134,8 @@ module control_unit (
                         mem_write_enable = 0;
                         register_write_select = 1;
                         extend_flag = 0;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
+                        // store_ctrl = 0;
+                        // load_ctrl = 0;
                         reg_write_ctrl = 0;
                     end
                     `XOR: begin
@@ -146,8 +146,8 @@ module control_unit (
                         mem_write_enable = 0;
                         register_write_select = 1;
                         extend_flag = 0;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
+                        // store_ctrl = 0;
+                        // load_ctrl = 0;
                         reg_write_ctrl = 0;
                     end
                     `SRL_SRA: begin
@@ -158,8 +158,8 @@ module control_unit (
                         mem_write_enable = 0;
                         register_write_select = 1;
                         extend_flag = 0;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
+                        // store_ctrl = 0;
+                        // load_ctrl = 0;
                         reg_write_ctrl = 0;
                     end
                     `OR: begin
@@ -170,8 +170,8 @@ module control_unit (
                         mem_write_enable = 0;
                         register_write_select = 1;
                         extend_flag = 0;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
+                        // store_ctrl = 0;
+                        // load_ctrl = 0;
                         reg_write_ctrl = 0;
                     end
                     `AND: begin
@@ -182,8 +182,8 @@ module control_unit (
                         mem_write_enable = 0;
                         register_write_select = 1;
                         extend_flag = 0;
-                        store_ctrl = 0;
-                        load_ctrl = 0;
+                        // store_ctrl = 0;
+                        // load_ctrl = 0;
                         reg_write_ctrl = 0;
                     end
                 endcase
@@ -219,8 +219,8 @@ module control_unit (
                     mem_write_enable = 1;
                     register_write_select = 0;
                     extend_flag = 1;
-                    store_ctrl = 1;
-                    load_ctrl = 0;
+                    // store_ctrl = 1;
+                    // load_ctrl = 0;
                     reg_write_ctrl = 0;   
                     `SB: begin
                         sign_extend = 3'b001;
@@ -243,8 +243,8 @@ module control_unit (
                 mem_write_enable = 0;
                 register_write_select = 0;
                 extend_flag = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
+                // store_ctrl = 0;
+                // load_ctrl = 0;
                 reg_write_ctrl = 0;
                 case(funct3)
                     `BEQ: begin
@@ -278,8 +278,8 @@ module control_unit (
                 mem_write_enable = 0;
                 register_write_select = 1;
                 extend_flag = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
+                // store_ctrl = 0;
+                // load_ctrl = 0;
                 reg_write_ctrl = 1;
             end
             `OP_AUIPC: begin
@@ -291,8 +291,8 @@ module control_unit (
                 mem_write_enable = 0;
                 register_write_select = 1;
                 extend_flag = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
+                // store_ctrl = 0;
+                // load_ctrl = 0;
                 reg_write_ctrl = 1;
             end
 
@@ -305,8 +305,8 @@ module control_unit (
                 mem_write_enable = 0;
                 register_write_select = 1;
                 extend_flag = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
+                // store_ctrl = 0;
+                // load_ctrl = 0;
                 reg_write_ctrl = 1;
             end
 
@@ -319,8 +319,8 @@ module control_unit (
                 mem_write_enable = 0;
                 register_write_select = 1;
                 extend_flag = 1;
-                store_ctrl = 0;
-                load_ctrl = 0;
+                // store_ctrl = 0;
+                // load_ctrl = 0;
                 reg_write_ctrl = 1;
             end
             
