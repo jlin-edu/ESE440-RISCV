@@ -553,7 +553,7 @@ if __name__ == "__main__":
         with open(in_file_name, "r") as inst_file:
             with open(out_file_name + out_extension, out_mode) as output_file:  
                 file_instructions = inst_file.readlines()    
-                symbols = symbol_scan(file_instructions)
+                #symbols = symbol_scan(file_instructions)
                 instructions = parse(file_instructions)
                 tokens = tokenize(instructions, file_instructions)
                 validate(tokens, file_instructions)
