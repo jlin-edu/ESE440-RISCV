@@ -28,7 +28,7 @@ module control_unit (
 
     // check fo funct7 for multiplications and divisions
         case (opcode)
-            `OP_IMM: begin
+            `OP_IMM: begin         // I-type instruction    
                 reg_wr_en = 1;
                 //pc_rs1_sel = 0;
                 imm_rs2_sel = 1;
@@ -36,7 +36,7 @@ module control_unit (
                 //mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
-            `OP_R3: begin           // Same control signals for all R3 type instructions
+            `OP_R3: begin         // R-type instruction
                 // pc_rs1_sel = 0;
                 reg_wr_en = 1;
                 // imm_rs2_sel = 0;
@@ -45,7 +45,7 @@ module control_unit (
                 // reg_write_ctrl = 0;
 
             end
-            `OP_LD: begin 
+            `OP_LD: begin               // I-type instruction
                 // pc_rs1_sel = 0;
                 reg_wr_en = 1;
                 imm_rs2_sel = 1;
@@ -54,7 +54,7 @@ module control_unit (
                 reg_write_ctrl = 2;
 
             end
-            `OP_ST: begin
+            `OP_ST: begin               // S-type instruction
                 // pc_rs1_sel = 0;
                 // reg_wr_en = 0;
                 imm_rs2_sel = 1;
@@ -63,7 +63,7 @@ module control_unit (
                 // reg_write_ctrl = 0;   
 
             end
-            `OP_BR: begin
+            `OP_BR: begin               // B-type instruction
                 pc_rs1_sel = 1;
                 // reg_wr_en = 0;
                 imm_rs2_sel = 1;
