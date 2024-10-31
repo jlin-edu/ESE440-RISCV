@@ -1,4 +1,4 @@
-`include("inst_defs.sv")
+`include "inst_defs.sv"
 
 module control_unit (
     // ----------------- ID stage controls ---------------------------
