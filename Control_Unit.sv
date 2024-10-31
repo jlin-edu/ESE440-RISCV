@@ -189,8 +189,14 @@ module control_unit (
                 endcase
             end
             `OP_LD: begin 
-                pc_rs1_sel = pc;
                 case(funct3)
+                    pc_rs1_sel = pc;
+                    registefile_write_enable = 0;
+                    imm_rs2_sel = 1;
+                    jump_branch_sel = 0;
+                    mem_write_enable = 1;
+                    register_write_select = 0;
+                    extend_flag = 1;
                     `LB: begin
                         // byte_enable = 1;
                         sign_extend = 3'b001;
