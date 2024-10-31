@@ -25,7 +25,7 @@ module alu(
             //                       For Branch instructions pc_sel is the result of a comparison
             //                       Otherwise, pc_sel should always be 0
             `OP_LUI:   out = in2 << 12;     //in2 contains the immediate value which is to be placed into rd
-            `OP_AUIPC: out = in1+(in2 << 2); //in1 should contain PC, which is the address of the auipc instruction, in2 is the immediate, result is written to register rd
+            `OP_AUIPC: out = in1+(in2 << 12); //in1 should contain PC, which is the address of the auipc instruction, in2 is the immediate, result is written to register rd
             `OP_IMM: begin
                 case(funct_3)
                     `ADDI:   out = in1+in2; //in2 will mux between rs2 and the immediate depending on a control signal

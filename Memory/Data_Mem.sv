@@ -3,12 +3,11 @@
 module Data_Mem #(
     parameter WIDTH = 32, SIZE = 256
     ) (
-    input clk, reset, write_enable,
-    input [`OP_SIZE] opcode,
-    input [`REG_RANGE] read_addr, write_addr,
+    input clk, reset, write_enable, debug_en,
+    input [`REG_RANGE] addr, debug_addr,
     input [`REG_RANGE] data_in,
     input [`FUNCT__RANGE] funct3,
-    output logic [`REG_RANGE] data_out
+    output logic [`REG_RANGE] data_out, debug_data
     );
 
     // Memory array
