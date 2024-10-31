@@ -5,14 +5,14 @@ module control_unit (
     input [`REG_RANGE] opcode,     
     input logic [`FUNCT_3_RANGE] funct3,              // 3-bit funct3 field
     input logic [`FUNCT_7_RANGE] funct7,        // 7-bit funct7 field  
-    output logic registefile_write_enable,                       // Read enable flag
-    output logic pc_rs1_sel,                       // MUX between PC (only used by auipc instruction) and rs1 
-    output logic imm_rs2_sel,                       // Immediate source select flag
+    output logic reg_wr_en,                       // Register file write enable flag
+    output logic pc_rs1_sel,                       // 0 rs1, 1 for pc
+    output logic imm_rs2_sel,                       // 0 for rs2, 1 for imm
     // ----------------- EX stage controls ---------------------------
-    output logic jump_branch_sel,                       // Jump/Branch select flag
+    output logic jump_branch_sel,                       // 0 for ALU, 1 for sum of pc and imm
 
     // ----------------- MEM stage controls ---------------------------
-    output logic mem_write_enable,                       // Write enable flag
+    output logic mem_wr_en,                       // Write enable flag
     // ----------------- WB stage controls ---------------------------
     output logic [2:0] reg_write_ctrl                       // 0 for ALU output, 1 is for pc+4, 2 is for memory
     );
@@ -23,17 +23,16 @@ module control_unit (
         pc_rs1_sel = 0;
         imm_rs2_sel = 0;
         jump_branch_sel = 0;
-        mem_write_enable = 0;
+        mem_wr_en = 0;
         reg_write_ctrl = 0;
 
     // check fo funct7 for multiplications and divisions
         case (opcode)
             `OP_IMM: begin
-                registefile_write_enable = 1;
-                pc_rs1_sel = 0;
+                reg_wr_en = 1;
                 imm_rs2_sel = 1;
                 jump_branch_sel = 0;
-                mem_write_enable = 0;
+                mem_wr_en = 0;
                 reg_write_ctrl = 1;
                 case (funct3)      
                     `ADDI: begin
@@ -66,67 +65,67 @@ module control_unit (
                 case (funct3)
                 pc_rs1_sel = pc;
                     `ADD_SUB: begin
-                        registefile_write_enable = 1;
+                        reg_wr_en = 1;
                         imm_rs2_sel = 0;
                         jump_branch_sel = 0;
-                        mem_write_enable = 0;
+                        mem_wr_en = 0;
                         register_write_select = 1;
                         reg_write_ctrl = 0;
                     end
                     `SLL: begin
-                        registefile_write_enable = 1;
+                        reg_wr_en = 1;
                         imm_rs2_sel = 0;
                         jump_branch_sel = 0;
-                        mem_write_enable = 0;
+                        mem_wr_en = 0;
                         register_write_select = 1;
                         reg_write_ctrl = 0;
                     end
                     `SLT: begin
-                        registefile_write_enable = 1;
+                        reg_wr_en = 1;
                         imm_rs2_sel = 0;
                         jump_branch_sel = 0;
-                        mem_write_enable = 0;
+                        mem_wr_en = 0;
                         register_write_select = 1;
                         reg_write_ctrl = 0;
 
                     end
                     `SLTU: begin
-                        registefile_write_enable = 1;
+                        reg_wr_en = 1;
                         imm_rs2_sel = 0;
                         jump_branch_sel = 0;
-                        mem_write_enable = 0;
+                        mem_wr_en = 0;
                         register_write_select = 1;
                         reg_write_ctrl = 0;
                     end
                     `XOR: begin
-                        registefile_write_enable = 1;
+                        reg_wr_en = 1;
                         imm_rs2_sel = 0;
                         jump_branch_sel = 0;
-                        mem_write_enable = 0;
+                        mem_wr_en = 0;
                         register_write_select = 1;
                         reg_write_ctrl = 0;
                     end
                     `SRL_SRA: begin
-                        registefile_write_enable = 1;
+                        reg_wr_en = 1;
                         imm_rs2_sel = 0;
                         jump_branch_sel = 0;
-                        mem_write_enable = 0;
+                        mem_wr_en = 0;
                         register_write_select = 1;
                         reg_write_ctrl = 0;
                     end
                     `OR: begin
-                        registefile_write_enable = 1;
+                        reg_wr_en = 1;
                         imm_rs2_sel = 0;
                         jump_branch_sel = 0;
-                        mem_write_enable = 0;
+                        mem_wr_en = 0;
                         register_write_select = 1;
                         reg_write_ctrl = 0;
                     end
                     `AND: begin
-                        registefile_write_enable = 1;
+                        reg_wr_en = 1;
                         imm_rs2_sel = 0;
                         jump_branch_sel = 0;
-                        mem_write_enable = 0;
+                        mem_wr_en = 0;
                         register_write_select = 1;
                         reg_write_ctrl = 0;
                     end
@@ -135,10 +134,10 @@ module control_unit (
             `OP_LD: begin 
                 case(funct3)
                     pc_rs1_sel = pc;
-                    registefile_write_enable = 0;
+                    reg_wr_en = 0;
                     imm_rs2_sel = 1;
                     jump_branch_sel = 0;
-                    mem_write_enable = 1;
+                    mem_wr_en = 1;
                     register_write_select = 0;
                     `LB: begin
                     end
@@ -157,10 +156,10 @@ module control_unit (
             `OP_ST: begin
                 case(funct3)
                     pc_rs1_sel = pc;
-                    registefile_write_enable = 0;
+                    reg_wr_en = 0;
                     imm_rs2_sel = 1;
                     jump_branch_sel = 0;
-                    mem_write_enable = 1;
+                    mem_wr_en = 1;
                     reg_write_ctrl = 0;   
                     `SB: begin
                     end
@@ -178,7 +177,7 @@ module control_unit (
                 registerfile_write_enable = 0;
                 imm_rs2_sel = 0;
                 jump_branch_sel = 1;
-                mem_write_enable = 0;
+                mem_wr_en = 0;
                 reg_write_ctrl = 0;
                 case(funct3)
                     `BEQ: begin
@@ -208,7 +207,7 @@ module control_unit (
                 registerfile_write_enable = 1;
                 imm_rs2_sel = 1;
                 jump_branch_sel = 0;
-                mem_write_enable = 0;
+                mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
             `OP_AUIPC: begin
@@ -216,7 +215,7 @@ module control_unit (
                 registerfile_write_enable = 1;
                 imm_rs2_sel = 1;
                 jump_branch_sel = 0;
-                mem_write_enable = 0;
+                mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
 
@@ -225,7 +224,7 @@ module control_unit (
                 registerfile_write_enable = 1;
                 imm_rs2_sel = 1;
                 jump_branch_sel = 1;
-                mem_write_enable = 0;
+                mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
 
@@ -234,7 +233,7 @@ module control_unit (
                 registerfile_write_enable = 1;
                 imm_rs2_sel = 1;
                 jump_branch_sel = 1;
-                mem_write_enable = 0;
+                mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
             
