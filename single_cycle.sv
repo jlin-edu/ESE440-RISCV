@@ -21,14 +21,14 @@ inst_fetch IF (.reset(reset), .pc_sel(pc_sel), .clk(clk), .write_en(inst_we), .w
 inst_decode ID (.clk(clk), .reset(reset), .debug_en(debug_en), .instruction(instruction),
                 .pc_4(pc_4), .data_mem(data_mem), .alu_out(alu_out), .debug_addr(debug_reg_addr),
                 .opcode(opcode), .funct3(funct3), .funct7(funct7), .rs1(rs1), .rs2(rs2), .imm(imm),
-                .debug_data(debig_reg_data), .jump_sel(jump_sel), .mem_we(mem_we), .op1_sel(op1_sel),
+                .debug_data(debug_reg_data), .jump_sel(jump_sel), .mem_we(mem_we), .op1_sel(op1_sel),
                 .op2_sel(op2_sel));
 
 execute EX (.imm(imm), .pc(pc), .rs1(rs1), .rs2(rs2), .opcode(opcode), .funct3(funct3), .funct7(funct7),
             .op1_sel(op1_sel), .op2_sel(op2_sel), .jump_sel(jump_sel), .alu_out(alu_out), .jump_addr(jump_addr),
-            .pc_sel(ps_sel));
+            .pc_sel(pc_sel));
 
 Data_Mem #() MEM (.clk(clk), .reset(reset), .write_enable(mem_we), .debug_en(debug_en),
                 .addr(alu_out), .data_in(rs2), .data_out(data_mem), .debug_data(debug_mem_data));
 
-endmodule;
+endmodule
