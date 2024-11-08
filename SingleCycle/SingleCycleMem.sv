@@ -1,7 +1,5 @@
 `include "inst_defs.sv"
 
-`include "inst_defs.sv"
-
 module data_memory #(   
     parameter                   WIDTH=32, SIZE=256,         //WIDTH is bits per word, SIZE is # of WORDS
     localparam                  LOGSIZE=$clog2(SIZE)
@@ -32,8 +30,8 @@ module data_memory #(
         if (wr_en) begin
             case(funct3)
                 `SW:  mem[word_offset]       <= data_in;
-                `SH:  mem[word_offset][15:0] <= data_in[15:0];
-                `SB:  mem[word_offset][7:0]  <= data_in[7:0];
+                `SH:  mem[word_offset][(8* byte_offset) +: 16]  <= data_in[15:0];
+                `SB:  mem[word_offset][(8* byte_offset) +: 8]  <= data_in[7:0];
             endcase
         end
     end
@@ -46,10 +44,10 @@ module data_memory #(
         //only able to load words from %4 address locations
         case(funct3)
             `LW:  data_out = mem[word_offset];
-            `LH:  data_out = 32'(signed'(mem[word_offset][15:0]));
-            `LB:  data_out = 32'(signed'(mem[word_offset][7:0]));
-            `LHU: data_out = mem[word_offset][15:0];
-            `LBU: data_out = mem[word_offset][7:0];
+            `LH:  data_out = 32'(signed'(mem[word_offset][(8* byte_offset) +: 16] ));
+            `LB:  data_out = 32'(signed'(mem[word_offset][(8* byte_offset) +: 8] ));
+            `LHU: data_out = mem[word_offset][(8* byte_offset) +: 16] ;
+            `LBU: data_out = mem[word_offset][(8* byte_offset) +: 8] ;
             default: begin
                 //ASSERT STATEMENT
                 data_out = 0;
