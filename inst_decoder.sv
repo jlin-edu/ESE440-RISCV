@@ -27,9 +27,10 @@ module inst_decoder (
             `OP_LD:     imm = 32'(signed'(inst[`IMM_FIELD_I]));
             `OP_ST:     imm = 32'(signed'{inst[`IMM_FIELD_S_U], inst[`IMM_FIELD_S_L]});
             `OP_IMM: begin
-                if (funct3 == `ADDI or funct3 == `SLTI or funct3 == `ANDI or funct3 == `ORI or funct3 == `XORI) begin
-                    imm = 32'(signed'(inst[`IMM_FIELD_I]))
-                end else begin
+                if (funct3 == `ADDI || funct3 == `SLTI || funct3 == `ANDI || funct3 == `ORI || funct3 == `XORI) begin
+                    imm = 32'(signed'(inst[`IMM_FIELD_I]));
+                end 
+                else begin
                     imm = 32'(inst[`IMM_FIELD_I]);
                 end
             end
