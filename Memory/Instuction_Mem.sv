@@ -4,7 +4,7 @@ module InstructionMem #(
     parameter WIDTH = 8, SIZE = 1024 // USE THIS IF SPACE AVAILABLE SINCE PC IS 32 BITS SO 2^32 ADDRESSES
     ) (
     input logic [`REG_RANGE] PC, write_data, write_addr, debug_pc,
-    input logic clk, w_clk, reset, write_enable, debug_en,
+    input logic clk, reset, write_enable, debug_en,
     output logic [`REG_RANGE] data_out, debug_out
     );
 
@@ -25,12 +25,15 @@ module InstructionMem #(
         if (debug_en) begin
             debug_out = { InstMem[base_debug + 3], InstMem[base_debug + 2], InstMem[base_debug + 1], InstMem[base_debug] };
         end
+        else begin 
+            debug_out = '0;
+        end
     end
 
     // Only write/reset on clock pulse and with appropriate signals
     // TODO: CHANGE TO COMB WRITE FOR TESTING, AND NO RESET NEEDED
 	assign base_w_addr = write_addr & 32'hFFFFFFFC;
-    always_ff @(posedge clk or posedge w_clk) begin
+    always_ff @(posedge clk) begin
         if (reset) begin
             InstMem <= '{default: 0};
         end else if (write_enable) begin

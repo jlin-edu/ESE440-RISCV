@@ -28,7 +28,7 @@ execute EX (.imm(imm), .pc(pc), .rs1(rs1), .rs2(rs2), .opcode(opcode), .funct3(f
             .op1_sel(op1_sel), .op2_sel(op2_sel), .jump_sel(jump_sel), .alu_out(alu_out), .jump_addr(jump_addr),
             .pc_sel(pc_sel));
 
-Data_Mem #() MEM (.clk(clk), .reset(reset), .write_enable(mem_we), .debug_en(debug_en),
-                .addr(alu_out), .data_in(rs2), .data_out(data_mem), .debug_data(debug_mem_data));
+data_memory #() MEM (.clk(clk),  .wr_en(mem_we),
+                .addr(alu_out), .data_in(rs2), .data_out(data_mem));
 
 endmodule
