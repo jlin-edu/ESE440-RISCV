@@ -8,7 +8,6 @@ module inst_decoder (
     output logic [`FUNCT_7_RANGE] funct7,
     output logic [`REG_RANGE] imm
 );
-    
     always_comb begin
         op     = inst[`OP_FIELD];
         rs1    = inst[`REG_RS1];
@@ -36,5 +35,4 @@ module inst_decoder (
             end
         endcase
     end
-
 endmodule
