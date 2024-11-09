@@ -6,7 +6,7 @@ module RegFile #(
     input logic clk, reset, write_enable, debug_en,
     input logic [`REG_FIELD_RANGE] read_addr1, read_addr2, write_addr, debug_addr,
     input logic [`REG_RANGE] write_data_in,
-    output logic [`REG_RANGE] read_data_out1, read_data_out2, debug_data,
+    output logic [`REG_RANGE] read_data_out1, read_data_out2, debug_data
     );
 
     // Memory array
