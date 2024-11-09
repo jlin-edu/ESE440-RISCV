@@ -52,14 +52,36 @@
 # REM rd, rs1, rs2
 # REMU rd, rs1, rs2
 #
-# pseudo INSTRUCTIONS
+# PSUEDO INSTRUCTIONS:
 # NOP
+# LI rd, imm
+# LA rd, imm
+# MV rd, rs1
+# NOT rd, rs1
+# NEG rd, rs1
+# SEQZ rd, rs1
+# SNEZ rd, rs1
+# SLTZ rd, rs1
+# SGTZ rd, rs1
+# BEQZ rs1, imm
+# BNEZ rs1, imm
+# BLEZ rs1, imm
+# BGEZ rs1, imm
+# BLTZ rs1, imm
+# BGTZ rs1, imm
+# BGT rs1, rs2, imm
+# BLE rs1, rs2, imm
+# BGTU rs1, rs2, imm
+# BLEU rs1, rs2, imm
+# J imm
+# JR imm
+# RET
 #
 ############################################################
 #               ASSEMBLER PROCEDURE                        #
 ############################################################
 #                                                          #
-#           PARSE -> TOKENIZE -> TRANSLATE                 #
+#     SYMBOL SCAN -> PARSE -> TOKENIZE -> TRANSLATE        #
 #                                                          #
 ############################################################
 #
@@ -178,7 +200,7 @@ instruction_dict = {
     "SW"        : [OP_ST,    "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0]],
     "ADDI"      : [OP_IMM,   "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
     "SLTI"      : [OP_IMM,   "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "SLTIU"     : [OP_IMM,   "011", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
+    "SLTUI"     : [OP_IMM,   "011", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
     "XORI"      : [OP_IMM,   "100", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
     "ORI"       : [OP_IMM,   "110", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
     "ANDI"      : [OP_IMM,   "111", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
@@ -211,7 +233,6 @@ PFORMAT = 0
 PMAP = 1
 PTRANSLATE = 2
 
-
 # FORMAT: [[PFORMAT], [MAPPING], [TRANSLATION], [FORMAT]]        MAPPING = FOLLOWS INDICES OF TRANSLATION, CONTAINS INDICES OF PFORMAT (START AT 1 SINCE MNEMONIC IGNORED)
 pseudo_instruction_dict = {
     "NOP" : [[None], [None], ["ADDI", "zero", "zero", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
@@ -241,6 +262,19 @@ pseudo_instruction_dict = {
 
 ###############################################################
 #
+#                       SYMBOL SCAN
+#
+#  INPUT: FILE TO READ
+#  OUTPUT: SYMBOL TABLE
+#  NOTES: A SYMBOL TABLE IS A DICTIONARY THAT PAIRS SYMBOLS
+#         WITH THEIR CORRESPONDING LINE NUMBER.
+#
+###############################################################
+
+# TODO: FIGURE OUT HOW TO KEEP LINE NUMBERS FOR ERRORS WHILE MODIFYING LINES TO REMOVE SYMBOLS (SEPARATE THE ERROR HANDLING FROM THE REST?)
+
+###############################################################
+#
 #                  PARSE INSTRUCTIONS IN FILE
 #
 #  INPUT: FILE TO READ
@@ -258,12 +292,26 @@ pseudo_instruction_dict = {
 
 def parse(instruction_lines):
     instruction_list = []
-    for i in range(len(instruction_lines)):
-        instruction = instruction_lines[i]
+    for idx in range(len(instruction_lines)):
+        instruction = instruction_lines[idx].replace("\n", "")
+        p_count = 0
+        for i in range(len(instruction)):
+            p_count += 1 if instruction[i] == '(' else 0
+            p_count -= 1 if instruction[i] == ')' else 0
+            if p_count < 0:
+                pos = 46 + len(f"{idx}") + i
+                print(f"\nERROR: MISSING OPENING PARENTHESIS - line {idx}: {instruction}")
+                print("^\n".rjust(pos))
+                sys.exit()
+        if (p_count > 0):
+            pos = 46 + len(f"{idx}") + len(instruction)
+            print(f"\nERROR: MISSING CLOSING PARENTHESIS - line {idx}: {instruction}")
+            print("^\n".rjust(pos))
+            sys.exit()
         instruction_split = instruction.split(" ")
         parsed_instruction = []
         for component in instruction_split:
-            parsed_component = component.replace(",", "").replace("\n", "").replace(")", "").split("(")
+            parsed_component = component.replace(",", "").replace(")", "").split("(")
             parsed_instruction.extend(parsed_component)
         instruction_list.append(parsed_instruction)
     return instruction_list
@@ -323,13 +371,16 @@ def tokenize(instructions_list, instruction_lines):
 def validate(token_list, instruction_lines):
     for tokens in token_list:
         idx = tokens[0].line
-        instruction_line = instruction_lines[idx]
+        instruction_line = instruction_lines[idx].replace("\n", "")
         
         mnemonic = tokens[0]
-        if (pseudo_instruction_dict.get(mnemonic.value) != None):
-            inst_format = pseudo_instruction_dict[mnemonic.value][PFORMAT]
+        mnemonic_name = mnemonic.value
+        if (pseudo_instruction_dict.get(mnemonic_name) != None):
+            inst_format = pseudo_instruction_dict[mnemonic_name][PFORMAT]
+            mnemonic_name = pseudo_instruction_dict[mnemonic_name][PTRANSLATE][0]
         else:
-            inst_format = instruction_dict[mnemonic.value][FORMAT]
+            inst_format = instruction_dict[mnemonic_name][FORMAT]
+        opcode = instruction_dict[mnemonic_name][OPCODE]
         
         operands = tokens[1:]
         if (inst_format[0] != None):
@@ -342,6 +393,15 @@ def validate(token_list, instruction_lines):
             for operand, op_format in zip(operands, inst_format):
                 if operand.type == TokenType.IMM and op_format == TokenType.REG and operand.value < 32:
                     operand.type = TokenType.REG
+                elif operand.type == TokenType.IMM and op_format == TokenType.IMM:
+                    imm_size = immediate_sizes[opcode]
+                    max_imm = 2**imm_size - 1
+                    if operand.value > max_imm:
+                        pos = 40 + len(f"{idx}") + instruction_line.find(f"{operand.value}")
+                        print(f"\nERROR: INVALID IMMEDIATE SIZE - line {idx}: {instruction_line}")
+                        print("^".rjust(pos))
+                        print(f"MAX IMM SIZE: {max_imm}\n")
+                        sys.exit()
                 elif operand.type != op_format:
                     pos = 9 + len(f"{idx}") + instruction_line.find(f"{operand.value}")
                     print(f"\nERROR: INVALID OPERAND TYPE - EXPECTED {op_format}, GOT {operand.type}")
@@ -366,7 +426,7 @@ def translate(token_list):
     for tokens in token_list:
         mnemonic = tokens[0]
         
-        if pseudo_instruction_dict.get(mnemonic.value) != None:
+        if pseudo_instruction_dict.get(mnemonic.value) != None: # TODO: HANDLE LI AND LA (1 -> 2 line instructions)
             pseudo_instruction = pseudo_instruction_dict[mnemonic.value]
             pseudo_translation = pseudo_instruction[PTRANSLATE]
             pseudo_format = pseudo_instruction[FORMAT]
@@ -465,7 +525,7 @@ if __name__ == "__main__":
             if option == "-o":
                 idx = idx + 1
                 if idx == len(sys.argv):
-                    print("\nERROR: NO OUTPUT FILE NAME PROVIDED\n")
+                    print("\nERROR: NO OUTPUT FILE NAME PROVIDED\n") # TODO: MAYBE ALLOW NO NAME TO BE PROVIDED, DEFAULT IS SAME NAME AS INPUT FILE
                     sys.exit()
                     
                 out_file_name = sys.argv[idx]
@@ -493,6 +553,7 @@ if __name__ == "__main__":
         with open(in_file_name, "r") as inst_file:
             with open(out_file_name + out_extension, out_mode) as output_file:  
                 file_instructions = inst_file.readlines()    
+                #symbols = symbol_scan(file_instructions)
                 instructions = parse(file_instructions)
                 tokens = tokenize(instructions, file_instructions)
                 validate(tokens, file_instructions)
