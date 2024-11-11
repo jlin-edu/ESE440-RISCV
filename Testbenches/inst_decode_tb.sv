@@ -16,7 +16,7 @@ module test_inst_decode_tb();
     logic [1:0] reg_write_ctrl_tb;
 
     // Logic signals for register file
-    
+    logic [`REG_FIELD_RANGE] read_addr1_tb, read_addr2_tb, write_addr_tb;
 
     // File IO
     int fd, fd_out;	
@@ -47,9 +47,9 @@ module test_inst_decode_tb();
         .read_addr1(rs1_tb),
         .read_addr2(rs2_tb),
         .write_addr(rd_tb),
-        .write_data_in(),
-        .read_data_out1(),
-        .read_data_out2()
+        .write_data_in(write_addr_tb),
+        .read_data_out1(read_addr1_tb),
+        .read_data_out2(read_addr2_tb))
     );
 
     always #5 clk_tb = ~clk_tb;
