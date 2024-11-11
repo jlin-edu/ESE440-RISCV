@@ -10,9 +10,12 @@ module test_inst_decode_tb();
     logic [`FUNCT_7_RANGE] funct7_tb;
     logic [`REG_RANGE]imm_tb, debug_data_tb;
     logic [4:0] rs1_tb, rs2_tb, rd_tb;
-    logic jump_sel_tb, mem_we_tb;
-    logic op1_sel_tb, op2_sel_tb;
 
+    // Logic signals for control unit
+    logic reg_wr_en_tb, pc_rs1_sel_tb, imm_rs2_sel_tb, jump_branch_sel_tb, mem_we_tb;
+    logic [1:0] reg_write_ctrl_tb;
+
+    // File IO
     int fd, fd_out;	
     logic [31:0] instruction;
     string line;
@@ -22,9 +25,6 @@ module test_inst_decode_tb();
         .reset(reset_tb),
         .debug_en(debug_en_tb),
         .instruction(instruction_tb),
-        .pc_4(pc_4_tb),
-        .data_mem(data_mem_tb),
-        .alu_out(alu_out_tb),
         .debug_addr(debug_addr_tb),
         .opcode(opcode_tb),
         .funct3(funct3_tb),
@@ -34,10 +34,13 @@ module test_inst_decode_tb();
         .rd(rd_tb),
         .imm(imm_tb),
         .debug_data(debug_data_tb),
-        .jump_sel(jump_sel_tb),
+        .jump_sel(jump_branch_sel_tb),
         .mem_we(mem_we_tb),
-        .op1_sel(op1_sel_tb),
-        .op2_sel(op2_sel_tb)
+        .op1_sel(pc_rs1_sel_tb),
+        .op2_sel(imm_rs2_sel_tb),
+        .reg_wr_en(reg_wr_en_tb),
+        .reg_write_ctrl(reg_write_ctrl_tb)
+        
     );
 
     always #5 clk_tb = ~clk_tb;
@@ -84,9 +87,11 @@ module test_inst_decode_tb();
                 if ($sscanf(line, "%32b", instruction) == 1) begin
                     instruction_tb = instruction;
                     #10;
-                    $fwrite(fd_out, "%t: Type of instruction: %s\n", $time, opcodeType(opcode_tb));
+                    $fwrite(fd_out, "\n%t: Type of instruction: %s\n", $time, opcodeType(opcode_tb));
                     $fwrite(fd_out, "instruction=%b, opcode=%b, funct3=%b, funct7=%b, rs1=%b, rs2=%b, rd=%b\nimm=%8b %8b %8b %8b\n", 
                         instruction_tb, opcode_tb, funct3_tb, funct7_tb, rs1_tb, rs2_tb, rd_tb, imm_tb[31:24], imm_tb[23:16], imm_tb[15:8], imm_tb[7:0]);
+                    $fwrite(fd_out, "reg_wr_en=%b, pc_rs1_sel=%b, imm_rs2_sel=%b, jump_branch_sel=%b, mem_we=%b, reg_write_ctrl=%b\n", 
+                        reg_wr_en_tb, pc_rs1_sel_tb, imm_rs2_sel_tb, jump_branch_sel_tb, mem_we_tb, reg_write_ctrl_tb);
                 end
             end
         end

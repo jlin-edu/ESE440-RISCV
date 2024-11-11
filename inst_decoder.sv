@@ -46,6 +46,7 @@ module inst_decoder (
                 rs1    = inst[`REG_RS1];
                 rs2    = inst[`REG_RS2];
                 funct3 = inst[`FUNCT_3_FIELD];
+                rd = 'x;
             end 
             `OP_LD:     begin                   // I-type instruction
                 imm = 32'(signed'(inst[`IMM_FIELD_I]));
