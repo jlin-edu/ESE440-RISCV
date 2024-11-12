@@ -4,7 +4,7 @@ module single_cycle (
     input logic clk, reset, debug_en, inst_we,
     input logic [`REG_FIELD_RANGE] debug_reg_addr,
     input logic [`REG_RANGE] debug_inst_addr, debug_mem_addr, inst_wr_addr, inst_wr_data,
-    output logic [`REG_RANGE] debug_inst_data, debug_reg_data, debug_mem_data
+    output logic [`REG_RANGE] debug_inst_data, debug_reg_data, debug_mem_data, debug_pc
 );
 
 logic pc_sel, jump_sel, mem_we, op1_sel, op2_sel;
@@ -12,6 +12,8 @@ logic [`OP_RANGE] opcode;
 logic [`FUNCT_3_RANGE] funct3;
 logic [`FUNCT_7_RANGE] funct7;
 logic [`REG_RANGE] jump_addr, instruction, pc, pc_4, data_mem, alu_out, rs1, rs2, imm;
+
+assign debug_pc = pc; // For reading PC value at top level
 
 inst_fetch IF (.reset(reset), .pc_sel(pc_sel), .clk(clk), .write_en(inst_we),
             .jump_addr(jump_addr), .debug_pc(debug_inst_addr), .write_addr(inst_wr_addr),
