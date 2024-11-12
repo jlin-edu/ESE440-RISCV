@@ -15,14 +15,18 @@ module inst_decode (
     output logic reg_wr_en,
     output logic jump_sel, mem_we,
     output logic op1_sel, op2_sel,
-    output logic [1:0] reg_write_ctrl
+    output logic [1:0] reg_write_ctrl,
+
+    // Register file signals
+    input logic [`REG_RS1] read_addr1, 
+    input logic [`REG_RS2] read_addr2, 
+    input logic [`REG_RD] write_addr,
+    output logic [`REG_RANGE] read_data_out1, read_data_out2, write_data_in
+
+ 
 );
 
-logic [`REG_FIELD_RANGE] rs1_addr, rs2_addr, rd_addr;
-
-logic [`REG_RANGE] reg_data;
-logic [`REG_RS1] rs1_decoder, rs1_regfile;
-logic [`REG_RS2] rs2_decoder, rs2_regfile;
+logic [`REG_FIELD_RANGE] reg_data;
 
 inst_decoder decoder (.inst(instruction), .rs1(rs1), .rs2(rs2), .rd(rd),
                     .op(opcode), .funct3(funct3), .funct7(funct7), .imm(imm));
@@ -33,17 +37,17 @@ control_unit controller (.opcode(opcode), .funct3(funct3), .funct7(funct7),
                     .mem_wr_en(mem_we), .reg_write_ctrl(reg_write_ctrl));
 
 RegFile #() registers (.clk(clk), .reset(reset), .write_enable(reg_wr_en),
-                    .read_addr1(rs1_addr), .read_addr2(rs2_addr), .write_addr(rd_addr),
-                    .write_data_in(reg_data), .read_data_out1(rs1_regfile), .read_data_out2(rs2_regfile),
+                    .read_addr1(rs1), .read_addr2(rs2), .write_addr(rd),
+                    .write_data_in(write_data_in), .read_data_out1(read_data_out1), .read_data_out2(read_data_out2),         
                     .debug_en(debug_en), .debug_addr(debug_addr), .debug_data(debug_data));
 
 // TO DO: MOVE TO WB IN FUTURE
 always_comb begin
-    reg_data = 0;
+    write_data_in = 0;
     case (reg_write_ctrl)
-        0: reg_data = alu_out;
-        1: reg_data = pc_4;
-        2: reg_data = data_mem;
+        0: write_data_in = alu_out;
+        1: write_data_in = pc_4;
+        2: write_data_in = data_mem;
     endcase
 end
 endmodule

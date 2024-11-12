@@ -16,7 +16,8 @@ module test_inst_decode_tb();
     logic [1:0] reg_write_ctrl_tb;
 
     // Logic signals for register file
-    logic [`REG_FIELD_RANGE] read_addr1_tb, read_addr2_tb, write_addr_tb;
+    // logic [4:0] rs1_temp_tb, rs2_temp_tb, rd_temp_tb;
+    logic [`REG_RANGE] read_dataout1_tb, read_dataout2_tb, write_datain_tb;
 
     // File IO
     int fd, fd_out;	
@@ -47,12 +48,13 @@ module test_inst_decode_tb();
         .read_addr1(rs1_tb),
         .read_addr2(rs2_tb),
         .write_addr(rd_tb),
-        .write_data_in(write_addr_tb),
-        .read_data_out1(read_addr1_tb),
-        .read_data_out2(read_addr2_tb))
+        .write_data_in(write_datain_tb),
+        .read_data_out1(read_dataout1_tb),
+        .read_data_out2(read_dataout2_tb)
     );
 
     always #5 clk_tb = ~clk_tb;
+    
     function string opcodeType(input logic [`OP_RANGE] opcode);
         case (opcode)
             `OP_LUI: return "LUI";
@@ -104,7 +106,8 @@ module test_inst_decode_tb();
                     $fwrite(fd_out, "reg_wr_en=%b, pc_rs1_sel=%b, imm_rs2_sel=%b, jump_branch_sel=%b, mem_we=%b, reg_write_ctrl=%b\n", 
                         reg_wr_en_tb, pc_rs1_sel_tb, imm_rs2_sel_tb, jump_branch_sel_tb, mem_we_tb, reg_write_ctrl_tb);
                     // Register File
-                    $fwrite(fd_out, "rs1=%b, rs2=%b, rd=%b, read_data_out1=%b, read_data_out2=%b, write_data_out=%b",)
+                    $fwrite(fd_out, "rs1=%b, rs2=%b, rd=%b, write_data_in=%b, read_data_out1=%b, read_data_out2=%b, ", 
+                        rs1_tb, rs2_tb, rd_tb, write_datain_tb, read_dataout1_tb, read_dataout2_tb);
                 end
             end
         end
