@@ -94,6 +94,7 @@
 
 import sys
 from enum import Enum
+from numpy import binary_repr
 
 ###############################################################
 #
@@ -126,10 +127,9 @@ TokenType = Enum("TokenType", ["MNEMONIC", "REG", "IMM", "NULL"])
 
 class Token:
     
-    def __init__(self, value = None, token_type = TokenType.NULL, line_number = -1):
+    def __init__(self, value = None, token_type = TokenType.NULL):
         self.value = value
         self.type = token_type
-        self.line = line_number
         
     def __str__(self):
         return f"Token - Value: {self.value}, Type: {self.type}"
@@ -173,105 +173,96 @@ FUNCT3 = 1
 FUNCT7 = 2
 FORMAT = 3
 POS    = 4
+LABEL  = 5
 
 RD  = 0
 RS1 = 1
 RS2 = 2
 
-# FORMAT: [ OPCODE, FUCT3, FUCT7, [FORMAT], [REG POSITIONS] ] (IF APPLICABLE)     [REG POSITIONS] = [RD, RS1, RS2]
+# FORMAT: [ OPCODE, FUCT3, FUCT7, [FORMAT], [REG POSITIONS], LABEL ALLOWED ] (IF APPLICABLE)     [REG POSITIONS] = [RD, RS1, RS2]
 instruction_dict = {
-    "LUI"       : [OP_LUI,   None,  None,      [TokenType.REG, TokenType.IMM],                [0, None, None]],
-    "AUIPC"     : [OP_AUIPC, None,  None,      [TokenType.REG, TokenType.IMM],                [0, None, None]],
-    "JAL"       : [OP_JAL,   None,  None,      [TokenType.REG, TokenType.IMM],                [0, None, None]],
-    "JALR"      : [OP_JALR,  "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "BEQ"       : [OP_BR,    "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1]],
-    "BNE"       : [OP_BR,    "001", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1]],
-    "BLT"       : [OP_BR,    "100", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1]],
-    "BGE"       : [OP_BR,    "101", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1]],
-    "BLTU"      : [OP_BR,    "110", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1]],
-    "BGEU"      : [OP_BR,    "111", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1]],
-    "LB"        : [OP_LD,    "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "LH"        : [OP_LD,    "001", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "LW"        : [OP_LD,    "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "LBU"       : [OP_LD,    "100", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "LHU"       : [OP_LD,    "101", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "SB"        : [OP_ST,    "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0]],
-    "SH"        : [OP_ST,    "001", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0]],
-    "SW"        : [OP_ST,    "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0]],
-    "ADDI"      : [OP_IMM,   "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "SLTI"      : [OP_IMM,   "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "SLTUI"     : [OP_IMM,   "011", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "XORI"      : [OP_IMM,   "100", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "ORI"       : [OP_IMM,   "110", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "ANDI"      : [OP_IMM,   "111", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "SLLI"      : [OP_IMM,   "001", "0000000", [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "SRLI"      : [OP_IMM,   "101", "0000000", [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "SRAI"      : [OP_IMM,   "101", "0100000", [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None]],
-    "ADD"       : [OP_R3,    "000", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "SUB"       : [OP_R3,    "000", "0100000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "SLL"       : [OP_R3,    "001", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "SLT"       : [OP_R3,    "010", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "SLTU"      : [OP_R3,    "011", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "XOR"       : [OP_R3,    "100", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "SRL"       : [OP_R3,    "101", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "SRA"       : [OP_R3,    "101", "0100000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "OR"        : [OP_R3,    "110", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "AND"       : [OP_R3,    "111", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "MUL"       : [OP_R3,    "000", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "MULH"      : [OP_R3,    "001", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "MULHSU"    : [OP_R3,    "010", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "MULHU"     : [OP_R3,    "011", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "DIV"       : [OP_R3,    "100", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "DIVU"      : [OP_R3,    "101", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "REM"       : [OP_R3,    "110", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]],
-    "REMU"      : [OP_R3,    "111", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2]]
+    "LUI"       : [OP_LUI,   None,  None,      [TokenType.REG, TokenType.IMM],                [0, None, None], False],
+    "AUIPC"     : [OP_AUIPC, None,  None,      [TokenType.REG, TokenType.IMM],                [0, None, None], True ],
+    "JAL"       : [OP_JAL,   None,  None,      [TokenType.REG, TokenType.IMM],                [0, None, None], True ],
+    "JALR"      : [OP_JALR,  "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    True ],
+    "BEQ"       : [OP_BR,    "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1],    True ],
+    "BNE"       : [OP_BR,    "001", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1],    True ],
+    "BLT"       : [OP_BR,    "100", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1],    True ],
+    "BGE"       : [OP_BR,    "101", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1],    True ],
+    "BLTU"      : [OP_BR,    "110", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1],    True ],
+    "BGEU"      : [OP_BR,    "111", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1],    True ],
+    "LB"        : [OP_LD,    "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "LH"        : [OP_LD,    "001", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "LW"        : [OP_LD,    "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "LBU"       : [OP_LD,    "100", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "LHU"       : [OP_LD,    "101", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "SB"        : [OP_ST,    "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0],    False],
+    "SH"        : [OP_ST,    "001", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0],    False],
+    "SW"        : [OP_ST,    "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0],    False],
+    "ADDI"      : [OP_IMM,   "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "SLTI"      : [OP_IMM,   "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "SLTUI"     : [OP_IMM,   "011", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "XORI"      : [OP_IMM,   "100", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "ORI"       : [OP_IMM,   "110", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "ANDI"      : [OP_IMM,   "111", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "SLLI"      : [OP_IMM,   "001", "0000000", [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "SRLI"      : [OP_IMM,   "101", "0000000", [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "SRAI"      : [OP_IMM,   "101", "0100000", [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
+    "ADD"       : [OP_R3,    "000", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "SUB"       : [OP_R3,    "000", "0100000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "SLL"       : [OP_R3,    "001", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "SLT"       : [OP_R3,    "010", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "SLTU"      : [OP_R3,    "011", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "XOR"       : [OP_R3,    "100", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "SRL"       : [OP_R3,    "101", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "SRA"       : [OP_R3,    "101", "0100000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "OR"        : [OP_R3,    "110", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "AND"       : [OP_R3,    "111", "0000000", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "MUL"       : [OP_R3,    "000", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "MULH"      : [OP_R3,    "001", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "MULHSU"    : [OP_R3,    "010", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "MULHU"     : [OP_R3,    "011", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "DIV"       : [OP_R3,    "100", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "DIVU"      : [OP_R3,    "101", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "REM"       : [OP_R3,    "110", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
+    "REMU"      : [OP_R3,    "111", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False]
 }
+# Potential changes: Create offset token with property of allowing labels
+# Have error handling as a seperate function
+# Have errors point to whole offender Ex: offender
+#                                         ^^^^^^^^
 
-
-
-PFORMAT = 0
-PMAP = 1
+PFORMAT    = 0
+PMAP       = 1
 PTRANSLATE = 2
+PLABEL     = 3
 
-# FORMAT: [[PFORMAT], [MAPPING], [TRANSLATION], [FORMAT]]        MAPPING = FOLLOWS INDICES OF TRANSLATION, CONTAINS INDICES OF PFORMAT (START AT 1 SINCE MNEMONIC IGNORED)
+# FORMAT: [[PFORMAT], [MAPPING], [TRANSLATION], [FORMAT], LABEL ALLOWED]        MAPPING = FOLLOWS INDICES OF TRANSLATION, CONTAINS INDICES OF PFORMAT (START AT 1 SINCE MNEMONIC IGNORED)
 pseudo_instruction_dict = {
-    "NOP" : [[None], [None], ["ADDI", "zero", "zero", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
+    "NOP" : [[None], [None], ["ADDI", "zero", "zero", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "LI" : [],
     "LA" : [],
-    "MV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG, 0], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
-    "NOT" : [[TokenType.REG, TokenType.REG], [1, 2], ["XORI", TokenType.REG, TokenType.REG, -1], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "NEG" : [[TokenType.REG, TokenType.REG], [1, 2], ["SUB", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG]],
-    "SEQZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTIU", TokenType.REG, TokenType.REG, 1], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "SNEZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTU", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG]],
-    "SLTZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLT", TokenType.REG, TokenType.REG, "x0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG]],
-    "SGTZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLT", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG]],
-    "BEQZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BEQ", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "BNEZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BNE", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "BLEZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BGE", "x0", TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "BGEZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BGE", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "BLTZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BLT", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "BGTZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BLT", "x0", TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "BGT" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLT", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "BLE" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BGE", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "BGTU" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLTU", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "BLEU" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLTU", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]],
-    "J" : [[TokenType.IMM], [1], ["JAL", "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.IMM]],
-    "JR" : [[TokenType.IMM], [1], ["JAL", "x1", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.IMM]],
-    "RET" : [[None], [None], ["JALR", "x0", "x1", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM]]
+    "MV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG, 0], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
+    "NOT" : [[TokenType.REG, TokenType.REG], [1, 2], ["XORI", TokenType.REG, TokenType.REG, -1], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
+    "NEG" : [[TokenType.REG, TokenType.REG], [1, 2], ["SUB", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
+    "SEQZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTIU", TokenType.REG, TokenType.REG, 1], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
+    "SNEZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTU", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
+    "SLTZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLT", TokenType.REG, TokenType.REG, "x0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
+    "SGTZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLT", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
+    "BEQZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BEQ", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "BNEZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BNE", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "BLEZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BGE", "x0", TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "BGEZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BGE", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "BLTZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BLT", TokenType.REG, "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "BGTZ" : [[TokenType.REG, TokenType.IMM], [1, 2], ["BLT", "x0", TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "BGT" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLT", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "BLE" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BGE", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "BGTU" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLTU", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "BLEU" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLTU", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
+    "J" : [[TokenType.IMM], [1], ["JAL", "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.IMM], True],
+    "JR" : [[TokenType.IMM], [1], ["JAL", "x1", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.IMM], True],
+    "RET" : [[None], [None], ["JALR", "x0", "x1", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False]
 }
-
-###############################################################
-#
-#                       SYMBOL SCAN
-#
-#  INPUT: FILE TO READ
-#  OUTPUT: SYMBOL TABLE
-#  NOTES: A SYMBOL TABLE IS A DICTIONARY THAT PAIRS SYMBOLS
-#         WITH THEIR CORRESPONDING LINE NUMBER.
-#
-###############################################################
-
-# TODO: FIGURE OUT HOW TO KEEP LINE NUMBERS FOR ERRORS WHILE MODIFYING LINES TO REMOVE SYMBOLS (SEPARATE THE ERROR HANDLING FROM THE REST?)
 
 ###############################################################
 #
@@ -281,40 +272,50 @@ pseudo_instruction_dict = {
 #  OUTPUT: LIST OF LIST OF STRINGS
 #  NOTES: THE OUTPUT IS A LIST OF LISTS, WITH EACH INTERNAL
 #         LIST HOLDING EACH PART OF A SINGLE INSTRUCTION
-#         ALSO PARSES PSEUDO INSTRUCTIONS, REPLACING WITH
-#         INSTRUCTION EQUIVALENT
+#         AND THE INSTRUCTION LINE
 #
 #  EXAMPLE:
 #  NEXT INSTRUCTION READ: ADD x1, x2, x3
-#  LIST OF STRINGS REPRESENTATION: ["ADD", "x1", "x2", "x3"]
+#  LIST OF STRINGS REPRESENTATION: ["ADD", "x1", "x2", "x3", [line_num, "instruction"]]
 #
 ###############################################################
 
 def parse(instruction_lines):
     instruction_list = []
+    symbols = {}
     for idx in range(len(instruction_lines)):
         instruction = instruction_lines[idx].replace("\n", "")
+        line_num = idx + 1;
+        if instruction == "": continue
         p_count = 0
         for i in range(len(instruction)):
             p_count += 1 if instruction[i] == '(' else 0
             p_count -= 1 if instruction[i] == ')' else 0
             if p_count < 0:
                 pos = 46 + len(f"{idx}") + i
-                print(f"\nERROR: MISSING OPENING PARENTHESIS - line {idx}: {instruction}")
+                print(f"\nERROR: MISSING OPENING PARENTHESIS - line {line_num}: {instruction}")
                 print("^\n".rjust(pos))
                 sys.exit()
         if (p_count > 0):
             pos = 46 + len(f"{idx}") + len(instruction)
-            print(f"\nERROR: MISSING CLOSING PARENTHESIS - line {idx}: {instruction}")
+            print(f"\nERROR: MISSING CLOSING PARENTHESIS - line {line_num}: {instruction}")
             print("^\n".rjust(pos))
             sys.exit()
         instruction_split = instruction.split(" ")
         parsed_instruction = []
-        for component in instruction_split:
-            parsed_component = component.replace(",", "").replace(")", "").split("(")
-            parsed_instruction.extend(parsed_component)
-        instruction_list.append(parsed_instruction)
-    return instruction_list
+        if len(instruction_split) == 1: # Handle symbols
+            if instruction[-1] == ':': # Labels
+                symbols[instruction[:-1]] = idx - len(symbols)
+            else:
+                print(f"\nERROR: INVALID SYMBOL - line {line_num}: {instruction}\n")
+                sys.exit()
+        else:
+            for component in instruction_split:
+                parsed_component = component.replace(",", "").replace(")", "").split("(")
+                parsed_instruction.extend(parsed_component)
+            parsed_instruction.append([line_num, instruction])
+            instruction_list.append(parsed_instruction)
+    return instruction_list, symbols
 
 ###############################################################
 #
@@ -322,34 +323,35 @@ def parse(instruction_lines):
 #
 #  INPUT: LIST OF LIST OF STRINGS
 #  OUTPUT: TOKEN LIST
-#  NOTES: THE OUTPUT IS A LIST OF TOKENS
+#  NOTES: THE OUTPUT IS A LIST OF TOKENS WTIH THE LINE INFO
 #
 #  EXAMPLE:
-#  NEXT INSTRUCTION LIST: ["ADD", "x1", "x2", "x3"]
-#  TOKEN LIST: [T(ADD), T(x1), T(x2), T(x3)]
+#  NEXT INSTRUCTION LIST: ["ADD", "x1", "x2", "x3", [line_num, "instruction"]]
+#  TOKEN LIST: [T(ADD), T(x1), T(x2), T(x3), [line_num, "instruction"]]
 #
 ###############################################################
 
-def tokenize(instructions_list, instruction_lines):
+def tokenize(instructions_list):
     token_list = []
-    for idx, instruction in enumerate(instructions_list):
+    for instruction in instructions_list:
         tokens = []
-        if instruction[0] == "": continue
-        for operand in instruction:
-            if (register_dict.get(operand) != None):
-                tokens.append(Token(operand, TokenType.REG, idx))
-            elif(instruction_dict.get(operand.upper()) != None or pseudo_instruction_dict.get(operand.upper()) != None):
-                tokens.append(Token(operand.upper(), TokenType.MNEMONIC, idx))
-            elif(operand.isnumeric()):
-                tokens.append(Token(int(operand), TokenType.IMM, idx))
+        for operand in instruction[:-1]:
+            if register_dict.get(operand) != None: # Register
+                tokens.append(Token(operand, TokenType.REG))
+            elif instruction_dict.get(operand.upper()) != None or pseudo_instruction_dict.get(operand.upper()) != None: # Mnemonic
+                tokens.append(Token(operand.upper(), TokenType.MNEMONIC))
+            elif operand.isnumeric(): # Immediate/offset
+                tokens.append(Token(int(operand), TokenType.IMM))
+            elif operand in symbols.keys(): # Label
+                tokens.append(Token(operand, TokenType.IMM))
             else:
-                instruction_line = instruction_lines[idx]
+                line_num, instruction_line = instruction[-1]
                 op_type = "MNEMONIC" if instruction.index(operand) == 0 else "OPERAND"
-                pos = 27 + len(f"{idx}") + instruction_line.find(operand) + len(op_type)
-                print(f"\nERROR: INVALID {op_type} - line {idx}: {instruction_line}")
+                pos = 27 + len(f"{line_num}") + instruction_line.find(operand) + len(op_type)
+                print(f"\nERROR: INVALID {op_type} - line {line_num}: {instruction_line}")
                 print("^\n".rjust(pos))
                 sys.exit()
-            # INVALID TODO: POTENTIALLY ADD LABELS FOR JUMPS
+        tokens.append(instruction[-1])
         token_list.append(tokens)
     return token_list
 
@@ -360,55 +362,102 @@ def tokenize(instructions_list, instruction_lines):
 #  INPUT: LIST OF LIST OF TOKENS
 #  OUTPUT: NONE
 #  NOTES: HAS NO OUTPUT, BUT RAISES ERRORS WHEN TOKENS
-#         DON'T MEET THE INSTRUCTION REQUIREMENTS. ALSO
-#         VERIFIES pseudo INSTRUCTION SYNTAX.
+#         DON'T MEET THE INSTRUCTION REQUIREMENTS.
 #
 #  EXAMPLE:
-#  NEXT TOKEN LIST: [T(ADD), T(x1), T(x2), T(x3)]
+#  NEXT TOKEN LIST: [T(ADD), T(x1), T(x2), T(x3), [line_num, "instruction"]]
 #  OUTPUT: NOTHING
 #
 ###############################################################
-def validate(token_list, instruction_lines):
-    for tokens in token_list:
-        idx = tokens[0].line
-        instruction_line = instruction_lines[idx].replace("\n", "")
+def validate(token_list):
+    for idx, tokens in enumerate(token_list):      
+        line_num, instruction_line = tokens[-1];
         
         mnemonic = tokens[0]
         mnemonic_name = mnemonic.value
-        if (pseudo_instruction_dict.get(mnemonic_name) != None):
-            inst_format = pseudo_instruction_dict[mnemonic_name][PFORMAT]
-            mnemonic_name = pseudo_instruction_dict[mnemonic_name][PTRANSLATE][0]
+        is_pseudo = pseudo_instruction_dict.get(mnemonic_name) != None
+        if is_pseudo:
+            dict_entry = pseudo_instruction_dict[mnemonic_name]
+            inst_format = dict_entry[PFORMAT]
+            mnemonic_name = dict_entry[PTRANSLATE][0]
         else:
-            inst_format = instruction_dict[mnemonic_name][FORMAT]
+            dict_entry = instruction_dict[mnemonic_name]
+            inst_format = dict_entry[FORMAT]
         opcode = instruction_dict[mnemonic_name][OPCODE]
         
-        operands = tokens[1:]
+        operands = tokens[1:-1]
         if (inst_format[0] != None):
             if len(operands) != len(inst_format):
-                pos = 40 + len(f"{idx}") + len(instruction_line)
-                print(f"\nERROR: INVALID OPERAND COUNT - line {idx}: {instruction_line}")
+                pos = 8 + len(f"{line_num}") + len(instruction_line)
+                print(f"\nERROR: INVALID OPERAND COUNT - GOT {len(operands)} - EXPECTED {len(inst_format)}")
+                print(f"line {line_num}: {instruction_line}")
                 print("^\n".rjust(pos))
                 sys.exit()
                 
             for operand, op_format in zip(operands, inst_format):
-                if operand.type == TokenType.IMM and op_format == TokenType.REG and operand.value < 32:
+                if operand.type == TokenType.IMM and op_format == TokenType.REG and operand.value < 32: # Account for using register numbers
                     operand.type = TokenType.REG
-                elif operand.type == TokenType.IMM and op_format == TokenType.IMM:
-                    imm_size = immediate_sizes[opcode]
-                    max_imm = 2**imm_size - 1
-                    if operand.value > max_imm:
-                        pos = 40 + len(f"{idx}") + instruction_line.find(f"{operand.value}")
-                        print(f"\nERROR: INVALID IMMEDIATE SIZE - line {idx}: {instruction_line}")
-                        print("^".rjust(pos))
-                        print(f"MAX IMM SIZE: {max_imm}\n")
-                        sys.exit()
+                elif operand.type == TokenType.IMM and op_format == TokenType.IMM: # Check immediate types
+                    if isinstance(operand.value, int): # Integer immediate - check size
+                        imm_size = immediate_sizes[opcode]
+                        max_imm = 2**imm_size - 1
+                        if operand.value > max_imm:
+                            pos = 40 + len(f"{line_num}") + instruction_line.find(f"{operand.value}")
+                            print(f"\nERROR: INVALID IMMEDIATE SIZE - line {line_num}: {instruction_line}")
+                            print("^".rjust(pos))
+                            print(f"MAX IMM SIZE: {max_imm}\n")
+                            sys.exit()
+                    elif not ((is_pseudo and dict_entry[PLABEL]) or dict_entry[LABEL]): # Label - check if valid for instruction
+                        pos = 9 + len(f"{line_num}") + instruction_line.find(operand.value)
+                        print(f"\nERROR: INVALID OPERAND TYPE - EXPECTED IMMEDIATE, GOT LABEL")
+                        print(f"line {line_num}: {instruction_line}")
+                        print(f"^\n".rjust(pos))
                 elif operand.type != op_format:
-                    pos = 9 + len(f"{idx}") + instruction_line.find(f"{operand.value}")
+                    pos = 9 + len(f"{line_num}") + instruction_line.find(f"{operand.value}")
                     print(f"\nERROR: INVALID OPERAND TYPE - EXPECTED {op_format}, GOT {operand.type}")
-                    print(f"line {idx}: {instruction_line}")
+                    print(f"line {line_num}: {instruction_line}")
                     print("^\n".rjust(pos))
                     sys.exit()
-            
+
+###############################################################
+#
+#      REPLACE PSEUDO INSTRUCTIONS WITH REAL INSTRUCTIONS
+#
+#  INPUT: LIST OF LIST OF TOKENS
+#  OUTPUT: LIST OF LIST OF TOKENS
+#  NOTES: HAS SIMILAR OUTPUT, EXCEPT ALL PSEUDO INSTRUCTIONS
+#         HAVE BEEN REPLACED. 
+#
+#  EXAMPLE:
+#  NEXT TOKEN LIST: [T(NOT), T(x1), T(x2), [line_num, "instruction"]]
+#  OUTPUT: [T(XORI), T(x1), T(x2) T(-1), [line_num, "instruction"]]
+#
+###############################################################
+def replace_pseudo(token_list):
+    extra_lines = 0
+    new_token_list = []
+    for line_num, tokens in enumerate(token_list):
+        mnemonic = tokens[0]
+        if pseudo_instruction_dict.get(mnemonic.value) != None: # TODO: HANDLE LI AND LA (1 -> 2 line instructions)
+            pseudo_instruction = pseudo_instruction_dict[mnemonic.value]
+            pseudo_translation = pseudo_instruction[PTRANSLATE]
+            pseudo_format = pseudo_instruction[FORMAT]
+            pseudo_mapping = pseudo_instruction[PMAP]
+            pseudo_tokens = [Token() for i in range(len(pseudo_format))]
+            pseudo_tokens.append(tokens[-1])
+
+            idx = 0;
+            for i in range(len(pseudo_format)):
+                if isinstance(pseudo_translation[i], str) or isinstance(pseudo_translation[i], int):
+                    pseudo_tokens[i].value = pseudo_translation[i]
+                    pseudo_tokens[i].type = pseudo_format[i]
+                else:
+                    pseudo_tokens[i] = (tokens[pseudo_mapping[idx]])
+                    idx = idx + 1;
+            new_token_list.append(pseudo_tokens)
+        else: new_token_list.append(tokens)
+    return new_token_list
+
 ###############################################################
 #
 #          TRANSLATE TOKENS OF EACH INSTRUCTION
@@ -417,34 +466,14 @@ def validate(token_list, instruction_lines):
 #  OUTPUT: LIST OF BINARY MACHINE CODE OF EACH INSTRUCTION
 #
 #  EXAMPLE:
-#  NEXT TOKEN LIST: [T(ADD), T(x1), T(x2), T(x3)]
+#  NEXT TOKEN LIST: [T(ADD), T(x1), T(x2), T(x3), [line_num, "instruction"]]
 #  OUTPUT: 00000000001100010000000010110011
 #
 ###############################################################
-def translate(token_list):
+def translate(token_list, symbols):
     machine_code = []
-    for tokens in token_list:
+    for idx, tokens in enumerate(token_list):
         mnemonic = tokens[0]
-        
-        if pseudo_instruction_dict.get(mnemonic.value) != None: # TODO: HANDLE LI AND LA (1 -> 2 line instructions)
-            pseudo_instruction = pseudo_instruction_dict[mnemonic.value]
-            pseudo_translation = pseudo_instruction[PTRANSLATE]
-            pseudo_format = pseudo_instruction[FORMAT]
-            pseudo_mapping = pseudo_instruction[PMAP]
-            pseudo_tokens = [Token() for i in range(len(pseudo_format))]
-
-            idx = 0;
-            for i in range(len(pseudo_format)):
-                if isinstance(pseudo_translation[i], str) or isinstance(pseudo_translation[i], int):
-                    pseudo_tokens[i].value = pseudo_translation[i]
-                    pseudo_tokens[i].type = pseudo_format[i]
-                    pseudo_tokens[i].line = mnemonic.line
-                else:
-                    pseudo_tokens[i] = (tokens[pseudo_mapping[idx]])
-                    idx = idx + 1;
-            tokens = pseudo_tokens
-            mnemonic = pseudo_tokens[0]
-        
         fields = instruction_dict[mnemonic.value]
         opcode = fields[OPCODE]
         funct3 = fields[FUNCT3]
@@ -453,10 +482,15 @@ def translate(token_list):
         immediate = None
         imm_size = immediate_sizes[opcode]
         inst_registers = []
-        for token in tokens:
+        for token in tokens[1:-1]:
             if token.type == TokenType.IMM:
-                imm_val = token.value if token.value > 0 else 2**imm_size + token.value
-                immediate = format(imm_val, f'0{imm_size}b') # TODO: CHECK IMMEDIATE SIZES AND JUMP CALCULATIONS
+                imm_val = (symbols[token.value] - idx) * 4 if isinstance(token.value, str) else token.value
+                if imm_val >= 2**imm_size:
+                    line_num, instruction_line = tokens[-1]
+                    print(f"\nERROR: LABEL OUT OF RANGE - LIMIT: {2**imm_size}, GOT: {imm_val}")
+                    print(f"line {line_num}: {instruction_line}")
+                    sys.exit()
+                immediate = binary_repr(imm_val, imm_size)
             elif token.type == TokenType.REG:
                 inst_registers.append(token.value)
         
@@ -553,11 +587,11 @@ if __name__ == "__main__":
         with open(in_file_name, "r") as inst_file:
             with open(out_file_name + out_extension, out_mode) as output_file:  
                 file_instructions = inst_file.readlines()    
-                #symbols = symbol_scan(file_instructions)
-                instructions = parse(file_instructions)
-                tokens = tokenize(instructions, file_instructions)
-                validate(tokens, file_instructions)
-                machine_code = translate(tokens)
+                instructions, symbols = parse(file_instructions)
+                tokens = tokenize(instructions)
+                validate(tokens)
+                tokens_ptrans = replace_pseudo(tokens)
+                machine_code = translate(tokens_ptrans, symbols)
                 for code in machine_code:
                     if out_mode == "wb+":
                         code = bytes(int(code[i:i+8], 2) for i in range(0, len(code), 8))
