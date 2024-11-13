@@ -2,7 +2,7 @@
 
 module control_unit (
     // ----------------- ID stage controls ---------------------------
-    input [`REG_RANGE] opcode,     
+    input [`OP_RANGE] opcode,     
     //input logic [`FUNCT_3_RANGE] funct3,              // 3-bit funct3 field
     //input logic [`FUNCT_7_RANGE] funct7,        // 7-bit funct7 field  
     output logic reg_wr_en,                       // Register file write enable flag
