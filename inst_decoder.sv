@@ -74,6 +74,14 @@ module inst_decoder (
                 //     funct3 = inst[`FUNCT_3_FIELD];
                 // end
             end
+            default: begin
+                imm = 0;
+                rd = 'x;
+                rs1 = 'x;
+                rs2 = 'x;
+                funct3 = 'x;
+                funct7 = 'x;
+            end
         endcase
     end
 endmodule
