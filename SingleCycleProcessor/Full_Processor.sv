@@ -133,6 +133,7 @@ module single_cycle_tb ();
     integer i;
     initial begin
         //@(posedge clk);
+        reset = 1;
         for(i=0; i<10; i=i+1) begin
             instr_in = testData[i][31:0];     
             instr_wr_addr = i*4;            //the i*4 is a left shift twice since we are indexing by word
@@ -140,7 +141,7 @@ module single_cycle_tb ();
             @(posedge clk);
         end
 
-        #1; reset = 1; instr_in = 0; instr_wr_addr = 0; instr_wr_en = 0;
+        #1; instr_in = 0; instr_wr_addr = 0; instr_wr_en = 0;
         @(posedge clk);
 
         #1; reset = 0;

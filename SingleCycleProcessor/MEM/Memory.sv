@@ -17,7 +17,7 @@ module memory #(
     input reg_wr_en_EXMEM,
     input [1:0] reg_wr_ctrl_EXMEM,
     input [`REG_FIELD_RANGE] rd_EXMEM,
-    input [`REG_RANGE] pc_4_EXMEM
+    input [`REG_RANGE] pc_4_EXMEM,
 
     // ----------------- Outputs of this stage -----------------
     // ----------------- ID Stage Signals(Outputs) -----------------

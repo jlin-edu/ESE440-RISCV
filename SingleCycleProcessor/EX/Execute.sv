@@ -41,7 +41,7 @@ module execute (
     
      // ----------------- IF Stage Signals(Outputs) -----------------
     output logic              pc_sel_EXIF,
-    output logic [`REG_RANGE] jump_addr_EXIF, //these are from the branch adder and mux
+    output logic [`REG_RANGE] jump_addr_EXIF //these are from the branch adder and mux
 
     //input signed        [`REG_RANGE]     in1, in2,
     //input               [`OP_RANGE]      op,

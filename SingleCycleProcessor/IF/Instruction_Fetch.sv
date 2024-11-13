@@ -24,7 +24,7 @@ module instruction_fetch #(
                 .pc_sel(pc_sel_EXIF), .jump_addr(jump_addr_EXIF),
                 .pc(pc_IFID), .pc_4(pc_4_IFID));
 
-    instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) intruction_buffer(.clk(clk), .pc(pc_IFID), .instr_out(instruction_IFID),
+    instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .pc(pc_IFID), .instr_out(instruction_IFID),
                                                                 .instr_in(instr_in), .wr_addr(wr_addr), .wr_en(wr_en));
 
 endmodule

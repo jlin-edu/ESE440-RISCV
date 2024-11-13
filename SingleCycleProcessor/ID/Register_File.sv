@@ -17,7 +17,7 @@ module register_file #(
 
     //second read port
     input  [`REG_FIELD_RANGE] rs2_rd_addr,
-    output logic [`REG_RANGE] rs2_rd_data,
+    output logic [`REG_RANGE] rs2_rd_data
 );
     logic [31:1][WIDTH-1:0] register_file;
 

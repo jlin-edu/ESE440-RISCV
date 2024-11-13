@@ -26,14 +26,8 @@ module inst_splitter (
             `OP_JALR:   imm = 32'(signed'(inst[`IMM_FIELD_I]));
             `OP_BR:     imm = 32'(signed'({inst[`IMM_FIELD_B_12], inst[`IMM_FIELD_B_11], inst[`IMM_FIELD_B_10_5], inst[`IMM_FIELD_B_4_1], 1'b0}));
             `OP_LD:     imm = 32'(signed'(inst[`IMM_FIELD_I]));
-            `OP_ST:     imm = 32'(signed'{inst[`IMM_FIELD_S_U], inst[`IMM_FIELD_S_L]});
-            `OP_IMM: begin
-                if (funct3 == `ADDI or funct3 == `SLTI or funct3 == `ANDI or funct3 == `ORI or funct3 == `XORI) begin
-                    imm = 32'(signed'(inst[`IMM_FIELD_I]));
-                end else begin
-                    imm = 32'(inst[`IMM_FIELD_I]);
-                end
-            end
+            `OP_ST:     imm = 32'(signed'({inst[`IMM_FIELD_S_U], inst[`IMM_FIELD_S_L]}));
+            `OP_IMM:    imm = 32'(signed'(inst[`IMM_FIELD_I]));
         endcase
     end
 
