@@ -11,7 +11,7 @@ module instruction_decode #(
 
     // ----------------- WB Stage Signals(Inputs) -----------------
     input [`REG_RANGE] reg_wr_data_WBID,        //these signals are responsible for writing to the register file
-    output logic [`REG_FIELD_RANGE] rd_WBID,
+    input [`REG_FIELD_RANGE] rd_WBID,
     input reg_wr_en_WBID,
 
 
