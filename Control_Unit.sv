@@ -94,7 +94,7 @@ module control_unit (
                 pc_rs1_sel = 1;                  
                 reg_wr_en = 1;
                 imm_rs2_sel = 1;
-                jump_branch_sel = 1;
+                // jump_branch_sel = 1;
                 // mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
