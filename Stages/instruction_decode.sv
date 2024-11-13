@@ -45,9 +45,9 @@ RegFile #() registers (.clk(clk), .reset(reset), .write_enable(reg_wr_en),
 always_comb begin
     write_data_in = 0;
     case (reg_write_ctrl)
-        0: write_data_in = alu_out;
-        1: write_data_in = pc_4;
-        2: write_data_in = data_mem;
+        0: write_data_in = 0;             // ALU output
+        1: write_data_in = 1;                // PC + 4
+        2: write_data_in = 2;            // Memory output
     endcase
 end
 endmodule
