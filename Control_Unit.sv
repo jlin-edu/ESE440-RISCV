@@ -4,17 +4,17 @@ module control_unit (
     // ----------------- ID stage controls ---------------------------
     input [`OP_RANGE] opcode,     
     input logic [`FUNCT_3_RANGE] funct3,              // 3-bit funct3 field
-    input logic [`FUNCT_7_RANGE] funct7,        // 7-bit funct7 field  
-    output logic reg_wr_en,                       // Register file write enable flag
-    output logic pc_rs1_sel,                       // 0 rs1, 1 for pc
-    output logic imm_rs2_sel,                       // 0 for rs2, 1 for imm
+    input logic [`FUNCT_7_RANGE] funct7,              // 7-bit funct7 field  
+    output logic reg_wr_en,                           // Register file write enable flag
+    output logic pc_rs1_sel,                          // 0 rs1, 1 for pc
+    output logic imm_rs2_sel,                         // 0 for rs2, 1 for imm
     // ----------------- EX stage controls ---------------------------
-    output logic jump_branch_sel,                       // 0 for ALU, 1 for sum of pc and imm
+    output logic jump_branch_sel,                     // 0 for ALU, 1 for sum of pc and imm
 
     // ----------------- MEM stage controls ---------------------------
-    output logic mem_wr_en,                       // Write enable flag
+    output logic mem_wr_en,                           // Write enable flag
     // ----------------- WB stage controls ---------------------------
-    output logic [1:0] reg_write_ctrl                       // 0 for ALU output, 1 is for pc+4, 2 is for memory
+    output logic [1:0] reg_write_ctrl                 // 0 for ALU output, 1 is for pc+4, 2 is for memory
     );
 
     always_comb begin : control_unit_block
@@ -67,7 +67,7 @@ module control_unit (
                 pc_rs1_sel = 1;
                 // reg_wr_en = 0;
                 imm_rs2_sel = 1;
-                jump_branch_sel = 1;         // The ALU needs to determine whether the branch should be taken
+                jump_branch_sel = 1;      
                 // mem_wr_en = 0;
                 // reg_write_ctrl = 0;
             end
