@@ -75,9 +75,9 @@ module Execute (
         branch_addr = pc_IDEX + immediate_IDEX;
 
         if(jump_branch_sel_IDEX == 1)
-            jump_addr_EXIF = //ALU_out_EXMEM
+            jump_addr_EXIF = branch_addr;
         else
-            jump_addr_EXIF = //branch_addr
+            jump_addr_EXIF = ALU_out_EXMEM;
 
     end
 
