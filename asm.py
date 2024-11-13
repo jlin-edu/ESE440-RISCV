@@ -476,6 +476,8 @@ def replace_pseudo(token_list):
                 addi_tokens[3].value = split_imm[1]
                 addi_tokens[3].type = TokenType.IMM
                 new_token_list.append(addi_tokens)
+                
+                # TODO: 
             else:
                 pseudo_tokens = [Token() for i in range(len(pseudo_format))]
                 pseudo_tokens.append(tokens[-1])
