@@ -42,7 +42,7 @@ module inst_decoder (
                 funct3 = inst[`FUNCT_3_FIELD];
             end 
             `OP_BR:     begin                   // B-type instruction
-                imm = 32'(signed'({inst[`IMM_FIELD_B_12], inst[`IMM_FIELD_B_10_5],"0000000000000", inst[`IMM_FIELD_B_4_1], inst[`IMM_FIELD_B_11], "0000000"}));
+                imm = 32'(signed'({inst[`IMM_FIELD_B_12], inst[`IMM_FIELD_B_11], inst[`IMM_FIELD_B_10_5], inst[`IMM_FIELD_B_4_1], 1'b0}));
                 rs1    = inst[`REG_RS1];
                 rs2    = inst[`REG_RS2];
                 funct3 = inst[`FUNCT_3_FIELD];
