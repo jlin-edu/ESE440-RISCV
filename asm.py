@@ -92,6 +92,8 @@
 #   -b : OUTPUT FILE AS BINARY, DEFAULT IS PLAIN TEXT
 #
 
+
+from re import split
 import sys
 from enum import Enum
 from numpy import binary_repr
@@ -162,10 +164,11 @@ immediate_sizes = {
     OP_BR    : 13,
     OP_LD    : 12,
     OP_ST    : 12,
-    OP_LUI   : 20,
-    OP_AUIPC : 20,
+    OP_LUI   : 32,
+    OP_AUIPC : 32,
     OP_JAL   : 21,
     OP_JALR  : 12,
+    "LOAD"   : 32
 }
 
 OPCODE = 0
@@ -231,17 +234,18 @@ instruction_dict = {
 # Have error handling as a seperate function
 # Have errors point to whole offender Ex: offender
 #                                         ^^^^^^^^
+# HEX DIGITS
 
 PFORMAT    = 0
 PMAP       = 1
 PTRANSLATE = 2
-PLABEL     = 3
+PLABEL     = 4
 
 # FORMAT: [[PFORMAT], [MAPPING], [TRANSLATION], [FORMAT], LABEL ALLOWED]        MAPPING = FOLLOWS INDICES OF TRANSLATION, CONTAINS INDICES OF PFORMAT (START AT 1 SINCE MNEMONIC IGNORED)
 pseudo_instruction_dict = {
     "NOP" : [[None], [None], ["ADDI", "zero", "zero", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
-    "LI" : [],
-    "LA" : [],
+    "LI" : [[TokenType.REG, TokenType.IMM], [], ["LOAD"], [], False],
+    "LA" : [[TokenType.REG, TokenType.IMM], [], ["LOAD"], [], True],
     "MV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG, 0], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
     "NOT" : [[TokenType.REG, TokenType.REG], [1, 2], ["XORI", TokenType.REG, TokenType.REG, -1], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "NEG" : [[TokenType.REG, TokenType.REG], [1, 2], ["SUB", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
@@ -383,7 +387,7 @@ def validate(token_list):
         else:
             dict_entry = instruction_dict[mnemonic_name]
             inst_format = dict_entry[FORMAT]
-        opcode = instruction_dict[mnemonic_name][OPCODE]
+        opcode = instruction_dict[mnemonic_name][OPCODE] if mnemonic_name != "LOAD" else "LOAD"
         
         operands = tokens[1:-1]
         if (inst_format[0] != None):
@@ -438,23 +442,53 @@ def replace_pseudo(token_list):
     new_token_list = []
     for line_num, tokens in enumerate(token_list):
         mnemonic = tokens[0]
-        if pseudo_instruction_dict.get(mnemonic.value) != None: # TODO: HANDLE LI AND LA (1 -> 2 line instructions)
+        if pseudo_instruction_dict.get(mnemonic.value) != None:
             pseudo_instruction = pseudo_instruction_dict[mnemonic.value]
             pseudo_translation = pseudo_instruction[PTRANSLATE]
             pseudo_format = pseudo_instruction[FORMAT]
             pseudo_mapping = pseudo_instruction[PMAP]
-            pseudo_tokens = [Token() for i in range(len(pseudo_format))]
-            pseudo_tokens.append(tokens[-1])
-
-            idx = 0;
-            for i in range(len(pseudo_format)):
-                if isinstance(pseudo_translation[i], str) or isinstance(pseudo_translation[i], int):
-                    pseudo_tokens[i].value = pseudo_translation[i]
-                    pseudo_tokens[i].type = pseudo_format[i]
+            
+            if pseudo_translation[0] == "LOAD": # LI OR LA
+                reg_token = tokens[1]
+                target_addr = tokens[2].value
+                if isinstance(target_addr, str): # Label for LA
+                    split_imm = [target_addr, target_addr]
                 else:
-                    pseudo_tokens[i] = (tokens[pseudo_mapping[idx]])
-                    idx = idx + 1;
-            new_token_list.append(pseudo_tokens)
+                    split_imm = [target_addr, 0]
+                    split_imm[1] = target_addr & 0xFFF
+                    split_imm[0] -= split_imm[1] if split_imm[1] < 2**11 else -split_imm[1]
+                
+                lui_tokens = [Token() for i in range(len(instruction_dict["LUI"][FORMAT]) + 1)]
+                lui_tokens.append(tokens[-1])
+                lui_tokens[0].value = "LUI"
+                lui_tokens[0].type = TokenType.MNEMONIC
+                lui_tokens[1] = reg_token
+                lui_tokens[2].value = split_imm[0]
+                lui_tokens[2].type = TokenType.IMM
+                new_token_list.append(lui_tokens)
+                
+                addi_tokens = [Token() for i in range(len(instruction_dict["ADDI"][FORMAT]) + 1)]
+                addi_tokens.append(tokens[-1])
+                addi_tokens[0].value = "ADDI"
+                addi_tokens[0].type = TokenType.MNEMONIC
+                addi_tokens[1] = reg_token
+                addi_tokens[2] = reg_token
+                addi_tokens[3].value = split_imm[1]
+                addi_tokens[3].type = TokenType.IMM
+                new_token_list.append(addi_tokens)
+            else:
+                pseudo_tokens = [Token() for i in range(len(pseudo_format))]
+                pseudo_tokens.append(tokens[-1])
+
+                idx = 0;
+                for i in range(len(pseudo_format)):
+                    if isinstance(pseudo_translation[i], str) or isinstance(pseudo_translation[i], int):
+                        pseudo_tokens[i].value = pseudo_translation[i]
+                        pseudo_tokens[i].type = pseudo_format[i]
+                    else:
+                        pseudo_tokens[i] = tokens[pseudo_mapping[idx]]
+                        idx = idx + 1
+                new_token_list.append(pseudo_tokens)   
         else: new_token_list.append(tokens)
     return new_token_list
 
@@ -484,11 +518,21 @@ def translate(token_list, symbols):
         inst_registers = []
         for token in tokens[1:-1]:
             if token.type == TokenType.IMM:
-                imm_val = (symbols[token.value] - idx) * 4 if isinstance(token.value, str) else token.value
+                if isinstance(token.value, str):
+                    if mnemonic.value == "ADDI":
+                        imm_val = (symbols[token.value] * 4) & 0xFFF
+                    elif mnemonic.value == "LUI":
+                        lsb = (symbols[token.value] * 4) & 0xFFF
+                        imm_val = symbols[token.value] * 4
+                        imm_val -= lsb if lsb < 2**11 else -lsb
+                    else:
+                        imm_val = (symbols[token.value] - idx) * 4
+                else: imm_val = token.value
+                    
                 if imm_val >= 2**imm_size:
                     line_num, instruction_line = tokens[-1]
                     print(f"\nERROR: LABEL OUT OF RANGE - LIMIT: {2**imm_size}, GOT: {imm_val}")
-                    print(f"line {line_num}: {instruction_line}")
+                    print(f"line {line_num}: {instruction_line}\n")
                     sys.exit()
                 immediate = binary_repr(imm_val, imm_size)
             elif token.type == TokenType.REG:
@@ -500,7 +544,7 @@ def translate(token_list, symbols):
                 inst_registers[i] = register_dict[register]
             else:
                 inst_registers[i] = list(register_dict.values())[register + 1]
-            
+        
         registers = [None for i in range(3)]
         reg_positions = fields[POS]
         for idx, register in enumerate(inst_registers):
@@ -522,7 +566,7 @@ def translate(token_list, symbols):
         elif opcode == OP_ST:
             inst_code += immediate[:7] + reg_src_2 + reg_src_1 + funct3 + immediate[7:] + opcode    
         elif opcode == OP_LUI or opcode == OP_AUIPC:
-            inst_code += immediate + reg_dest + opcode
+            inst_code += immediate[:20] + reg_dest + opcode
         elif opcode == OP_JAL:
             inst_code += immediate[0] + immediate[10:20] + immediate[9] + immediate[1:9] + reg_dest + opcode
         machine_code.append(inst_code) 
