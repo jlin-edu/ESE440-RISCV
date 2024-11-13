@@ -10,10 +10,17 @@ module inst_decoder (
     output logic [`FUNCT_7_RANGE] funct7,
     output logic [`REG_RANGE] imm
 );
+
+assign op = inst[`OP_FIELD];
+
     always_comb begin
-        op     = inst[`OP_FIELD];
+
         imm = 0;
-        
+        rd = 'x;
+        rs1 = 'x;
+        rs2 = 'x;
+        funct3 = 'x;
+        funct7 = 'x;
         case (op)
             `OP_R3:    begin
                 imm = 32'(0);

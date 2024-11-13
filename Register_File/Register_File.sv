@@ -41,6 +41,9 @@ module RegFile #(
         if (debug_en) begin
             debug_data = (debug_addr == 5'b00000) ? 32'h00000000 : RegisterFile[debug_addr];
         end
+        else begin
+            debug_data = 32'h00000000;
+        end
 	end
     
 endmodule
