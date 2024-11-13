@@ -42,7 +42,7 @@ module control_unit (
                 // imm_rs2_sel = 0;
                 // jump_branch_sel = 0;
                 // mem_wr_en = 0;
-                // reg_write_ctrl = 0;
+                reg_write_ctrl = 0;         // Write from ALU result
 
             end
             `OP_LD: begin               // I-type instruction
@@ -51,7 +51,7 @@ module control_unit (
                 imm_rs2_sel = 1;
                 // jump_branch_sel = 0;
                 // mem_wr_en = 0;
-                reg_write_ctrl = 2;
+                reg_write_ctrl = 2;             // Write from memory
 
             end
             `OP_ST: begin               // S-type instruction
@@ -67,7 +67,7 @@ module control_unit (
                 pc_rs1_sel = 1;
                 // reg_wr_en = 0;
                 imm_rs2_sel = 1;
-                jump_branch_sel = 1;
+                jump_branch_sel = 1;         // The ALU needs to determine whether the branch should be taken
                 // mem_wr_en = 0;
                 // reg_write_ctrl = 0;
             end
@@ -107,6 +107,15 @@ module control_unit (
                 // mem_wr_en = 0;
                 reg_write_ctrl = 1;
             end
+
+            default: begin              // To avoid inferred latches
+                reg_wr_en = 0;
+                pc_rs1_sel = 0;
+                imm_rs2_sel = 0;
+                jump_branch_sel = 0;
+                mem_wr_en = 0;
+                reg_write_ctrl = 0;
+            end 
             
         endcase 
     end 
