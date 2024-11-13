@@ -32,11 +32,11 @@ module inst_decoder (
                 rd     = inst[`REG_RD];
             end 
             `OP_JAL:    begin                   // J-type instruction
-                imm = 32'({inst[`IMM_FIELD_J_20], inst[`IMM_FIELD_J_10_1], inst[`IMM_FIELD_J_11], inst[`IMM_FIELD_J_19_12], 1'b0});
+                imm = 32'(signed'({inst[`IMM_FIELD_J_20], inst[`IMM_FIELD_J_10_1], inst[`IMM_FIELD_J_11], inst[`IMM_FIELD_J_19_12], 1'b0}));
                 rd     = inst[`REG_RD];
             end 
             `OP_JALR:   begin                   // I-type instruction
-                imm = 32'(inst[`IMM_FIELD_I]);
+                imm = 32'(signed'(inst[`IMM_FIELD_I]));
                 rd     = inst[`REG_RD];
                 rs1    = inst[`REG_RS1];
                 funct3 = inst[`FUNCT_3_FIELD];
