@@ -61,18 +61,18 @@ module inst_decoder (
                 funct3 = inst[`FUNCT_3_FIELD];
             end 
             `OP_IMM: begin                      // I-type instruction
-                if (funct3 == `ADDI || funct3 == `SLTI || funct3 == `ANDI || funct3 == `ORI || funct3 == `XORI) begin       // Signed
+                // if (funct3 == `ADDI || funct3 == `SLTI || funct3 == `ANDI || funct3 == `ORI || funct3 == `XORI) begin       // Signed
                     imm = 32'(signed'(inst[`IMM_FIELD_I]));
                     rd     = inst[`REG_RD];
                     rs1    = inst[`REG_RS1];
                     funct3 = inst[`FUNCT_3_FIELD];
-                end 
-                else begin          // Unsigned
-                    imm = 32'(inst[`IMM_FIELD_I]);
-                    rd     = inst[`REG_RD];
-                    rs1    = inst[`REG_RS1];
-                    funct3 = inst[`FUNCT_3_FIELD];
-                end
+                // end 
+                // else begin          // Unsigned
+                //     imm = 32'(inst[`IMM_FIELD_I]);
+                //     rd     = inst[`REG_RD];
+                //     rs1    = inst[`REG_RS1];
+                //     funct3 = inst[`FUNCT_3_FIELD];
+                // end
             end
         endcase
     end
