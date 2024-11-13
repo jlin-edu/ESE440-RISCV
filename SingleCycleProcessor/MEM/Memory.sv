@@ -1,6 +1,6 @@
 `include "inst_defs.sv"
 
-module Execute #(
+module memory #(
     parameter                   WIDTH=32, SIZE=256,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
@@ -34,7 +34,7 @@ module Execute #(
 
     //Write Back(im just putting this here for the single stage version)
     assign rd_WBID = rd_EXMEM;
-    assign reg_wr_en_EXMEM = reg_wr_en_WBID;
+    assign reg_wr_en_WBID = reg_wr_en_EXMEM;
     always_comb begin
         reg_wr_data_WBID = 0;
         if(reg_wr_ctrl_EXMEM == 0)
