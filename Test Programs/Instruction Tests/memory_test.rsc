@@ -1,0 +1,12 @@
+li x1, 16
+li x2, 153
+li x3, 2070
+li x4, 1478154795
+sb x2, x1(2)
+sh x3, x1(4)
+sw x4, x1(16)
+lb x5, x1(2)
+lbu x6, x1(2)
+lh x7, x1(4)
+lhu x8, x1(4)
+lw x9, x1(16)
