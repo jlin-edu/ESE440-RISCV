@@ -115,6 +115,7 @@
 # More pseudo instructions (inc, dec, clr, push(?), pop(?))
 # Optimal li (use lui or not depending on imm size)
 # Macros??
+# NEGATIVE NUMBER IMMEDIATES
 #
 ######################################################################################
 
