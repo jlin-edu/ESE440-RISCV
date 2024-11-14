@@ -230,11 +230,13 @@ instruction_dict = {
     "REM"       : [OP_R3,    "110", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
     "REMU"      : [OP_R3,    "111", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False]
 }
-# Potential changes: Create offset token with property of allowing labels
-# Have error handling as a seperate function
-# Have errors point to whole offender Ex: offender
+# TODO Potential changes: Create offset token with property of allowing labels
+# TODO Have error handling as a seperate function
+# TODO Have errors point to whole offender Ex: offender
 #                                         ^^^^^^^^
-# HEX DIGITS
+# TODO HEX DIGITS
+# TODO Refactor to be a class with methods, more OOP
+# TODO allow code on same line as label? potential
 
 PFORMAT    = 0
 PMAP       = 1
@@ -288,7 +290,7 @@ def parse(instruction_lines):
     instruction_list = []
     symbols = {}
     for idx in range(len(instruction_lines)):
-        instruction = instruction_lines[idx].replace("\n", "")
+        instruction = instruction_lines[idx].replace("\n", "").rstrip()
         line_num = idx + 1;
         if instruction == "": continue
         p_count = 0
@@ -307,7 +309,7 @@ def parse(instruction_lines):
             sys.exit()
         instruction_split = instruction.split(" ")
         parsed_instruction = []
-        if len(instruction_split) == 1: # Handle symbols
+        if len(instruction_split) == 1 and not instruction_split[0].upper() in ["NOP", "RET"]: # Handle symbols
             if instruction[-1] == ':': # Labels
                 symbols[instruction[:-1]] = idx - len(symbols)
             else:
@@ -374,7 +376,7 @@ def tokenize(instructions_list):
 #
 ###############################################################
 def validate(token_list):
-    for idx, tokens in enumerate(token_list):      
+    for tokens in token_list:      
         line_num, instruction_line = tokens[-1];
         
         mnemonic = tokens[0]
@@ -437,7 +439,7 @@ def validate(token_list):
 #  OUTPUT: [T(XORI), T(x1), T(x2) T(-1), [line_num, "instruction"]]
 #
 ###############################################################
-def replace_pseudo(token_list):
+def replace_pseudo(token_list, symbols):
     extra_lines = 0
     new_token_list = []
     for line_num, tokens in enumerate(token_list):
@@ -477,7 +479,10 @@ def replace_pseudo(token_list):
                 addi_tokens[3].type = TokenType.IMM
                 new_token_list.append(addi_tokens)
                 
-                # TODO: 
+                for label, line in symbols.items():
+                    if line > line_num: # Label after current instruction
+                        symbols[label] = line + 1
+                extra_lines += 1
             else:
                 pseudo_tokens = [Token() for i in range(len(pseudo_format))]
                 pseudo_tokens.append(tokens[-1])
@@ -485,7 +490,7 @@ def replace_pseudo(token_list):
                 idx = 0;
                 for i in range(len(pseudo_format)):
                     if isinstance(pseudo_translation[i], str) or isinstance(pseudo_translation[i], int):
-                        pseudo_tokens[i].value = pseudo_translation[i]
+                        pseudo_tokens[i].value = int(pseudo_translation[i]) if pseudo_translation[i].isnumeric() else pseudo_translation[i]
                         pseudo_tokens[i].type = pseudo_format[i]
                     else:
                         pseudo_tokens[i] = tokens[pseudo_mapping[idx]]
@@ -636,7 +641,8 @@ if __name__ == "__main__":
                 instructions, symbols = parse(file_instructions)
                 tokens = tokenize(instructions)
                 validate(tokens)
-                tokens_ptrans = replace_pseudo(tokens)
+                tokens_ptrans = replace_pseudo(tokens, symbols)
+                print(symbols)
                 machine_code = translate(tokens_ptrans, symbols)
                 for code in machine_code:
                     if out_mode == "wb+":
