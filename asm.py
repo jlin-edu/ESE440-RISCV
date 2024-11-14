@@ -1,5 +1,5 @@
 # Simple assembler for the Dire-WolVes RISC-V Processor
-# TODO: Labels and jump address calculation
+# Author: Alec Merves
 ################ INSTRUCTIONS SYNTAX #######################
 #
 # MNEMONICS ARE NOT CASE SENSITVE
@@ -91,7 +91,32 @@
 #   -o : CHOOSE OUTPUT FILE NAME, DEFAULT IS rsc_out
 #   -b : OUTPUT FILE AS BINARY, DEFAULT IS PLAIN TEXT
 #
-
+######################################################################################
+# 
+#                    Future Additions/Changes (Potential)
+#
+# Create offset token with property of allowing labels
+# Have error handling as a seperate function
+# Have errors point to whole offender Ex: offender
+#                                         ^^^^^^^^
+# HEX DIGITS and BINARY NUMBERS
+# Refactor to be a class with methods, more OOP
+# allow code on same line as label? potential
+# Optimize LI and LA to see if the necessary immediate fits in 12 bits 
+# Allow not specifying file extension in command
+# Add debug code to print itermediate stages?
+# Option to specify file length
+# Pad rest of memory with NOPs
+# Allow register names (a0, sp, etc) 
+# Variable names?
+# Extra features from https://michaeljclark.github.io/asm.html
+# COMMENTS!!!!!!!!!!!!!!!!!!!!!!
+# Optimal jump address calculator, such as using auipc and jal etc
+# More pseudo instructions (inc, dec, clr, push(?), pop(?))
+# Optimal li (use lui or not depending on imm size)
+# Macros??
+#
+######################################################################################
 
 from re import split
 import sys
@@ -230,13 +255,6 @@ instruction_dict = {
     "REM"       : [OP_R3,    "110", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False],
     "REMU"      : [OP_R3,    "111", "0000001", [TokenType.REG, TokenType.REG, TokenType.REG], [0, 1, 2],       False]
 }
-# TODO Potential changes: Create offset token with property of allowing labels
-# TODO Have error handling as a seperate function
-# TODO Have errors point to whole offender Ex: offender
-#                                         ^^^^^^^^
-# TODO HEX DIGITS
-# TODO Refactor to be a class with methods, more OOP
-# TODO allow code on same line as label? potential
 
 PFORMAT    = 0
 PMAP       = 1
@@ -290,7 +308,7 @@ def parse(instruction_lines):
     instruction_list = []
     symbols = {}
     for idx in range(len(instruction_lines)):
-        instruction = instruction_lines[idx].replace("\n", "").rstrip()
+        instruction = instruction_lines[idx].replace("\n", "").rstrip().lstrip()
         line_num = idx + 1;
         if instruction == "": continue
         p_count = 0
@@ -642,7 +660,6 @@ if __name__ == "__main__":
                 tokens = tokenize(instructions)
                 validate(tokens)
                 tokens_ptrans = replace_pseudo(tokens, symbols)
-                print(symbols)
                 machine_code = translate(tokens_ptrans, symbols)
                 for code in machine_code:
                     if out_mode == "wb+":
