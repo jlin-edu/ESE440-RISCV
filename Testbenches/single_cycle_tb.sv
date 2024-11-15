@@ -1,5 +1,8 @@
 `include "inst_defs.sv"
 
+// Single Cycle Testbench, specify the program to run in the program_file string.
+// The program will run for 256 clock cycles, this can be changed in the cycles variable
+
 module single_cycle_tb ();
     parameter   WIDTH=32, SIZE=64;
     localparam  LOGSIZE=$clog2(SIZE);
@@ -19,6 +22,7 @@ module single_cycle_tb ();
     string line;
 
     string program_file = "FILE NAME HERE";
+    int cycles = 256;
 
     initial begin    
         fd = $fopen(program_file, "r");
@@ -35,7 +39,7 @@ module single_cycle_tb ();
         instr_in = 0; instr_wr_addr = 0; instr_wr_en = 0;
         reset = 0;
         
-        for (int i = 0; i < 256; i++) begin @(posedge clk); end
+        for (int i = 0; i < cycles; i++) begin @(posedge clk); end
 
         $finish;
     end
