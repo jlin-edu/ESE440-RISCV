@@ -99,7 +99,6 @@
 # Have error handling as a seperate function
 # Have errors point to whole offender Ex: offender
 #                                         ^^^^^^^^
-# HEX DIGITS and BINARY NUMBERS
 # Refactor to be a class with methods, more OOP
 # allow code on same line as label? potential
 # Optimize LI and LA to see if the necessary immediate fits in 12 bits 
@@ -115,14 +114,20 @@
 # More pseudo instructions (inc, dec, clr, push(?), pop(?))
 # Optimal li (use lui or not depending on imm size)
 # Macros??
-# NEGATIVE NUMBER IMMEDIATES
 # FIX HOW FILES ARE SPCIFIED (ALLOW SUB DIRECTORIES)
 # ALLOW -o without name to specify same file name
 # HAVE WAY TO ASSEMBLE MULTIPLE FILES AT ONCE (LISTING, * Operator etc)
 #
 ######################################################################################
+#                       
+#                              DOCUMENTATION(ISH)
+#
+# Added support for binary and hex numbers, and negative numbers
+#
+#
+#
+######################################################################################
 
-from re import split
 import sys
 from enum import Enum
 from numpy import binary_repr
@@ -144,6 +149,8 @@ OP_AUIPC = "0010111"
 
 OP_JAL   = "1101111"
 OP_JALR  = "1100111"
+
+hex_chars = set("ABCDEFabcdef0123456789")
 
 ###############################################################
 #
@@ -368,8 +375,12 @@ def tokenize(instructions_list):
                 tokens.append(Token(operand, TokenType.REG))
             elif instruction_dict.get(operand.upper()) != None or pseudo_instruction_dict.get(operand.upper()) != None: # Mnemonic
                 tokens.append(Token(operand.upper(), TokenType.MNEMONIC))
-            elif operand.isnumeric(): # Immediate/offset
+            elif operand.isnumeric() or (operand[1:].isnumeric() and operand[0] == '-'): # Immediate/offset
                 tokens.append(Token(int(operand), TokenType.IMM))
+            elif operand[:2] == "0b" and operand[2:].isnumeric(): # Binary immediates
+                tokens.append(Token(int(operand[2:], 2), TokenType.IMM))
+            elif operand[:2] == "0x" and not (set(operand[2:]) - set(hex_chars)): # Hex immediates
+                tokens.append(Token(int(operand[2:], 16), TokenType.IMM))
             elif operand in symbols.keys(): # Label
                 tokens.append(Token(operand, TokenType.IMM))
             else:
