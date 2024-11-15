@@ -53,9 +53,7 @@ module SingleCycleProcessorTesting;
         instr_in = 0; instr_wr_addr = 0; instr_wr_en = 0;
         reset = 0;
 
-
-
-        for(integer i = 0; i < 500; i++) begin
+        for(integer i = 0; i < 300; i++) begin
             @(posedge clk);
             $fwrite(fd_out, "%d, Cycle %0d:\n", $time,i);
             $fwrite(fd_out, "  IF Stage: PC = %d, Instruction = %b\n", dut.pc_IFID, dut.instruction_IFID);
