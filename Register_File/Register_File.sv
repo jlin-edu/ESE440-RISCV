@@ -4,9 +4,11 @@ module RegFile #(
     parameter WIDTH = 32, SIZE = 32
     ) (
     input logic clk, reset, write_enable, debug_en,
-    input logic [`REG_FIELD_RANGE] read_addr1, read_addr2, write_addr, debug_addr,
+    input logic [`REG_RS1] read_addr1, 
+    input logic [`REG_RS2] read_addr2, 
+    input logic [`REG_RD] write_addr, debug_addr,
     input logic [`REG_RANGE] write_data_in,
-    output logic [`REG_RANGE] read_data_out1, read_data_out2, debug_data,
+    output logic [`REG_RANGE] read_data_out1, read_data_out2, debug_data
     );
 
     // Memory array
@@ -38,6 +40,9 @@ module RegFile #(
 
         if (debug_en) begin
             debug_data = (debug_addr == 5'b00000) ? 32'h00000000 : RegisterFile[debug_addr];
+        end
+        else begin
+            debug_data = 32'h00000000;
         end
 	end
     

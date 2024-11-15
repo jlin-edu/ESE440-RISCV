@@ -138,8 +138,8 @@
 
 `define IMM_FIELD_B_12 31
 `define IMM_FIELD_B_10_5 30:25
-`define IMM_FIELD_B_11 5
-`define IMM_FIELD_B_4_1 11:6
+`define IMM_FIELD_B_11 7
+`define IMM_FIELD_B_4_1 11:8
 
 `define IMM_FIELD_U 31:12
 

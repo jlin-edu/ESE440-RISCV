@@ -25,6 +25,9 @@ module InstructionMem #(
         if (debug_en) begin
             debug_out = { InstMem[base_debug + 3], InstMem[base_debug + 2], InstMem[base_debug + 1], InstMem[base_debug] };
         end
+        else begin 
+            debug_out = '0;
+        end
     end
 
     // Only write/reset on clock pulse and with appropriate signals
