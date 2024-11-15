@@ -21,7 +21,7 @@ module single_cycle_tb ();
     int fd;
     string line;
 
-    string program_file = "FILE NAME HERE";
+    string program_file = "load_test.txt";
     int cycles = 256;
 
     initial begin    
