@@ -35,7 +35,7 @@ initial begin
 	#6 reset_tb = 0;
 	$display("READING MEMORY");
 	for (int i = 0; i < 1024; i++) begin
-	   @ (posedge clk_tb);
+        @ (posedge clk_tb);
 	end
     
     $display("WRITING TO INSTRUCTION MEMORY....");

@@ -116,6 +116,9 @@
 # Optimal li (use lui or not depending on imm size)
 # Macros??
 # NEGATIVE NUMBER IMMEDIATES
+# FIX HOW FILES ARE SPCIFIED (ALLOW SUB DIRECTORIES)
+# ALLOW -o without name to specify same file name
+# HAVE WAY TO ASSEMBLE MULTIPLE FILES AT ONCE (LISTING, * Operator etc)
 #
 ######################################################################################
 
