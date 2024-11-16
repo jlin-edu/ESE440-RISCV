@@ -66,7 +66,7 @@ module control_unit (
             `OP_BR: begin               // B-type instruction
                 pc_rs1_sel = 1;
                 // reg_wr_en = 0;
-                imm_rs2_sel = 1;
+                imm_rs2_sel = 0;
                 jump_branch_sel = 1;
                 // mem_wr_en = 0;
                 // reg_write_ctrl = 0;
