@@ -21,8 +21,8 @@ module single_cycle_tb ();
     int fd;
     string line;
 
-    string program_file = "load_test.txt";
-    int cycles = 256;
+    string program_file = "memory_test.txt";
+    int cycles = 16;
 
     initial begin    
         fd = $fopen(program_file, "r");
@@ -34,12 +34,13 @@ module single_cycle_tb ();
             $sscanf(line, "%b\n", instr_in);
             @(posedge clk);
             instr_wr_addr += 4;
+            @(negedge clk);
         end
         $fclose(fd);
         instr_in = 0; instr_wr_addr = 0; instr_wr_en = 0;
         reset = 0;
         
-        for (int i = 0; i < cycles; i++) begin @(posedge clk); end
+        for (int i = 0; i < cycles + 1; i++) begin @(posedge clk); end
 
         $finish;
     end

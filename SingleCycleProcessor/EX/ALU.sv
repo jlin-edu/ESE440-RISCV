@@ -70,7 +70,7 @@ module alu(
                     `SLL: begin 
                         case(funct_7)   
                             `DEFAULT_7: out = in1 << in2[4:0]; //shifts use the lower 5 bits of register rs2
-                            `M:         out = (in1*in2) >> `REG_SIZE; //MULH
+                            `M:         out = 64'(in1*in2) >> `REG_SIZE; //MULH
                             default: begin
                                 //ASSERT STATEMENT
                                 out    = 0;
@@ -81,7 +81,7 @@ module alu(
                     `SLT: begin  
                         case(funct_7)  
                             `DEFAULT_7: out = (in1 < in2) ? 1 : 0;
-                            `M:         out = (in1 * $unsigned(in2)) >> `REG_SIZE; //MULHSU
+                            `M:         out = 64'(in1 * $unsigned(in2)) >> `REG_SIZE; //MULHSU
                             default: begin
                                 //ASSERT STATEMENT
                                 out    = 0;
@@ -92,7 +92,7 @@ module alu(
                     `SLTU: begin
                         case(funct_7)  
                             `DEFAULT_7: out = ($unsigned(in1) < $unsigned(in2)) ? 1 : 0;
-                            `M:         out = ($unsigned(in1) * $unsigned(in2)) >> `REG_SIZE; //MULHU
+                            `M:         out = 64'($unsigned(in1) * $unsigned(in2)) >> `REG_SIZE; //MULHU
                             default: begin
                                 //ASSERT STATEMENT
                                 out    = 0;

@@ -117,6 +117,9 @@
 # FIX HOW FILES ARE SPCIFIED (ALLOW SUB DIRECTORIES)
 # ALLOW -o without name to specify same file name
 # HAVE WAY TO ASSEMBLE MULTIPLE FILES AT ONCE (LISTING, * Operator etc)
+# Option to output in hex for debugging
+# Output is in the same directory as the input file
+# Option to change output directory
 #
 ######################################################################################
 #                       
@@ -318,10 +321,13 @@ pseudo_instruction_dict = {
 def parse(instruction_lines):
     instruction_list = []
     symbols = {}
+    blank_lines = 0
     for idx in range(len(instruction_lines)):
         instruction = instruction_lines[idx].replace("\n", "").rstrip().lstrip()
-        line_num = idx + 1;
-        if instruction == "": continue
+        line_num = idx + 1
+        if instruction == "": 
+            blank_lines += 1
+            continue
         p_count = 0
         for i in range(len(instruction)):
             p_count += 1 if instruction[i] == '(' else 0
@@ -340,7 +346,7 @@ def parse(instruction_lines):
         parsed_instruction = []
         if len(instruction_split) == 1 and not instruction_split[0].upper() in ["NOP", "RET"]: # Handle symbols
             if instruction[-1] == ':': # Labels
-                symbols[instruction[:-1]] = idx - len(symbols)
+                symbols[instruction[:-1]] = idx - len(symbols) - blank_lines
             else:
                 print(f"\nERROR: INVALID SYMBOL - line {line_num}: {instruction}\n")
                 sys.exit()
@@ -595,7 +601,7 @@ def translate(token_list, symbols):
         
         inst_code = ""
         if opcode == OP_IMM or opcode == OP_LD or opcode == OP_JALR:
-            if mnemonic in ["SLLI", "SRLI", "SRAI"]:
+            if mnemonic.value in ["SLLI", "SRLI", "SRAI"]:
                 inst_code += funct7 + immediate[7:] + reg_src_1 + funct3 + reg_dest + opcode
             else:
                 inst_code += immediate + reg_src_1 + funct3 + reg_dest + opcode
