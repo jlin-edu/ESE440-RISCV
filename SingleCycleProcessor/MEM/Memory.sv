@@ -4,7 +4,7 @@ module memory #(
     parameter                   WIDTH=32, SIZE=256,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
-    input clk, reset,
+    input clk,
 
     // ----------------- Inputs to this stage -----------------
     // ----------------- MEM Stage Signals(Inputs) -----------------
