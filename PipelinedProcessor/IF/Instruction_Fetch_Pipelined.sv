@@ -16,15 +16,31 @@ module instruction_fetch_pipe #(
     //the dynamic duo
     input clk, reset,
 
+    // flush pipeline command
+    input flush,
+
     //outputs of IF, inputs of other stages (ID uses instruction, EX uses PC, WB uses PC+4)
     output logic [`REG_RANGE] pc_IFID, pc_4_IFID, instruction_IFID
 );
     
+    logic [`REG_RANGE] pc_IF, pc_4_IF;
+
     PC pc_module(.clk(clk), .reset(reset),
                 .pc_sel(pc_sel_EXIF), .jump_addr(jump_addr_EXIF),
-                .pc(pc_IFID), .pc_4(pc_4_IFID));
+                .pc(pc_IF), .pc_4(pc_4_IF));
 
-    instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .pc(pc_IFID), .instr_out(instruction_IFID),
+    instr_memory_seq #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .pc(pc_IF), .instr_out(instruction_IFID),
                                                                 .instr_in(instr_in), .wr_addr(wr_addr), .wr_en(wr_en));
+
+    //instruction is already sequential read
+    always_ff @(posedge clk) begin
+        if (flush) begin
+            pc_IFID <= 0; // Or set to Z?
+            pc_4_IFID <= 0;
+        end else begin
+            pc_IFID <= pc_IF;
+            pc_4_IFID <= pc_4_IF;
+        end  
+    end
 
 endmodule
