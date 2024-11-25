@@ -33,6 +33,7 @@ module pipelined #(
 
 
     // ---------- Outputs ----------
+    logic flush;    // Used by the hazard unit to flush the pipeline
     // ----- EX Stage Signals(Outputs) -----
     logic [`OP_RANGE] op_IDEX;               //used by ALU to determine what operation to do
     logic [`FUNCT_7_RANGE] funct7_IDEX;      //used by ALU to determine what operation to do
@@ -73,13 +74,10 @@ module pipelined #(
     //logic [`REG_RANGE] jump_addr;
 
 
-    instruction_fetch_pipe #(.WIDTH(WIDTH), .SIZE(SIZE)) IF(.clk(clk), .reset(reset),
+    instruction_fetch_pipe #(.WIDTH(WIDTH), .SIZE(SIZE)) IF(.clk(clk), .reset(reset), .flush(flush)
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
                                                         .instr_in(instr_in), .wr_addr(instr_wr_addr), .wr_en(instr_wr_en));
-
-    //pipeline register here
-    //instruction, pc, pc+4
 
     instruction_decode_pipe #(.WIDTH(WIDTH)) ID(.clk(clk), .reset(reset),
                                             .instruction_IFID(instruction_IFID), .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID),
@@ -88,9 +86,6 @@ module pipelined #(
                                             .immediate_IDEX(immediate_IDEX), .pc_IDEX(pc_IDEX), .jump_branch_sel_IDEX(jump_branch_sel_IDEX),
                                             .mem_wr_en_IDEX(mem_wr_en_IDEX), .rs2_data_IDEX(rs2_data_IDEX),
                                             .reg_wr_en_IDEX(reg_wr_en_IDEX), .reg_wr_ctrl_IDEX(reg_wr_ctrl_IDEX), .rd_IDEX(rd_IDEX), .pc_4_IDEX(pc_4_IDEX));
-
-    //pipeline register here
-    //
 
     execute_pipe EX(
                 .in1_IDEX(in1_IDEX), .in2_IDEX(in2_IDEX), .funct7_IDEX(funct7_IDEX), .funct3_IDEX(funct3_IDEX), .op_IDEX(op_IDEX),
