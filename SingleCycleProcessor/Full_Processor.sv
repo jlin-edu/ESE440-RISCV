@@ -6,11 +6,12 @@ module single_cycle #(
 )(
     //instruction memory write port
     input [WIDTH-1:0]           instr_in,       //the write port should only be used for filling the memory with instructions in a testbench
-    input [(LOGSIZE-1)+2:0]     instr_wr_addr, 
+    input [(LOGSIZE-1):0]     instr_wr_addr, 
     input instr_wr_en,
 
     //y'know
-    input clk, reset
+    input clk, reset,
+    output logic signed[`REG_RANGE] ALU_out_EXMEM
 );
     // --------------- Instruction Fetch Signals ---------------
     // ---------- Inputs ----------
@@ -57,7 +58,7 @@ module single_cycle #(
     // --------------- Execute Signals ---------------
     // ----------------- Outputs of this stage -----------------
     // ----------------- MEM Stage Signals(Outputs) -----------------
-    logic signed [`REG_RANGE] ALU_out_EXMEM;   //wait does the ALU_out need to be signed???   //these are from the ALU
+    // logic signed [`REG_RANGE] ALU_out_EXMEM;   //wait does the ALU_out need to be signed???   //these are from the ALU
     logic [`FUNCT_3_RANGE] funct3_EXMEM;
     logic mem_wr_en_EXMEM;
     logic [`REG_RANGE] rs2_data_EXMEM;
@@ -68,6 +69,8 @@ module single_cycle #(
     logic [`REG_FIELD_RANGE] rd_EXMEM;
     logic [`REG_RANGE] pc_4_EXMEM;
     
+    // assign ALU_output = ALU_out_EXMEM; 
+    
 
     //MEM Signals
     //logic [`REG_RANGE] jump_addr;
@@ -76,7 +79,7 @@ module single_cycle #(
     instruction_fetch #(.WIDTH(WIDTH), .SIZE(SIZE)) IF(.clk(clk), .reset(reset),
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
-                                                        .instr_in(instr_in), .wr_addr(instr_wr_addr), .wr_en(instr_wr_en));
+                                                        .instr_in(instr_in), .wr_addr(instr_wr_addr[LOGSIZE-1:2]), .wr_en(instr_wr_en));
 
     //pipeline register here
     //instruction, pc, pc+4
@@ -91,7 +94,7 @@ module single_cycle #(
 
     //pipeline register here
     //
-
+// .clk(clk), .reset(reset),
     execute EX(
                 .in1_IDEX(in1_IDEX), .in2_IDEX(in2_IDEX), .funct7_IDEX(funct7_IDEX), .funct3_IDEX(funct3_IDEX), .op_IDEX(op_IDEX),
                 .immediate_IDEX(immediate_IDEX), .pc_IDEX(pc_IDEX), .jump_branch_sel_IDEX(jump_branch_sel_IDEX),
