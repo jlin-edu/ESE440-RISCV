@@ -33,7 +33,7 @@ module pipelined #(
 
 
     // ---------- Outputs ----------
-    logic flush;    // Used by the hazard unit to flush the pipeline
+    logic flush;    // Used by the hazard unit to flush the pipeline FIND BETTER PLACE
     // ----- EX Stage Signals(Outputs) -----
     logic [`OP_RANGE] op_IDEX;               //used by ALU to determine what operation to do
     logic [`FUNCT_7_RANGE] funct7_IDEX;      //used by ALU to determine what operation to do
@@ -52,6 +52,7 @@ module pipelined #(
     logic reg_wr_en_IDEX;                //the rest of these signals are used for Write Back
     logic [1:0] reg_wr_ctrl_IDEX;
     logic [`REG_FIELD_RANGE] rd_IDEX;
+     logic [`REG_FIELD_RANGE] rs1_IDEX, rs2_IDEX;
     logic [`REG_RANGE] pc_4_IDEX;
 
 
@@ -79,12 +80,12 @@ module pipelined #(
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
                                                         .instr_in(instr_in), .wr_addr(instr_wr_addr), .wr_en(instr_wr_en));
 
-    instruction_decode_pipe #(.WIDTH(WIDTH)) ID(.clk(clk), .reset(reset),
+    instruction_decode_pipe #(.WIDTH(WIDTH)) ID(.clk(clk), .reset(reset), .flush(flush),
                                             .instruction_IFID(instruction_IFID), .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID),
                                             .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
                                             .op_IDEX(op_IDEX), .funct7_IDEX(funct7_IDEX), .funct3_IDEX(funct3_IDEX), .in1_IDEX(in1_IDEX), .in2_IDEX(in2_IDEX),
                                             .immediate_IDEX(immediate_IDEX), .pc_IDEX(pc_IDEX), .jump_branch_sel_IDEX(jump_branch_sel_IDEX),
-                                            .mem_wr_en_IDEX(mem_wr_en_IDEX), .rs2_data_IDEX(rs2_data_IDEX),
+                                            .mem_wr_en_IDEX(mem_wr_en_IDEX), .rs2_data_IDEX(rs2_data_IDEX), .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
                                             .reg_wr_en_IDEX(reg_wr_en_IDEX), .reg_wr_ctrl_IDEX(reg_wr_ctrl_IDEX), .rd_IDEX(rd_IDEX), .pc_4_IDEX(pc_4_IDEX));
 
     execute_pipe EX(

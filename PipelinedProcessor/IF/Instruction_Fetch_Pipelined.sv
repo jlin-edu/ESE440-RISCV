@@ -34,8 +34,8 @@ module instruction_fetch_pipe #(
 
     //instruction is already sequential read
     always_ff @(posedge clk) begin
-        if (flush) begin
-            pc_IFID <= 0; // Or set to Z?
+        if (flush || reset) begin
+            pc_IFID <= 0;
             pc_4_IFID <= 0;
         end else begin
             pc_IFID <= pc_IF;
