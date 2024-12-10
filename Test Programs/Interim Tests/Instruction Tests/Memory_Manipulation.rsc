@@ -1,0 +1,9 @@
+li x1, 1024
+li x2, 999
+li x3, 1128
+SB x1, 0(x0)
+SH x2, 4(x0)
+SW x3, 8(x0)
+LB x1, 8(x0)
+LH x2, 4(x0)
+LW x3, 0(x0)

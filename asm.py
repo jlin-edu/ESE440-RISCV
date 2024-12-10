@@ -153,6 +153,7 @@
 # Option to output in hex for debugging
 # Output is in the same directory as the input file
 # Option to change output directory
+# Call pseudo instruction
 #
 ######################################################################################
 #                       
@@ -388,7 +389,7 @@ def parse(instruction_lines):
             print(f"\nERROR: MISSING CLOSING PARENTHESIS - line {line_num}: {instruction}")
             print("^\n".rjust(pos))
             sys.exit()
-        instruction_split = [operand for operand in re.split(r'[^\w:-]', instruction) if operand != ""]
+        instruction_split = [operand for operand in re.split(r'[^\w:.-]', instruction) if operand != ""]
         parsed_instruction = []
         if len(instruction_split) == 1 and not instruction_split[0].upper() in ["NOP", "RET"]: # Handle symbols
             if instruction[-1] == ':': # Labels
