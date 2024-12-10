@@ -140,7 +140,6 @@
 # Add debug code to print itermediate stages?
 # Option to specify file length
 # Pad rest of memory with NOPs
-# Allow register names (a0, sp, etc) 
 # Variable names?
 # Extra features from https://michaeljclark.github.io/asm.html
 # COMMENTS!!!!!!!!!!!!!!!!!!!!!!
@@ -159,7 +158,9 @@
 #                       
 #                              DOCUMENTATION(ISH)
 #
-# Added support for binary and hex numbers, and negative numbers
+# Update 0.1: Added support for binary and hex numbers, and negative numbers
+# Update 0.2: Added support for register names (sp, s0, ra, etc.) and fixed pseudo
+#             instructions. Also fixed issues with extra whitespace in syntax
 #
 #
 #
