@@ -62,15 +62,21 @@ module single_cycle #(
     logic mem_wr_en_EXMEM;
     logic [`REG_RANGE] rs2_data_EXMEM;
 
-    // ----------------- WB Stage Signals(Outputs) -----------------
     logic reg_wr_en_EXMEM;
     logic [1:0] reg_wr_ctrl_EXMEM;
     logic [`REG_FIELD_RANGE] rd_EXMEM;
     logic [`REG_RANGE] pc_4_EXMEM;
     
+    // ----------------- WB Stage Signals(Outputs) -----------------
+    logic [`REG_RANGE] ALU_out_MEMWB;
+    logic [`REG_RANGE] pc_4_MEMWB;
+    logic [WIDTH-1:0] mem_rd_data_MEMWB;
+    logic [1:0] reg_wr_ctrl_MEMWB;
 
-    //MEM Signals
-    //logic [`REG_RANGE] jump_addr;
+    logic [`REG_FIELD_RANGE] rd_MEMWB;
+    logic reg_wr_en_MEMWB;
+
+
 
 
     instruction_fetch #(.WIDTH(WIDTH), .SIZE(SIZE)) IF(.clk(clk), .reset(reset),
@@ -104,9 +110,11 @@ module single_cycle #(
     memory #(.WIDTH(WIDTH), .SIZE(SIZE)) MEM(.clk(clk),
                                             .ALU_out_EXMEM(ALU_out_EXMEM), .funct3_EXMEM(funct3_EXMEM), .mem_wr_en_EXMEM(mem_wr_en_EXMEM), .rs2_data_EXMEM(rs2_data_EXMEM),
                                             .reg_wr_en_EXMEM(reg_wr_en_EXMEM), .reg_wr_ctrl_EXMEM(reg_wr_ctrl_EXMEM), .rd_EXMEM(rd_EXMEM), .pc_4_EXMEM(pc_4_EXMEM),
-                                            .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID));    
+                                            .rd_MEMWB(rd_MEMWB), .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
+                                            .ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB));    
 
-
+    write_back WB(.ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
+                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID));
     
 
 endmodule

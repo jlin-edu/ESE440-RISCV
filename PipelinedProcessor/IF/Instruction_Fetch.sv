@@ -16,15 +16,33 @@ module instruction_fetch #(
     //the dynamic duo
     input clk, reset,
 
+    //input flush,    //hazard handling
+
     //outputs of IF, inputs of other stages (ID uses instruction, EX uses PC, WB uses PC+4)
     output logic [`REG_RANGE] pc_IFID, pc_4_IFID, instruction_IFID
 );
+    logic [`REG_RANGE] pc_IF, pc_4_IF;
     
     PC pc_module(.clk(clk), .reset(reset),
                 .pc_sel(pc_sel_EXIF), .jump_addr(jump_addr_EXIF),
-                .pc(pc_IFID), .pc_4(pc_4_IFID));
+                .pc(pc_IF), .pc_4(pc_4_IF));
 
-    instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .pc(pc_IFID), .instr_out(instruction_IFID),
-                                                                .instr_in(instr_in), .wr_addr(wr_addr), .wr_en(wr_en));
+    instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .pc(pc_IF), .instr_out(instruction_IFID),
+                                                                .instr_in(instr_in), .wr_addr(wr_addr), .wr_en(wr_en), //.flush(flush)
+                                                                );
+
+    //pipeline register
+    //is the reset even nessecary? If the instruction memory is replaced with a NOP then shouldn't pc and pc+4 be irrelevant?
+    always_ff @(posedge clk) begin
+        //if((reset == 1) || (flush == 1)) begin
+        if(reset == 1)
+            pc_IFID   <= 0;
+            pc_4_IFID <= 0;
+        end
+        else begin
+            pc_IFID   <= pc_IF;
+            pc_4_IFID <= pc_4_IF;
+        end
+    end
 
 endmodule

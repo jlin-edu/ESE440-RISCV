@@ -53,21 +53,51 @@ module execute (
 );
     //MEM Pipeline Signals
     //ALU_out_EXMEM
-    assign funct3_EXMEM = funct3_IDEX;
-    assign mem_wr_en_EXMEM = mem_wr_en_IDEX;
-    assign rs2_data_EXMEM = rs2_data_IDEX;
+    //assign funct3_EXMEM = funct3_IDEX;
+    //assign mem_wr_en_EXMEM = mem_wr_en_IDEX;
+    //assign rs2_data_EXMEM = rs2_data_IDEX;
 
     //WB Pipeline Signals
-    assign reg_wr_en_EXMEM = reg_wr_en_IDEX;
-    assign reg_wr_ctrl_EXMEM = reg_wr_ctrl_IDEX;
-    assign rd_EXMEM = rd_IDEX;
-    assign pc_4_EXMEM = pc_4_IDEX;
+    //assign reg_wr_en_EXMEM = reg_wr_en_IDEX;
+    //assign reg_wr_ctrl_EXMEM = reg_wr_ctrl_IDEX;
+    //assign rd_EXMEM = rd_IDEX;
+    //assign pc_4_EXMEM = pc_4_IDEX;
+
+    logic signed [`REG_RANGE] ALU_out_EX;
+    always_ff @(posedge clk) begin
+        if(reset == 1) begin
+            //MEM Stage
+            ALU_out_EXMEM <= 0;
+            funct3_EXMEM <= 0;
+            mem_wr_en_EXMEM <= 0;
+            rs2_data_EXMEM <= 0;
+
+            //WB Stage
+            reg_wr_en_EXMEM <= 0;
+            reg_wr_ctrl_EXMEM <= 0;
+            rd_EXMEM <= 0;
+            pc_4_EXMEM <= 0;
+        end
+        else begin
+            //MEM Stage
+            ALU_out_EXMEM <= ALU_out_EX;
+            funct3_EXMEM <= funct3_IDEX;
+            mem_wr_en_EXMEM <= mem_wr_en_IDEX;
+            rs2_data_EXMEM <= rs2_data_IDEX;
+
+            //WB Stage
+            reg_wr_en_EXMEM <= reg_wr_en_IDEX;
+            reg_wr_ctrl_EXMEM <= reg_wr_ctrl_IDEX;
+            rd_EXMEM <= rd_IDEX;
+            pc_4_EXMEM <= pc_4_IDEX;
+        end
+    end
 
 
 
     alu alu(.in1(in1_IDEX), .in2(in2_IDEX),
             .op(op_IDEX), .funct_3(funct3_IDEX), .funct_7(funct7_IDEX),
-            .out(ALU_out_EXMEM), .pc_sel(pc_sel_EXIF));
+            .out(ALU_out_EX), .pc_sel(pc_sel_EXIF));
 
     //branch adder
     logic [`REG_RANGE] branch_addr;
@@ -77,7 +107,7 @@ module execute (
         if(jump_branch_sel_IDEX == 1)
             jump_addr_EXIF = branch_addr;
         else
-            jump_addr_EXIF = ALU_out_EXMEM;
+            jump_addr_EXIF = ALU_out_EX;
 
     end
 
