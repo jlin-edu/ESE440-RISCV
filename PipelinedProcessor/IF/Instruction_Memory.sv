@@ -7,7 +7,7 @@ module instr_memory #(
     input [WIDTH-1:0]           instr_in,       //the write port should only be used for filling the memory with instructions in a testbench
     input [(LOGSIZE-1)+2:0]     wr_addr, 
     input wr_en,
-    input clk,            //not sure if this is needed
+    input clk, reset,            //not sure if this is needed
 
     //input flush,    //hazard handling
 
@@ -27,9 +27,10 @@ module instr_memory #(
         if(wr_en)
             mem[write_word_offset] <= instr_in;
 
-        //if(flush == 1)    //optional reset
-        //    instr_out <= `NOP;
-        //else
+        //if((reset == 1) || (flush == 1)) begin
+        if(reset == 1)    //optional reset
+            instr_out <= `NOP;
+        else
             instr_out <= mem[word_offset];
     end
 endmodule

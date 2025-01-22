@@ -4,7 +4,7 @@ module memory #(
     parameter                   WIDTH=32, SIZE=256,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
-    input clk,
+    input clk, reset,
 
     // ----------------- Inputs to this stage -----------------
     // ----------------- MEM Stage Signals(Inputs) -----------------
@@ -60,7 +60,13 @@ module memory #(
     logic [`REG_RANGE] reg_wr_data_WB; 
     always_ff @(posedge clk) begin
         if(reset) begin
-
+            ALU_out_MEMWB <= 0;
+            pc_4_MEMWB <= 0;
+            mem_rd_data_MEMWB <= 0;   //this line needs to get deleted once we use sequial read
+            reg_wr_ctrl_MEMWB <= 0;
+        
+            rd_MEMWB <= 0;
+            reg_wr_en_MEMWB <= 0;
         end
         else begin
             ALU_out_MEMWB <= ALU_out_EXMEM;

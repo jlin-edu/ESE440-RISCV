@@ -1,6 +1,8 @@
 `include "inst_defs.sv"
 
-module write_back(
+module write_back#(
+    parameter WIDTH=32
+)(
     input [`REG_RANGE] ALU_out_MEMWB,
     input [`REG_RANGE] pc_4_MEMWB,
     input [WIDTH-1:0] mem_rd_data_MEMWB,

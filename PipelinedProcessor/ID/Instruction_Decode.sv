@@ -64,7 +64,7 @@ module instruction_decode #(
     //assign pc_4_IDEX = pc_4_IFID;
     always_ff @(posedge clk) begin
         //if((reset == 1) || (flush == 1)) begin
-        if(reset == 1)
+        if(reset == 1) begin
             //EX Stage
             op_IDEX        <= `OP_IMM;
             funct7_IDEX    <= 0;
@@ -114,7 +114,7 @@ module instruction_decode #(
     //logic [`OP_RANGE] op;
     //logic [`FUNCT_3_RANGE] funct3;
     //logic [`FUNCT_7_RANGE] funct7;
-    //logic [`REG_FIELD_RANGE] rs1, rs2;
+    logic [`REG_FIELD_RANGE] rs1, rs2;
     assign op_ID     = instruction_IFID[`OP_FIELD];
     assign funct3_ID = instruction_IFID[`FUNCT_3_FIELD];
     assign funct7_ID = instruction_IFID[`FUNCT_7_FIELD];
