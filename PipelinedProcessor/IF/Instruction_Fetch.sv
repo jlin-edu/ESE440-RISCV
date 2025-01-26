@@ -29,14 +29,13 @@ module instruction_fetch #(
 
     instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .reset(reset),
                                                                 .pc(pc_IF), .instr_out(instruction_IFID),
-                                                                .instr_in(instr_in), .wr_addr(wr_addr), .wr_en(wr_en) //.flush(flush)
+                                                                .instr_in(instr_in), .wr_addr(wr_addr), .wr_en(wr_en), .flush(pc_sel_EXIF)
                                                                 );
 
     //pipeline register
     //is the reset even nessecary? If the instruction memory is replaced with a NOP then shouldn't pc and pc+4 be irrelevant?
     always_ff @(posedge clk) begin
-        //if((reset == 1) || (flush == 1)) begin
-        if(reset == 1) begin
+        if((reset == 1) || (pc_sel_EXIF == 1)) begin
             pc_IFID   <= 0;
             pc_4_IFID <= 0;
         end

@@ -14,7 +14,7 @@ module instruction_decode #(
     input [`REG_FIELD_RANGE] rd_WBID,
     input reg_wr_en_WBID,
 
-    //input flush,    //Hazard Handling
+    input pc_sel_EXIF,    //utilized for flushing, Hazard Handling
 
     // ----------------- Outputs of this stage -----------------
     // ----------------- EX Stage Signals(Outputs) -----------------
@@ -63,8 +63,7 @@ module instruction_decode #(
     //assign pc_IDEX = pc_IFID;
     //assign pc_4_IDEX = pc_4_IFID;
     always_ff @(posedge clk) begin
-        //if((reset == 1) || (flush == 1)) begin
-        if(reset == 1) begin
+        if((reset == 1) || (pc_sel_EXIF == 1)) begin
             //EX Stage
             op_IDEX        <= `OP_IMM;
             funct7_IDEX    <= 0;
