@@ -4,6 +4,8 @@ from tkinter import ttk
 
 from Register import Register
 
+
+#TODO: Improve performance, change to either panes or some simpler geometry with less widgets
 class RegisterFile:
     def __init__(self, master, title, columns=1, rows=1):
         self.title = title

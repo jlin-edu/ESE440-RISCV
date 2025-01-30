@@ -3,7 +3,7 @@ from tkinter import ttk
 
 from MemoryCell import MemoryCell
 
-# TODO: Improve performance: 1. Multithreading 2. Canvas elements become statically drawn
+# TODO: Change to a tree view with popup entry for modifying
 class Memory:
     def __init__(self, master, size, title, width=300, height=100):
         self.title = title
