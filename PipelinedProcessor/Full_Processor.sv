@@ -37,7 +37,7 @@ module pipelined_processor #(
     logic [`OP_RANGE] op_IDEX;               //used by ALU to determine what operation to do
     logic [`FUNCT_7_RANGE] funct7_IDEX;      //used by ALU to determine what operation to do
     logic [`FUNCT_3_RANGE] funct3_IDEX;      //used by ALU, but also by the Data MEM to know which load/store operation
-    logic [`REG_RANGE] in1_IDEX, in2_IDEX;   //used by ALU to perform an operation and get an output
+    logic [`REG_RANGE] rs1_data_IDEX;             //used by ALU to perform an operation and get an output
 
     logic signed [`REG_RANGE] immediate_IDEX;       //used by branch adder to determine branch address
     logic [`REG_RANGE] pc_IDEX;              //used by branch adder to determine branch address
@@ -53,6 +53,9 @@ module pipelined_processor #(
     logic [`REG_FIELD_RANGE] rd_IDEX;
     logic [`REG_RANGE] pc_4_IDEX;
 
+    // ----------------- Forwarding Signals -----------------
+    logic [`REG_FIELD_RANGE] rs1_IDEX, rs2_IDEX;
+    logic pc_rs1_sel_IDEX, imm_rs2_sel_IDEX;
 
     // --------------- Execute Signals ---------------
     // ----------------- Outputs of this stage -----------------
@@ -90,23 +93,28 @@ module pipelined_processor #(
     instruction_decode #(.WIDTH(WIDTH)) ID(.clk(clk), .reset(reset),
                                             .instruction_IFID(instruction_IFID), .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID),
                                             .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
-                                            .op_IDEX(op_IDEX), .funct7_IDEX(funct7_IDEX), .funct3_IDEX(funct3_IDEX), .in1_IDEX(in1_IDEX), .in2_IDEX(in2_IDEX),
+                                            .op_IDEX(op_IDEX), .funct7_IDEX(funct7_IDEX), .funct3_IDEX(funct3_IDEX), .rs1_data_IDEX(rs1_data_IDEX),
                                             .immediate_IDEX(immediate_IDEX), .pc_IDEX(pc_IDEX), .jump_branch_sel_IDEX(jump_branch_sel_IDEX),
                                             .mem_wr_en_IDEX(mem_wr_en_IDEX), .rs2_data_IDEX(rs2_data_IDEX),
                                             .reg_wr_en_IDEX(reg_wr_en_IDEX), .reg_wr_ctrl_IDEX(reg_wr_ctrl_IDEX), .rd_IDEX(rd_IDEX), .pc_4_IDEX(pc_4_IDEX),
-                                            .pc_sel_EXIF(pc_sel_EXIF));
+                                            .pc_sel_EXIF(pc_sel_EXIF),
+                                            .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
+                                            .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX));
 
     //pipeline register here
     //
 
     execute EX( .clk(clk), .reset(reset),
-                .in1_IDEX(in1_IDEX), .in2_IDEX(in2_IDEX), .funct7_IDEX(funct7_IDEX), .funct3_IDEX(funct3_IDEX), .op_IDEX(op_IDEX),
+                .rs1_data_IDEX(rs1_data_IDEX), .funct7_IDEX(funct7_IDEX), .funct3_IDEX(funct3_IDEX), .op_IDEX(op_IDEX),
                 .immediate_IDEX(immediate_IDEX), .pc_IDEX(pc_IDEX), .jump_branch_sel_IDEX(jump_branch_sel_IDEX),
                 .mem_wr_en_IDEX(mem_wr_en_IDEX), .rs2_data_IDEX(rs2_data_IDEX),
                 .reg_wr_en_IDEX(reg_wr_en_IDEX), .reg_wr_ctrl_IDEX(reg_wr_ctrl_IDEX), .rd_IDEX(rd_IDEX), .pc_4_IDEX(pc_4_IDEX),
                 .ALU_out_EXMEM(ALU_out_EXMEM), .funct3_EXMEM(funct3_EXMEM), .mem_wr_en_EXMEM(mem_wr_en_EXMEM), .rs2_data_EXMEM(rs2_data_EXMEM),
                 .reg_wr_en_EXMEM(reg_wr_en_EXMEM), .reg_wr_ctrl_EXMEM(reg_wr_ctrl_EXMEM), .rd_EXMEM(rd_EXMEM), .pc_4_EXMEM(pc_4_EXMEM),
-                .pc_sel_EXIF(pc_sel_EXIF), .jump_addr_EXIF(jump_addr_EXIF));
+                .pc_sel_EXIF(pc_sel_EXIF), .jump_addr_EXIF(jump_addr_EXIF),
+                .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
+                .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
+                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID));
 
     memory #(.WIDTH(WIDTH), .SIZE(SIZE)) MEM(.clk(clk), .reset(reset),
                                             .ALU_out_EXMEM(ALU_out_EXMEM), .funct3_EXMEM(funct3_EXMEM), .mem_wr_en_EXMEM(mem_wr_en_EXMEM), .rs2_data_EXMEM(rs2_data_EXMEM),

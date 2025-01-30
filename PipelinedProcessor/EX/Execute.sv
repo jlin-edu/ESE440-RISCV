@@ -5,7 +5,7 @@ module execute (
 
     // ----------------- Inputs to this stage -----------------
     // ----------------- EX Stage Signals(Inputs) -----------------
-    input signed [`REG_RANGE]     in1_IDEX, in2_IDEX,   //these are used by the ALU
+    input signed [`REG_RANGE]     rs1_data_IDEX,  //these are used by the ALU
     input        [`FUNCT_7_RANGE] funct7_IDEX,
     input        [`FUNCT_3_RANGE] funct3_IDEX,
     input        [`OP_RANGE]      op_IDEX,
@@ -23,6 +23,17 @@ module execute (
     input [1:0] reg_wr_ctrl_IDEX,
     input [`REG_FIELD_RANGE] rd_IDEX,
     input [`REG_RANGE] pc_4_IDEX,
+
+    // ----------------- Forwarding/ALU Mux Signals -----------------
+    input [`REG_FIELD_RANGE] rs1_IDEX, rs2_IDEX,    //the 2 registers used as alu input operands
+    input pc_rs1_sel_IDEX, imm_rs2_sel_IDEX,        //select signals, if this is set to 1 then the data rs field may be invalid, and data shouldn't be forwarded
+
+    input [`REG_RANGE] reg_wr_data_WBID,
+    input [`REG_FIELD_RANGE] rd_WBID,
+    input reg_wr_en_WBID,
+    
+    //input [1:0] in1_sel, in2_sel,       //select signal to control inputs to alu
+                                        //00 means to select rs_data, 01 means 
 
 
     // ----------------- Outputs of this stage -----------------
@@ -93,9 +104,38 @@ module execute (
         end
     end
 
+    logic signed        [`REG_RANGE]     in1, in2;
+    logic               [1:0] in1_sel, in2_sel;
+    //Forwarding Unit
+    ForwardUnit ForwardUnit(.rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
+                            .rd_EXMEM(rd_EXMEM), .reg_wr_en_EXMEM(reg_wr_en_EXMEM),
+                            .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
+                            .in1_sel(in1_sel), in2_sel(in2_sel));
+
+    // ALU Input Mux
+    always_comb begin
+        if(pc_rs1_sel_IDEX == 1)    //if pc_rs1_sel is set to 1 then this operand contains the pc and should not be forwarded as it does not contain register data
+            in1 = pc_IDEX;
+        else if(in1_sel == 2'b00)
+            in1 = rs1_data_IDEX;
+        else if(in1_sel == 2'b10)
+            in1 = ALU_out_EXMEM;
+        else if(in1_sel == 2'b01)
+            in1 = reg_wr_data_WBID;
+
+        if(imm_rs2_sel_IDEX == 1)   //if imm_rs2_sel is set to 1 then this operand contains the immediate and should not be forwarded as it does not contain register data
+            in2 = immediate_IDEX;
+        else if(in2_sel == 2'b00)
+            in2 = rs2_data_IDEX;
+        else if(in2_sel == 2'b10)
+            in2 = ALU_out_EXMEM;
+        else if(in2_sel == 2'b01)
+            in2 = reg_wr_data_WBID;
+    end
 
 
-    alu alu(.in1(in1_IDEX), .in2(in2_IDEX),
+
+    alu alu(.in1(in1), .in2(in2),
             .op(op_IDEX), .funct_3(funct3_IDEX), .funct_7(funct7_IDEX),
             .out(ALU_out_EX), .pc_sel(pc_sel_EXIF));
 
