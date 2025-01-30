@@ -15,14 +15,14 @@ module single_cycle_tb ();
     initial clk  = 0;
     always #5 clk  = ~clk;
 
-    single_cycle #(.WIDTH(WIDTH), .SIZE(SIZE)) dut(.clk(clk), .reset(reset),
+    pipelined_processor #(.WIDTH(WIDTH), .SIZE(SIZE)) dut(.clk(clk), .reset(reset),
                     .instr_in(instr_in), .instr_wr_addr(instr_wr_addr), .instr_wr_en(instr_wr_en));
 
     int fd;
     string line;
 
-    string program_file = "memory_test.txt";
-    int cycles = 16;
+    string program_file = "branch_test.txt";
+    int cycles = 32;
 
     initial begin    
         fd = $fopen(program_file, "r");
