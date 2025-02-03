@@ -1,9 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-
 from Register import Register
-
 
 #TODO: Improve performance, change to either panes or some simpler geometry with less widgets
 class RegisterFile:
@@ -16,8 +14,8 @@ class RegisterFile:
         self.frame = self.RegisterFileFrame(master, self)
         self.registers = [[Register(self.frame, self, self.cols * j + i) for i in range(self.cols)] for j in range(self.rows)]
     
-    def grid(self, row, column):
-        self.frame.grid(row=row, column=column)
+    def grid(self, row, column, **kwargs):
+        self.frame.grid(row=row, column=column, **kwargs)
         for i in range(self.rows):
             for j in range(self.cols):
                 self.registers[i][j].grid(j, i)
@@ -45,12 +43,13 @@ class RegisterFile:
             super().__init__(master, text=self.register_file.title, padding=3)
         
 
-root = tk.Tk()
-registers = RegisterFile(root, "Register File", 4, 8)
-registers.grid(0, 0)
+if __name__ == "__main__":
+    root = tk.Tk()
+    registers = RegisterFile(root, "Register File", 4, 8)
+    registers.grid(0, 0)
 
-temp = [[registers.cols * j + i for i in range(registers.cols)] for j in range(registers.rows)]
-print(temp)
-registers.load(temp)
+    temp = [[registers.cols * j + i for i in range(registers.cols)] for j in range(registers.rows)]
+    print(temp)
+    registers.load(temp)
 
-root.mainloop()
+    root.mainloop()

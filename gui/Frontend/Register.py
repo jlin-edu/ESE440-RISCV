@@ -25,8 +25,8 @@ class Register:
     
     # Grid method to place the frame in the specified position of the master widget,
     # as well as place all widgets within the frame
-    def grid(self, col=0, row=0):
-        self.frame.grid(column=col, row=row)
+    def grid(self, col=0, row=0, **kwargs):
+        self.frame.grid(column=col, row=row, **kwargs)
         self.frame.grid_all()
     
     # RegisterFrame inner class, used to manage the frame and widgets associated
@@ -57,7 +57,7 @@ class Register:
         
         # Method to initialize the register number widget within the frame
         def init_num_label(self):
-            self.num_label = ttk.Label(self, text=self.str_num(), anchor="center", width=len(self.val_str.get())+1)
+            self.num_label = ttk.Label(self, text=self.str_num(), anchor="center", width=len(self.str_num())+1)
         
         # Method to initialize the register value widget within the frame
         def init_val_label(self):
@@ -75,7 +75,7 @@ class Register:
         
         # String representation of the register's number (2 digit integer with preceding 'x')
         def str_num(self):
-            return f"x{self.register.num:02}"
+            return f"x{self.register.num:02}" if isinstance(self.register.num, int) else self.register.num
 
         # String representation of the register's value (8 digit hexidecimal with preceding '0x')
         def str_val(self):
