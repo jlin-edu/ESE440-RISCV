@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from turtle import title
 
+from Controls import Controls
 from Memory import Memory
 from Register import Register
 from RegisterFile import RegisterFile
@@ -27,12 +27,10 @@ class GUI(tk.Tk):
         self.instruction_mem = Memory(self, 1024, "Instruction Memory")
         self.data_mem = Memory(self, 1024, "Data Memory")
         
-        #TODO: flush out the controls
-        self.controls = ttk.Frame(self, relief="solid", borderwidth=1)
-        self.temp = ttk.Label(self.controls, text="Controls", anchor="center")
+        self.controls = Controls(self)
         
         self.stages = ttk.Frame(self, relief="solid", borderwidth=2)
-        self.temp2 = ttk.Label(self.stages, text="Pipeline Stages", anchor="center")
+        self.temp2 = ttk.Label(self.stages, text="Pipeline Stages", anchor="center") #TODO
     
     def grid_all(self):
         self.pc.grid(col=0, row=0, sticky="w")
@@ -40,8 +38,7 @@ class GUI(tk.Tk):
         self.instruction_mem.grid(col=1, row=1)
         self.data_mem.grid(col=1, row=2)
         
-        self.controls.grid(column=1, row=0, columnspan=2, sticky="nsew")
-        self.temp.grid(sticky="nsew")
+        self.controls.grid(column=1, row=0, columnspan=1, sticky="nsew")
         
         self.stages.grid(column=2, row=0, rowspan=3, sticky="nsew")
         self.temp2.grid(sticky="nsew")
