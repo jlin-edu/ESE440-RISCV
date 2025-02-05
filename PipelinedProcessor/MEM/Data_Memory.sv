@@ -2,6 +2,8 @@
 
 module data_memory #(   
     parameter                   WIDTH=32, SIZE=256,         //WIDTH is bits per word, SIZE is # of WORDS
+    parameter NUM_COL   = 4,
+    parameter COL_WIDTH = 8,
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
     input [WIDTH-1:0]           data_in,
@@ -20,6 +22,11 @@ module data_memory #(
 
     assign word_offset = addr[(LOGSIZE-1)+2:2];
     assign byte_offset = addr[1:0];
+
+    //we can do (byte_offset & wr_en) to get a 4 bit write enable i think, this will then be used in the sequential memory
+    //also remember to use the funct 3 field to know which bits
+    
+    
     
     always_ff @(posedge clk) begin
         //data_out <= mem[addr];
@@ -55,4 +62,5 @@ module data_memory #(
             end
         endcase
     end
+    
 endmodule
