@@ -16,14 +16,14 @@
 # BGE rs1, rs2, offset
 # BLTU rs1, rs2, offset
 # BGEU rs1, rs2, offset
-# LB rd, rs1(offset)
-# LH rd, rs1(offset)
-# LW rd, rs1(offset)
-# LBU rd, rs1(offset)
-# LHU rd, rs1(offset)
-# SB rs2, rs1(offset)
-# SH rs2, rs1(offset)
-# SW rs2, rs1(offset)
+# LB rd, offset(rs1)
+# LH rd, offset(rs1)
+# LW rd, offset(rs1)
+# LBU rd, offset(rs1)
+# LHU rd, offset(rs1)
+# SB rs2, offset(rs1)
+# SH rs2, offset(rs1)
+# SW rs2, offset(rs1)
 # ADDI rd, rs1, imm
 # SLTI rd, rs1, imm
 # SLTUI rd, rs1, imm
@@ -77,6 +77,40 @@
 # JR imm
 # RET
 #
+# REGISTER NAMES
+# x0 : zero - hardwired zero
+# x1 : ra - return address
+# x2 : sp - stack pointer
+# x3 : gp - global pointer
+# x4 : tp - thread pointer
+# x5 : t0 - temporary/alternate link register
+# x6 : t1 - temporary
+# x7 : t2 - temporary
+# x8 : s0/fp - saved register/frame pointer
+# x9 : s1 - saved register
+# x10: a0 - function argument/return value
+# x11: a1 - function argument/return value
+# x12: a2 - function argument
+# x13: a3 - function argument
+# x14: a4 - function argument
+# x15: a5 - function argument
+# x16: a6 - function argument
+# x17: a7 - function argument
+# x18: s2 - saved register
+# x19: s3 - saved register
+# x20: s4 - saved register
+# x21: s5 - saved register
+# x22: s6 - saved register
+# x23: s7 - saved register
+# x24: s8 - saved register
+# x25: s9 - saved register
+# x26: s10 - saved register
+# x27: s11 - saved register
+# x28: t3 - temporary
+# x29: t4 - temporary
+# x30: t5 - temporary
+# x31: t6 - temporary
+#
 ############################################################
 #               ASSEMBLER PROCEDURE                        #
 ############################################################
@@ -106,7 +140,6 @@
 # Add debug code to print itermediate stages?
 # Option to specify file length
 # Pad rest of memory with NOPs
-# Allow register names (a0, sp, etc) 
 # Variable names?
 # Extra features from https://michaeljclark.github.io/asm.html
 # COMMENTS!!!!!!!!!!!!!!!!!!!!!!
@@ -120,18 +153,22 @@
 # Option to output in hex for debugging
 # Output is in the same directory as the input file
 # Option to change output directory
+# Call pseudo instruction
 #
 ######################################################################################
 #                       
 #                              DOCUMENTATION(ISH)
 #
-# Added support for binary and hex numbers, and negative numbers
+# Update 0.1: Added support for binary and hex numbers, and negative numbers
+# Update 0.2: Added support for register names (sp, s0, ra, etc.) and fixed pseudo
+#             instructions. Also fixed issues with extra whitespace in syntax
 #
 #
 #
 ######################################################################################
 
 import sys
+import re
 from enum import Enum
 from numpy import binary_repr
 
@@ -188,13 +225,23 @@ class Token:
 ###############################################################
 
 register_dict = {
-    "zero"  : "00000", "x0"    : "00000", "x1"    : "00001", "x2"    : "00010", "x3"    : "00011",
-    "x4"    : "00100", "x5"    : "00101", "x6"    : "00110", "x7"    : "00111", "x8"    : "01000",
-    "x9"    : "01001", "x10"   : "01010", "x11"   : "01011", "x12"   : "01100", "x13"   : "01101",
-    "x14"   : "01110", "x15"   : "01111", "x16"   : "10000", "x17"   : "10001", "x18"   : "10010",
-    "x19"   : "10011", "x20"   : "10100", "x21"   : "10101", "x22"   : "10110", "x23"   : "10111",
-    "x24"   : "11000", "x25"   : "11001", "x26"   : "11010", "x27"   : "11011", "x28"   : "11100",
-    "x29"   : "11101", "x30"   : "11110", "x31"   : "11111"
+    # Register names of the form: x##
+    "x0"    : "00000", "x1"    : "00001", "x2"    : "00010", "x3"    : "00011", "x4"    : "00100",
+    "x5"    : "00101", "x6"    : "00110", "x7"    : "00111", "x8"    : "01000", "x9"    : "01001",
+    "x10"   : "01010", "x11"   : "01011", "x12"   : "01100", "x13"   : "01101", "x14"   : "01110",
+    "x15"   : "01111", "x16"   : "10000", "x17"   : "10001", "x18"   : "10010", "x19"   : "10011",
+    "x20"   : "10100", "x21"   : "10101", "x22"   : "10110", "x23"   : "10111", "x24"   : "11000",
+    "x25"   : "11001", "x26"   : "11010", "x27"   : "11011", "x28"   : "11100", "x29"   : "11101",
+    "x30"   : "11110", "x31"   : "11111", 
+    
+    # Register defined names
+    "zero"  : "00000", "ra"    : "00001", "sp"    : "00010", "gp"    : "00011", "tp"    : "00100",
+    "t0"    : "00101", "t1"    : "00110", "t2"    : "00111", "s0"    : "01000", "s1"    : "01001",
+    "a0"    : "01010", "a1"    : "01011", "a2"    : "01100", "a3"    : "01101", "a4"    : "01110",
+    "a5"    : "01111", "a6"    : "10000", "a7"    : "10001", "s2"    : "10010", "s3"    : "10011",
+    "s4"    : "10100", "s5"    : "10101", "s6"    : "10110", "s7"    : "10111", "s8"    : "11000",
+    "s9"    : "11001", "s10"   : "11010", "s11"   : "11011", "t3"    : "11100", "t4"    : "11101",
+    "t5"    : "11110", "t6"    : "11111", "fp"    : "01000"
 }
 
 immediate_sizes = {
@@ -233,14 +280,14 @@ instruction_dict = {
     "BGE"       : [OP_BR,    "101", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1],    True ],
     "BLTU"      : [OP_BR,    "110", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1],    True ],
     "BGEU"      : [OP_BR,    "111", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 0, 1],    True ],
-    "LB"        : [OP_LD,    "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
-    "LH"        : [OP_LD,    "001", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
-    "LW"        : [OP_LD,    "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
-    "LBU"       : [OP_LD,    "100", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
-    "LHU"       : [OP_LD,    "101", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
-    "SB"        : [OP_ST,    "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0],    False],
-    "SH"        : [OP_ST,    "001", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0],    False],
-    "SW"        : [OP_ST,    "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [None, 1, 0],    False],
+    "LB"        : [OP_LD,    "000", None,      [TokenType.REG, TokenType.IMM, TokenType.REG], [0, 1, None],    False],
+    "LH"        : [OP_LD,    "001", None,      [TokenType.REG, TokenType.IMM, TokenType.REG], [0, 1, None],    False],
+    "LW"        : [OP_LD,    "010", None,      [TokenType.REG, TokenType.IMM, TokenType.REG], [0, 1, None],    False],
+    "LBU"       : [OP_LD,    "100", None,      [TokenType.REG, TokenType.IMM, TokenType.REG], [0, 1, None],    False],
+    "LHU"       : [OP_LD,    "101", None,      [TokenType.REG, TokenType.IMM, TokenType.REG], [0, 1, None],    False],
+    "SB"        : [OP_ST,    "000", None,      [TokenType.REG, TokenType.IMM, TokenType.REG], [None, 1, 0],    False],
+    "SH"        : [OP_ST,    "001", None,      [TokenType.REG, TokenType.IMM, TokenType.REG], [None, 1, 0],    False],
+    "SW"        : [OP_ST,    "010", None,      [TokenType.REG, TokenType.IMM, TokenType.REG], [None, 1, 0],    False],
     "ADDI"      : [OP_IMM,   "000", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
     "SLTI"      : [OP_IMM,   "010", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
     "SLTUI"     : [OP_IMM,   "011", None,      [TokenType.REG, TokenType.REG, TokenType.IMM], [0, 1, None],    False],
@@ -280,10 +327,10 @@ pseudo_instruction_dict = {
     "NOP" : [[None], [None], ["ADDI", "zero", "zero", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "LI" : [[TokenType.REG, TokenType.IMM], [], ["LOAD"], [], False],
     "LA" : [[TokenType.REG, TokenType.IMM], [], ["LOAD"], [], True],
-    "MV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG, 0], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
-    "NOT" : [[TokenType.REG, TokenType.REG], [1, 2], ["XORI", TokenType.REG, TokenType.REG, -1], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
+    "MV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG,"0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
+    "NOT" : [[TokenType.REG, TokenType.REG], [1, 2], ["XORI", TokenType.REG, TokenType.REG, "-1"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "NEG" : [[TokenType.REG, TokenType.REG], [1, 2], ["SUB", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
-    "SEQZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTIU", TokenType.REG, TokenType.REG, 1], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
+    "SEQZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTIU", TokenType.REG, TokenType.REG, "-1"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "SNEZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTU", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
     "SLTZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLT", TokenType.REG, TokenType.REG, "x0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
     "SGTZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLT", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
@@ -298,7 +345,7 @@ pseudo_instruction_dict = {
     "BGTU" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLTU", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
     "BLEU" : [[TokenType.REG, TokenType.REG, TokenType.IMM], [2, 1, 3], ["BLTU", TokenType.REG, TokenType.REG, TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], True],
     "J" : [[TokenType.IMM], [1], ["JAL", "x0", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.IMM], True],
-    "JR" : [[TokenType.IMM], [1], ["JAL", "x1", TokenType.IMM], [TokenType.MNEMONIC, TokenType.REG, TokenType.IMM], True],
+    "JR" : [[TokenType.REG], [1], ["JALR", "x0", TokenType.REG, "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "RET" : [[None], [None], ["JALR", "x0", "x1", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False]
 }
 
@@ -342,7 +389,7 @@ def parse(instruction_lines):
             print(f"\nERROR: MISSING CLOSING PARENTHESIS - line {line_num}: {instruction}")
             print("^\n".rjust(pos))
             sys.exit()
-        instruction_split = instruction.split(" ")
+        instruction_split = [operand for operand in re.split(r'[^\w:.-]', instruction) if operand != ""]
         parsed_instruction = []
         if len(instruction_split) == 1 and not instruction_split[0].upper() in ["NOP", "RET"]: # Handle symbols
             if instruction[-1] == ':': # Labels

@@ -17,7 +17,8 @@ module data_memory #(
 
     logic [LOGSIZE-1:0] word_offset;
     logic [1:0] byte_offset;
-
+    
+    assign addr[31:(LOGSIZE-1)+2] = 0; 
     assign word_offset = addr[(LOGSIZE-1)+2:2];
     assign byte_offset = addr[1:0];
     
