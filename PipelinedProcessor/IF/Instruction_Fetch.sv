@@ -23,11 +23,11 @@ module instruction_fetch #(
 );
     logic [`REG_RANGE] pc_IF, pc_4_IF;
     
-    PC pc_module(.clk(clk), .reset(reset),
+    PC pc_module(.clk(clk), .reset(reset), .stall(stall),
                 .pc_sel(pc_sel_EXIF), .jump_addr(jump_addr_EXIF),
                 .pc(pc_IF), .pc_4(pc_4_IF));
 
-    instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .reset(reset),
+    instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .reset(reset), .stall(stall),
                                                                 .pc(pc_IF), .instr_out(instruction_IFID),
                                                                 .instr_in(instr_in), .wr_addr(wr_addr), .wr_en(wr_en), .flush(pc_sel_EXIF)
                                                                 );

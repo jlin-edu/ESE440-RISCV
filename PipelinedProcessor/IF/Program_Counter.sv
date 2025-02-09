@@ -2,7 +2,7 @@
 
 module PC (
     input [`REG_RANGE] jump_addr,
-    input pc_sel, clk, reset,
+    input pc_sel, clk, reset, stall,
     output logic [`REG_RANGE] pc, pc_4
 );
 

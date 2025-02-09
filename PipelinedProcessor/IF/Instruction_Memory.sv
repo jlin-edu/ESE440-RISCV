@@ -9,7 +9,7 @@ module instr_memory #(
     input wr_en,
     input clk, reset,            //not sure if this is needed
 
-    input flush,    //hazard handling
+    input flush, stall,    //hazard handling
 
 
     //input  [(LOGSIZE-1)+2:0]    pc,             //should this we REG_RANGE or should it rely on LOGSIZE??
