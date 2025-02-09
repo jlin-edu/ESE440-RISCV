@@ -1,9 +1,9 @@
 `include "inst_defs.sv"
 
-// Single Cycle Testbench, specify the program to run in the program_file string.
+// Pipelined Processor Testbench, specify the program to run in the program_file string.
 // The program will run for 256 clock cycles, this can be changed in the cycles variable
 
-module single_cycle_tb ();
+module pipeline_tb ();
     parameter   WIDTH=32, SIZE=128;
     localparam  LOGSIZE=$clog2(SIZE);
 
@@ -15,7 +15,7 @@ module single_cycle_tb ();
     initial clk  = 0;
     always #5 clk  = ~clk;
 
-    single_cycle #(.WIDTH(WIDTH), .SIZE(SIZE)) dut(.clk(clk), .reset(reset),
+    pipelined_processor #(.WIDTH(WIDTH), .SIZE(SIZE)) dut(.clk(clk), .reset(reset),
                     .instr_in(instr_in), .instr_wr_addr(instr_wr_addr), .instr_wr_en(instr_wr_en));
 
     int fd;

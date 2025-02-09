@@ -10,7 +10,6 @@ class VCDinter:
             self._init()
             self._parse()
             self._scan()
-            self.cache = None # REPLACE WITH CORRECT VALUE
         return self.cache
         
     def _init(self):
