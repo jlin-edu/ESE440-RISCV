@@ -1,7 +1,7 @@
 `include "inst_defs.sv"
 
 module memory #(
-    parameter                   WIDTH=32, SIZE=256,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
+    parameter                   WIDTH=32, SIZE=1024,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
     input clk,

@@ -3,35 +3,35 @@ li x2, 2709678748
 li x3, 3819450013
 
 start:
-beq x1, x2, equal
+beq x1, x2, 36
 
 great_eq:
-bge x3, x1, end_branch
-bltu x1, x3, less_than_u
+bge x1, x3, 44
+bltu x1, x3, 36
 
 not_equal:
-bne x1, x2, end_branch 
-blt x3, x1, less_than
+bne x1, x2, 36
+blt x1, x3, 12
 
 great_eq_u:
-bgeu x1, x3, end_branch
-bge x1, x3, great_eq
+bgeu x1, x3, 28
+bge x3, x1, -20
 
 less_than:
-blt x1, x3, end_branch
-bgeu x3, x1, great_eq_u
+blt x3, x1, 20
+bgeu x3, x1, -12
 
 equal:
-beq x1, x3, end_branch
-bne x1, x3, not_equal
+beq x1, x3, 12
+bne x1, x3, -28
 
 less_than_u:
-bltu x3 x1, start
+bltu x3 x1, -44
 
 end_branch:
-la x1, third
+la x1, 24
 auipc x2, 73728
-j first
+j 72
 nop
 nop
 nop
@@ -51,7 +51,7 @@ nop
 nop
 nop
 first:
-jal x3, second
+jal x3, -36
 nop
 nop
 nop

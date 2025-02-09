@@ -4,7 +4,7 @@
 // The program will run for 256 clock cycles, this can be changed in the cycles variable
 
 module single_cycle_tb ();
-    parameter   WIDTH=32, SIZE=64;
+    parameter   WIDTH=32, SIZE=128;
     localparam  LOGSIZE=$clog2(SIZE);
 
     logic [WIDTH-1:0] instr_in;
@@ -21,8 +21,8 @@ module single_cycle_tb ();
     int fd;
     string line;
 
-    string program_file = "memory_test.txt";
-    int cycles = 16;
+    string program_file = "pub_sub.txt";
+    int cycles = 4096;
 
     initial begin    
         fd = $fopen(program_file, "r");
