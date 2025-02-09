@@ -152,6 +152,9 @@ module instruction_decode #(
                                                 .rs1_rd_addr(rs1_ID), .rs1_rd_data(rs1_data),
                                                 .rs2_rd_addr(rs2_ID), .rs2_rd_data(rs2_data_ID)); 
 
+
+    logic stall;
+    
     //muxes for selecting inputs of our ALU
     /*
     always_comb begin

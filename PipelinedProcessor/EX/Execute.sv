@@ -107,10 +107,10 @@ module execute (
     logic signed        [`REG_RANGE]     in1, in2;
     logic               [1:0] in1_sel, in2_sel;
     //Forwarding Unit
-    ForwardUnit ForwardUnit(.rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
+    ForwardUnit forwardunit(.rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
                             .rd_EXMEM(rd_EXMEM), .reg_wr_en_EXMEM(reg_wr_en_EXMEM),
                             .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
-                            .in1_sel(in1_sel), in2_sel(in2_sel));
+                            .in1_sel(in1_sel), .in2_sel(in2_sel));
 
     // ALU Input Mux
     always_comb begin
