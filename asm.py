@@ -129,6 +129,8 @@
 # 
 #                    Future Additions/Changes (Potential)
 #
+# FIX JUMP ADDRESS CALCULATION!!!!!
+#
 # Create offset token with property of allowing labels
 # Have error handling as a seperate function
 # Have errors point to whole offender Ex: offender

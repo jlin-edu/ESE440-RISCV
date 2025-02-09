@@ -1,7 +1,7 @@
 `include "inst_defs.sv"
 
 module single_cycle #(
-    parameter                   WIDTH=32, SIZE=64,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
+    parameter                   WIDTH=32, SIZE=128,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
     //instruction memory write port

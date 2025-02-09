@@ -11,7 +11,7 @@ main:
         sw      a5,-416(s0)
         li      a5,2
         sw      a5,-20(s0)
-        j       .L2
+        j       88
 .L3:
         lw      a5,-20(s0)
         addi    a4,a5,-1
@@ -37,7 +37,7 @@ main:
 .L2:
         lw      a4,-20(s0)
         li      a5,99
-        ble     a4,a5,.L3
+        ble     a4,a5,-96
         li      a5,0
         mv      a0,a5
         lw      ra,428(sp)
