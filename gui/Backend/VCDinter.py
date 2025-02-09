@@ -1,6 +1,6 @@
 class VCDinter:
-    def __init__(self, file):
-        self.file = file
+    def __init__(self, filename):
+        self.filename = filename
         self.open(self.file)
         self.cache = {} # Cache for last data collection, used when a read call is made before any new changes
 
@@ -13,7 +13,7 @@ class VCDinter:
         return self.cache
         
     def _init(self):
-        pass # Internal method to initialize for file reading
+        pass
         
     def _parse(self):
         pass # Internal method to parse file
