@@ -57,6 +57,9 @@ module pipelined_processor #(
     logic [`REG_FIELD_RANGE] rs1_IDEX, rs2_IDEX;
     logic pc_rs1_sel_IDEX, imm_rs2_sel_IDEX;
 
+    logic stall;
+
+
     // --------------- Execute Signals ---------------
     // ----------------- Outputs of this stage -----------------
     // ----------------- MEM Stage Signals(Outputs) -----------------
@@ -85,7 +88,8 @@ module pipelined_processor #(
     instruction_fetch #(.WIDTH(WIDTH), .SIZE(SIZE)) IF(.clk(clk), .reset(reset),
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
-                                                        .instr_in(instr_in), .wr_addr(instr_wr_addr), .wr_en(instr_wr_en));
+                                                        .instr_in(instr_in), .wr_addr(instr_wr_addr), .wr_en(instr_wr_en),
+                                                        .stall(stall));
 
     //pipeline register here
     //instruction, pc, pc+4
@@ -99,7 +103,8 @@ module pipelined_processor #(
                                             .reg_wr_en_IDEX(reg_wr_en_IDEX), .reg_wr_ctrl_IDEX(reg_wr_ctrl_IDEX), .rd_IDEX(rd_IDEX), .pc_4_IDEX(pc_4_IDEX),
                                             .pc_sel_EXIF(pc_sel_EXIF),
                                             .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
-                                            .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX));
+                                            .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
+                                            .stall(stall));
 
     //pipeline register here
     //

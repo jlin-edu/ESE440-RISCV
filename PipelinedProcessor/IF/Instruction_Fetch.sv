@@ -16,7 +16,7 @@ module instruction_fetch #(
     //the dynamic duo
     input clk, reset,
 
-    //input flush,    //hazard handling
+    input stall,    //hazard handling
 
     //outputs of IF, inputs of other stages (ID uses instruction, EX uses PC, WB uses PC+4)
     output logic [`REG_RANGE] pc_IFID, pc_4_IFID, instruction_IFID
@@ -39,7 +39,7 @@ module instruction_fetch #(
             pc_IFID   <= 0;
             pc_4_IFID <= 0;
         end
-        else begin
+        else if(stall == 0) begin
             pc_IFID   <= pc_IF;
             pc_4_IFID <= pc_4_IF;
         end

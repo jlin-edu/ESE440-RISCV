@@ -40,9 +40,9 @@ module instruction_decode #(
 
     // ----------------- Forwarding Signals -----------------
     output logic [`REG_FIELD_RANGE] rs1_IDEX, rs2_IDEX,
-    output logic pc_rs1_sel_IDEX, imm_rs2_sel_IDEX
+    output logic pc_rs1_sel_IDEX, imm_rs2_sel_IDEX,
 
-
+    output logic stall
     //used for data forwarding(not pipelined) 
     //forwarding unit should also be passed the opcode as well to determine if numbers in rs1 and rs2 range are actualy register numbers
     //actually, what we can do is send control signals imm_rs2_sel and pc_rs1_sel to forwarding unit to identify
@@ -69,7 +69,7 @@ module instruction_decode #(
     //assign pc_IDEX = pc_IFID;
     //assign pc_4_IDEX = pc_4_IFID;
     always_ff @(posedge clk) begin
-        if((reset == 1) || (pc_sel_EXIF == 1)) begin
+        if((reset == 1) || (pc_sel_EXIF == 1) || (stall == 1)) begin
             //EX Stage
             op_IDEX        <= `OP_IMM;
             funct7_IDEX    <= 0;
@@ -153,8 +153,10 @@ module instruction_decode #(
                                                 .rs2_rd_addr(rs2_ID), .rs2_rd_data(rs2_data_ID)); 
 
 
-    logic stall;
-    
+    //logic stall;
+    hazard_unit hazard_unit(.reg_wr_ctrl_IDEX(reg_wr_ctrl_IDEX), .rd_IDEX(rd_IDEX),
+                            .rs1_ID(rs1_ID), .rs2_ID(rs2_ID), .pc_rs1_sel(pc_rs1_sel), .imm_rs2_sel(imm_rs2_sel),
+                            .stall(stall));
     //muxes for selecting inputs of our ALU
     /*
     always_comb begin
