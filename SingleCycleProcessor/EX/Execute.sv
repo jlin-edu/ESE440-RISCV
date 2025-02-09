@@ -1,7 +1,7 @@
 `include "inst_defs.sv"
 
 module execute (
-    // input clk, reset,   //not used for the single cycle version but when we pipeline we need to insert a ff block
+    //input clk, reset,   //not used for the single cycle version but when we pipeline we need to insert a ff block
 
     // ----------------- Inputs to this stage -----------------
     // ----------------- EX Stage Signals(Inputs) -----------------
