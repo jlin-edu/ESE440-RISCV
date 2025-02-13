@@ -6,6 +6,8 @@ from Memory import Memory
 from Register import Register
 from RegisterFile import RegisterFile
 
+# IDEAS: Have current instruction highlighted/tracked in the instruction memory view
+
 class GUI(tk.Tk):
     def __init__(self):
         super().__init__()
