@@ -44,21 +44,34 @@ class VCDInterpreter:
         return pc
     
     def get_regs(self, time):
-        if not self.regs[0]:
+        if not self.regs:
             for key, value in self.VCDdata.items():
-                for i in range(3):
-                    if value[i] == self.regs_net[i]:
-                        self.regs[i] = key
-                        break
-        address = self.VCDdata[self.regs[0]]
-        data = self.VCDdata[self.regs[1]]
-        enable = self.VCDdata[self.regs[2]]
+                if isinstance(value, list) and value[0] == self.regs_net:
+                    self.regs = key
+                    break
+        data = self.VCDdata[self.regs]
         
-        reg_data = []
+        regs = [None for i in range(32)]
+        
 
     
     def get_inst(self, time):
-        pass
+        if not self.data:
+            for key, value in self.VCDdata.items():
+                if isinstance(value, list) and value[0] == self.data_net:
+                    self.data = key
+                    break
+        data = self.VCDdata[self.data]
+        
+        mem = [None for i in range(self.memsize)]
     
     def get_data(self, time):
-        pass
+        if not self.inst:
+            for key, value in self.VCDdata.items():
+                if isinstance(value, list) and value[0] == self.inst_net:
+                    self.inst = key
+                    break
+        data = self.VCDdata[self.inst]
+        
+        mem = [None for i in range(self.memsize)]
+        
