@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from Register import Register
+from .Register import Register
 
 #TODO: Improve performance, change to either panes or some simpler geometry with less widgets
 class RegisterFile:

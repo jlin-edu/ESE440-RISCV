@@ -3,7 +3,7 @@
 #           -> Have GUI toggle between seeing program load and only seeing execution
 
 class VCDInterpreter:
-    def __init__(self, VCDdata, memsize=1024):
+    def __init__(self, VCDdata=None, memsize=1024):
         self.VCDdata = VCDdata
         self.memsize = memsize
         
@@ -21,12 +21,16 @@ class VCDInterpreter:
         self.inst = None
         self.data = None
     
+    def load(self, data):
+        self.VCDdata = data
+    
     def extract(self, time):
-        self.state = ['0', ['0' for i in range(32)], ['0' for i in range(self.memsize)], ['0' for i in range(self.memsize)]]
-        self.get_pc(time)
-        self.get_regs(time)
-        self.get_inst(time)
-        self.get_data(time)
+        self.state = [0, [0 for i in range(32)], [0 for i in range(self.memsize)], [0 for i in range(self.memsize)]]
+        self.state[0] = self.get_pc(time)
+        self.state[1] = self.get_regs(time)
+        self.state[2] = self.get_inst(time)
+        self.state[3] = self.get_data(time)
+        return self.state
     
     def get_pc(self, time):
         if not self.pc:

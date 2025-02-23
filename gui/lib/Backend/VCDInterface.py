@@ -1,15 +1,13 @@
 #monitor the whole DUT or just the PC + REGS + MEMS?
 
 class VCDInterface:
-    def __init__(self, filename, ):
+    def __init__(self, filename=None):
         self.filename = filename
         self.file = None
-        
-        self.VCDdata = None
-        
-        self.open()
-        
         self.cache = None # Cache for last data collection, used when a read call is made before any new changes
+        
+        if filename:
+            self.open()
 
     def read(self):
         # Read any new changes since last time
@@ -65,7 +63,6 @@ class VCDInterface:
     def readline(self):
         return self.file.readline().strip()
     
-    
     def open(self):
         if self.file:
             print("Error: File already open")
@@ -93,13 +90,3 @@ class VCDInterface:
                 last_time = int(file_line[1:-1])
             file_line = self.file.readline()
         return last_time
-    
-    # Output: Dictionary with entries each signal (of importance?) in the design, 
-    #         each mapped to a dictionary of their value changes with time stamps
-    
-from VCDInterpreter import VCDInterpreter
-    
-if __name__ == "__main__":
-    test = VCDInterface("C:/Users/Alecm/Desktop/Programming/Vivado/Dire-WolVes/Single-Cycle/Single-Cycle.sim/sim_1/behav/xsim/test.vcd")
-    test_interp = VCDInterpreter(test.read())
-    print(test_interp.get_inst(test.get_time()))

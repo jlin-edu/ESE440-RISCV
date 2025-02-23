@@ -15,6 +15,9 @@ class Memory:
         self.frame.grid(column=col, row=row)
         self.frame.grid_all()
     
+    def load(self, data):
+        for i in range(len(self.vals)):
+            self.vals[i] = data[i]
     class MemoryFrame(ttk.LabelFrame):
         def __init__(self, memory, master, width, height):
             self.width = width

@@ -1,6 +1,8 @@
-from lib.Frontend import *
-from lib.Backend import *
+from lib.Backend.Controller import Controller
+from lib.Frontend.GUI import GUI
 
 if __name__ == "__main__":
-    gui = GUI()
     control = Controller()
+    gui = GUI(control)
+    
+    

@@ -1,21 +1,27 @@
 import tkinter as tk
+from tkinter import filedialog
 from tkinter import ttk
 
-from Controls import Controls
-from Memory import Memory
-from Register import Register
-from RegisterFile import RegisterFile
+from .Controls import Controls
+from .Memory import Memory
+from .Register import Register
+from .RegisterFile import RegisterFile
 
 # IDEAS: Have current instruction highlighted/tracked in the instruction memory view
+# TODO: Menu bar to open files, start sim, close, etc
 
 class GUI(tk.Tk):
-    def __init__(self):
+    def __init__(self, controller):
         super().__init__()
         self.title("Dire-WolVes RISC-V GUI v0.01")
         self.frame = ttk.Frame(self)
         self.load_widgets()
         self.grid_all()
         self.resizable(False, False)
+        
+        self.controller = controller
+        self.VCDfile = filedialog.askopenfilename()
+        
         self.mainloop()
     
     def load_widgets(self):
@@ -44,6 +50,9 @@ class GUI(tk.Tk):
         
         self.stages.grid(column=2, row=0, rowspan=3, sticky="nsew")
         self.temp2.grid(sticky="nsew")
-
-if __name__ == "__main__":
-    test = GUI()
+        
+    def write(self, data):
+        self.pc.set_val(data[0])
+        self.registers.load(data[1])
+        self.instruction_mem.load(data[2])
+        self.data_mem.load(data[3])
