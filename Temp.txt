@@ -6,3 +6,13 @@ run all (make sure to restart sim)
 close_vcd
 
 find NAME.vcd in Vivado directory
+
+
+TCL COMMANDS FOR GETTING REQUIRED DATA FOR SINGLE CYCLE GUI:
+restart
+open_vcd test.vcd
+log_vcd /single_cycle_tb/dut/IF/pc_module/pc
+log_vcd /single_cycle_tb/dut/IF/instruction_buffer/mem
+log_vcd /single_cycle_tb/dut/ID/register_file/register_file
+log_vcd /single_cycle_tb/dut/MEM/data_memory/mem
+run all
