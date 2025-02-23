@@ -1,9 +1,11 @@
 #monitor the whole DUT or just the PC + REGS + MEMS?
 
 class VCDInterface:
-    def __init__(self, filename):
+    def __init__(self, filename, ):
         self.filename = filename
         self.file = None
+        
+        self.VCDdata = None
         
         self.open()
         
@@ -27,12 +29,19 @@ class VCDInterface:
         self.cache["timescale"] = self.readline()
         
         # Read vars
-        while (file_line != "$dumpvars"):
+        seen_mem = False
+        while (file_line != "$enddefinitions $end"):
             file_line = self.readline()
             if file_line[:len("$var")] == "$var":
                 line_contents = file_line.split(' ')
-                if not line_contents[3] in self.cache:
-                    self.cache[line_contents[3]] = [line_contents[4], {}]
+                if line_contents[4] == "mem":
+                    if seen_mem == False:
+                        line_contents[4] = "inst_mem"
+                        seen_mem = True
+                    else:
+                        line_contents[4] = "data_mem"
+                
+                self.cache[line_contents[3]] = [line_contents[4], {}]
         
     def _parse(self):
         file_line = None
@@ -91,5 +100,6 @@ class VCDInterface:
 from VCDInterpreter import VCDInterpreter
     
 if __name__ == "__main__":
-    test = VCDInterface("C:/Users/Alecm/Desktop/Programming/Vivado/Dire-WolVes/Pipelined Processor/Pipelined Processor.sim/sim_1/behav/xsim/test.vcd")
+    test = VCDInterface("C:/Users/Alecm/Desktop/Programming/Vivado/Dire-WolVes/Single-Cycle/Single-Cycle.sim/sim_1/behav/xsim/test.vcd")
     test_interp = VCDInterpreter(test.read())
+    print(test_interp.get_inst(test.get_time()))
