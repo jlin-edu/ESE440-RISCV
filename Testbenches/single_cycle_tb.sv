@@ -22,8 +22,8 @@ module single_cycle_tb ();
     string line;
 
 
-    string program_file = "pub_sub.txt";
-    int cycles = 4096;
+    string program_file = "r3_test.txt";
+    int cycles = 64;
     
 
     initial begin    
