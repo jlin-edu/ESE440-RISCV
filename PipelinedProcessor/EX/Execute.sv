@@ -94,7 +94,7 @@ module execute (
             ALU_out_EXMEM <= ALU_out_EX;
             funct3_EXMEM <= funct3_IDEX;
             mem_wr_en_EXMEM <= mem_wr_en_IDEX;
-            rs2_data_EXMEM <= rs2_data_IDEX;
+            rs2_data_EXMEM <= rs2_data_forward;
 
             //WB Stage
             reg_wr_en_EXMEM <= reg_wr_en_IDEX;
@@ -111,6 +111,15 @@ module execute (
                             .rd_EXMEM(rd_EXMEM), .reg_wr_en_EXMEM(reg_wr_en_EXMEM),
                             .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
                             .in1_sel(in1_sel), .in2_sel(in2_sel));
+
+    logic [`REG_RANGE] rs2_data_forward;
+    always_comb begin
+        rs2_data_forward = rs2_data_IDEX;
+        if((reg_wr_en_EXMEM == 1) && (rs2_IDEX == rd_EXMEM) && (rd_EXMEM != 0))
+                rs2_data_forward = ALU_out_EXMEM;
+        else if((reg_wr_en_WBID == 1) && (rs2_IDEX == rd_WBID) && (rd_WBID != 0))
+                rs2_data_forward = reg_wr_data_WBID;
+    end
 
     // ALU Input Mux
     always_comb begin
