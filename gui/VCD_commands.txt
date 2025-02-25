@@ -11,8 +11,31 @@ find NAME.vcd in Vivado directory
 TCL COMMANDS FOR GETTING REQUIRED DATA FOR SINGLE CYCLE GUI:
 restart
 open_vcd test.vcd
+log_vcd /single_cycle_tb/dut/clk
+log_vcd /single_cycle_tb/dut/reset
 log_vcd /single_cycle_tb/dut/IF/pc_module/pc
 log_vcd /single_cycle_tb/dut/IF/instruction_buffer/mem
 log_vcd /single_cycle_tb/dut/ID/register_file/register_file
 log_vcd /single_cycle_tb/dut/MEM/data_memory/mem
 run all
+close_vcd
+
+TCL COMMANDS FOR GETTING REQUIRED DATA FOR PIPELINE GUI:
+restart
+open_vcd test.vcd
+log_vcd /single_cycle_tb/dut/clk
+log_vcd /single_cycle_tb/dut/reset
+log_vcd /single_cycle_tb/dut/IF/pc_module/pc
+log_vcd /single_cycle_tb/dut/IF/instruction_buffer/mem
+log_vcd /single_cycle_tb/dut/ID/register_file/register_file
+log_vcd /single_cycle_tb/dut/MEM/data_memory/mem
+run all
+close_vcd
+
+ADDING FILES TO SIMULATION
+set_property SOURCE_SET sources_1 [get_filesets sim_1]
+add_files -fileset sim_1 -norecurse {{C:/Users/Alecm/Desktop/Programming/Dire-WolVes/ESE440-RISCV/Test Programs/Interim Tests/C Tests/Pub Sub/pub_sub.txt}}
+
+REMOVING FILES FROM SIMULATION
+export_ip_user_files -of_objects  [get_files {{C:/Users/Alecm/Desktop/Programming/Dire-WolVes/ESE440-RISCV/Test Programs/Interim Tests/C Tests/Pub Sub/pub_sub.txt}}] -no_script -reset -force -quiet
+remove_files  -fileset sim_1 {{C:/Users/Alecm/Desktop/Programming/Dire-WolVes/ESE440-RISCV/Test Programs/Interim Tests/C Tests/Pub Sub/pub_sub.txt}}
