@@ -29,12 +29,11 @@ class RegisterFile:
             self.registers[row][column].set_val(value)
 
     def load(self, values):
-        if len(values) > self.rows or len(values[0]) > self.cols:
+        if len(values) > self.rows * self.cols:
             print(f"Error: Dimension size error")
         else:
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    self.set_val(values[i][j], i, j)
+            for i in range(self.rows * self.cols):
+                self.set_val(values[i], i // self.cols, i % self.cols)
 
     class RegisterFileFrame(ttk.LabelFrame):
         def __init__(self, master, register_file):

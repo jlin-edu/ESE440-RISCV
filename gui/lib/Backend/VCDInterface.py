@@ -1,12 +1,12 @@
 #monitor the whole DUT or just the PC + REGS + MEMS?
 
 class VCDInterface:
-    def __init__(self, filename=None):
-        self.filename = filename
+    def __init__(self, file_name=None):
+        self.file_name = file_name
         self.file = None
         self.cache = None # Cache for last data collection, used when a read call is made before any new changes
         
-        if filename:
+        if file_name:
             self.open()
 
     def read(self):
@@ -63,13 +63,15 @@ class VCDInterface:
     def readline(self):
         return self.file.readline().strip()
     
-    def open(self):
+    def open(self, file_name=None):
         if self.file:
             print("Error: File already open")
             return
-        self.file = open(self.filename, 'r')
+        if file_name:
+            self.file_name = file_name
+        self.file = open(self.file_name, 'r')
         if not self.file:
-            print(f"Error opening file: {self.filename}")
+            print(f"Error opening file: {self.file_name}")
 
     def close(self):
         if not self.file:
@@ -80,7 +82,7 @@ class VCDInterface:
     def quit(self):
         self.close()
     
-    
+    # Obsolete time function, use VCDInterpreter.get_time()
     def get_time(self):
         self.file.seek(0, 0)
         file_line = self.file.readline()
@@ -90,3 +92,6 @@ class VCDInterface:
                 last_time = int(file_line[1:-1])
             file_line = self.file.readline()
         return last_time
+
+    
+        

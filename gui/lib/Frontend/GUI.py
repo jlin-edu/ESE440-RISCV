@@ -12,15 +12,19 @@ from .RegisterFile import RegisterFile
 
 class GUI(tk.Tk):
     def __init__(self, controller):
+        self.controller = controller
+        controller.GUI = self
+        
         super().__init__()
         self.title("Dire-WolVes RISC-V GUI v0.01")
         self.frame = ttk.Frame(self)
         self.load_widgets()
         self.grid_all()
         self.resizable(False, False)
+        self.option_add("*tearOff", False)
         
-        self.controller = controller
-        self.VCDfile = filedialog.askopenfilename()
+        self.VCDfile = filedialog.askopenfilename(title="Select VCD File", filetypes=(("VCD Files", "*.vcd"), ("All Files", "*.*")))
+        self.controller.open(self.VCDfile)
         
         self.mainloop()
     
@@ -50,6 +54,10 @@ class GUI(tk.Tk):
         
         self.stages.grid(column=2, row=0, rowspan=3, sticky="nsew")
         self.temp2.grid(sticky="nsew")
+        
+    def load_menu(self):
+        self.menu = tk.Menu(self)
+        self['menu'] = self.menu
         
     def write(self, data):
         self.pc.set_val(data[0])

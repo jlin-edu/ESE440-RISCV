@@ -18,6 +18,7 @@ class Memory:
     def load(self, data):
         for i in range(len(self.vals)):
             self.vals[i] = data[i]
+        self.frame.update()
     class MemoryFrame(ttk.LabelFrame):
         def __init__(self, memory, master, width, height):
             self.width = width
@@ -57,6 +58,10 @@ class Memory:
             address_length = ceil(log(self.memory.size, 2)/4.0)
             padding = ['0' for i in range(address_length - len(address))]
             return "0x" + "".join(padding) + address
+        
+        def update(self):
+            for i, val in enumerate(self.memory.vals):
+                self.tree.item(i, values=(self.str_addr(i), self.str_val(val)))
 
 if __name__ == "__main__":
     root = tk.Tk()
