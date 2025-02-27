@@ -21,8 +21,8 @@ module single_cycle_tb ();
     int fd;
     string line;
 
-    string program_file = "branch_test.txt";
-    int cycles = 32;
+    string program_file = "Fibonacci.txt";
+    int cycles = 1024;
 
     initial begin    
         fd = $fopen(program_file, "r");

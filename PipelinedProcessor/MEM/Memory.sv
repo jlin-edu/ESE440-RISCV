@@ -1,7 +1,7 @@
 `include "inst_defs.sv"
 
 module memory #(
-    parameter                   WIDTH=32, SIZE=4096,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
+    parameter                   WIDTH=32, SIZE=256,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
     parameter                   NUM_COL   = 4,
     parameter                   COL_WIDTH = 8,
     localparam                  LOGSIZE=$clog2(SIZE)
@@ -37,10 +37,10 @@ module memory #(
     output logic [`REG_FIELD_RANGE] rd_MEMWB,
     output logic reg_wr_en_MEMWB
 );
-    logic [`REG_RANGE] word_addr;
+    logic [LOGSIZE-1:0] word_addr;
     logic [1:0] byte_offset;
 
-    assign word_addr = ALU_out_EXMEM[31:2];
+    assign word_addr = ALU_out_EXMEM[(LOGSIZE-1)+2:2];
     assign byte_offset = ALU_out_EXMEM[1:0];
 
     logic [3:0]        byte_wr_en;

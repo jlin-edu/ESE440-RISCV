@@ -131,6 +131,8 @@ module execute (
             in1 = ALU_out_EXMEM;
         else if(in1_sel == 2'b01)
             in1 = reg_wr_data_WBID;
+        else
+            in1 = 0;
 
         if(imm_rs2_sel_IDEX == 1)   //if imm_rs2_sel is set to 1 then this operand contains the immediate and should not be forwarded as it does not contain register data
             in2 = immediate_IDEX;
@@ -140,6 +142,8 @@ module execute (
             in2 = ALU_out_EXMEM;
         else if(in2_sel == 2'b01)
             in2 = reg_wr_data_WBID;
+        else
+            in2 = 0;
     end
 
 

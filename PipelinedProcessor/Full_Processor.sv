@@ -11,6 +11,7 @@ module pipelined_processor #(
 
     //y'know
     input clk, reset
+    //output logic signed [`REG_RANGE] processor_out
 );
     // --------------- Instruction Fetch Signals ---------------
     // ---------- Inputs ----------
@@ -136,5 +137,6 @@ module pipelined_processor #(
                 .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
                 .funct3_MEMWB(funct3_MEMWB), .byte_offset_MEMWB(byte_offset_MEMWB));
     
+    //assign processor_out = ALU_out_EXMEM;
 
 endmodule

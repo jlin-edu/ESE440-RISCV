@@ -8,7 +8,7 @@ module data_memory #(
 )(
     input [WIDTH-1:0]           data_in,
     output logic [WIDTH-1:0]    data_out,
-    input [`REG_RANGE]          word_addr,
+    input [LOGSIZE-1:0]         word_addr,
     input                       clk,
     input [NUM_COL-1:0]         byte_wr_en,
     input                       reset
