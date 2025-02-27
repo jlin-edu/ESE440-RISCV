@@ -3,7 +3,7 @@
 module instruction_decode_pipe #(
     parameter WIDTH=32
 )(
-    input clk, reset, flush
+    input clk, reset, flush,
 
     // ----------------- Inputs to this stage -----------------
     // ----------------- IF Stage Signals(Inputs) -----------------
