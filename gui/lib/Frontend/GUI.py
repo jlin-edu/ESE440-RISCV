@@ -34,9 +34,10 @@ class GUI(tk.Tk):
         
         # Adjusts height of each memory view
         s = ttk.Style()
-        s.configure("Treeview", rowheight=15)
+        s.configure("Treeview", rowheight=20)
+        s.map("Treeview", foreground=self.fixed_map('foreground', s), background=self.fixed_map('background', s))
         
-        self.instruction_mem = Memory(self, 1024, "Instruction Memory")
+        self.instruction_mem = Memory(self, 1024, "Instruction Memory", highlight=True)
         self.data_mem = Memory(self, 1024, "Data Memory")
         
         self.controls = Controls(self)
@@ -63,4 +64,16 @@ class GUI(tk.Tk):
         self.pc.set_val(data[0])
         self.registers.load(data[1])
         self.instruction_mem.load(data[2])
+        self.instruction_mem.highlight_pos(data[0] // 4) # Highlight the instruction corresponding to the PC value (/ 4 since PC increments by 4)
         self.data_mem.load(data[3])
+
+    def fixed_map(self, option, style):
+        # Fix for setting text colour for Tkinter 8.6.9
+        # From: https://core.tcl.tk/tk/info/509cafafae
+        #
+        # Returns the style map for 'option' with any styles starting with
+        # ('!disabled', '!selected', ...) filtered out.
+
+        # style.map() returns an empty list for missing options, so this
+        # should be future-safe.
+        return [elm for elm in style.map('Treeview', query_opt=option) if elm[:2] != ('!disabled', '!selected')]
