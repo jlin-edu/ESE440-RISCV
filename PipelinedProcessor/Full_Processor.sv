@@ -79,6 +79,9 @@ module pipelined_processor #(
     logic [WIDTH-1:0] mem_rd_data_MEMWB;
     logic [1:0] reg_wr_ctrl_MEMWB;
 
+    logic [`FUNCT_3_RANGE] funct3_MEMWB;
+    logic [1:0] byte_offset_MEMWB;
+
     logic [`REG_FIELD_RANGE] rd_MEMWB;
     logic reg_wr_en_MEMWB;
 
@@ -125,11 +128,13 @@ module pipelined_processor #(
                                             .ALU_out_EXMEM(ALU_out_EXMEM), .funct3_EXMEM(funct3_EXMEM), .mem_wr_en_EXMEM(mem_wr_en_EXMEM), .rs2_data_EXMEM(rs2_data_EXMEM),
                                             .reg_wr_en_EXMEM(reg_wr_en_EXMEM), .reg_wr_ctrl_EXMEM(reg_wr_ctrl_EXMEM), .rd_EXMEM(rd_EXMEM), .pc_4_EXMEM(pc_4_EXMEM),
                                             .rd_MEMWB(rd_MEMWB), .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
-                                            .ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB));    
+                                            .ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
+                                            .funct3_MEMWB(funct3_MEMWB), .byte_offset_MEMWB(byte_offset_MEMWB));    
 
     write_back #(.WIDTH(WIDTH)) WB(.ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
                 .rd_MEMWB(rd_MEMWB), .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
-                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID));
+                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
+                .funct3_MEMWB(funct3_MEMWB), .byte_offset_MEMWB(byte_offset_MEMWB));
     
 
 endmodule
