@@ -75,7 +75,7 @@ module pipelined #(
     //logic [`REG_RANGE] jump_addr;
 
 
-    instruction_fetch_pipe #(.WIDTH(WIDTH), .SIZE(SIZE)) IF(.clk(clk), .reset(reset), .flush(flush)
+    instruction_fetch_pipe #(.WIDTH(WIDTH), .SIZE(SIZE)) IF(.clk(clk), .reset(reset), .flush(flush),
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
                                                         .instr_in(instr_in), .wr_addr(instr_wr_addr), .wr_en(instr_wr_en));
