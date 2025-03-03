@@ -35,7 +35,14 @@ module memory #(
     //enable, data and address
     //output logic [`REG_RANGE] reg_wr_data_WBID,
     output logic [`REG_FIELD_RANGE] rd_MEMWB,
-    output logic reg_wr_en_MEMWB
+    output logic reg_wr_en_MEMWB,
+
+
+    // ---------------- Data Mem B port for AXI/PS use ---------------
+    input [WIDTH-1:0]           AXI_dmem_data_in,
+    output logic [WIDTH-1:0]    AXI_dmem_data_out,
+    input [LOGSIZE-1:0]         AXI_dmem_word_addr,
+    input [NUM_COL-1:0]         AXI_dmem_byte_wr_en
 );
     logic [LOGSIZE-1:0] word_addr;
     logic [1:0] byte_offset;
@@ -88,9 +95,10 @@ module memory #(
 
 
     //logic [WIDTH-1:0] mem_rd_data;
-    data_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) data_memory(.clk(clk),
-                                                            .data_in(mem_data_in), .word_addr(word_addr), .byte_wr_en(byte_wr_en), .reset(reset),
-                                                            .data_out(mem_rd_data_MEMWB));    //replace mem_rd_data with mem_rd_data_MEMWB once sequential read is added
+    data_memory #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL), 
+                    .COL_WIDTH(COL_WIDTH)) data_memory(.clk(clk), .data_in(mem_data_in), .word_addr(word_addr), 
+                                                        .byte_wr_en(byte_wr_en), .reset(reset), .data_out(mem_rd_data_MEMWB),
+                                                        .data_in_B(AXI_dmem_data_in), .data_out_B(AXI_dmem_data_out), .word_addr_B(AXI_dmem_word_addr), .byte_wr_en_B(AXI_dmem_byte_wr_en));    //replace mem_rd_data with mem_rd_data_MEMWB once sequential read is added
 
     //Write Back(im feeling lazy so im putting this here, might move later)
     //note that when we chnage the data memory to be a squential read, 

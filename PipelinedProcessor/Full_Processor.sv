@@ -2,6 +2,8 @@
 
 module pipelined_processor #(
     parameter                   WIDTH=32, SIZE=64,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
+    parameter                   NUM_COL   = 4,
+    parameter                   COL_WIDTH = 8,
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
     //instruction memory write port
@@ -12,6 +14,12 @@ module pipelined_processor #(
     //y'know
     input clk, reset
     //output logic signed [`REG_RANGE] processor_out
+
+    // Data Mem B port for AXI/PS use
+    input [WIDTH-1:0]           AXI_dmem_data_in,
+    output logic [WIDTH-1:0]    AXI_dmem_data_out,
+    input [LOGSIZE-1:0]         AXI_dmem_word_addr,
+    input [NUM_COL-1:0]         AXI_dmem_byte_wr_en
 );
     // --------------- Instruction Fetch Signals ---------------
     // ---------- Inputs ----------
@@ -125,12 +133,14 @@ module pipelined_processor #(
                 .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
                 .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID));
 
-    memory #(.WIDTH(WIDTH), .SIZE(SIZE)) MEM(.clk(clk), .reset(reset),
+    memory #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL), .COL_WIDTH(COL_WIDTH)) 
+                                        MEM(.clk(clk), .reset(reset),
                                             .ALU_out_EXMEM(ALU_out_EXMEM), .funct3_EXMEM(funct3_EXMEM), .mem_wr_en_EXMEM(mem_wr_en_EXMEM), .rs2_data_EXMEM(rs2_data_EXMEM),
                                             .reg_wr_en_EXMEM(reg_wr_en_EXMEM), .reg_wr_ctrl_EXMEM(reg_wr_ctrl_EXMEM), .rd_EXMEM(rd_EXMEM), .pc_4_EXMEM(pc_4_EXMEM),
                                             .rd_MEMWB(rd_MEMWB), .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
                                             .ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
-                                            .funct3_MEMWB(funct3_MEMWB), .byte_offset_MEMWB(byte_offset_MEMWB));    
+                                            .funct3_MEMWB(funct3_MEMWB), .byte_offset_MEMWB(byte_offset_MEMWB),
+                                            .AXI_dmem_data_in(AXI_dmem_data_in), .AXI_dmem_data_out(AXI_dmem_data_out), .AXI_dmem_word_addr(AXI_dmem_word_addr), .AXI_dmem_byte_wr_en(AXI_dmem_byte_wr_en));    
 
     write_back #(.WIDTH(WIDTH)) WB(.ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
                 .rd_MEMWB(rd_MEMWB), .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
