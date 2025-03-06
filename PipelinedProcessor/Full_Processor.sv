@@ -12,7 +12,7 @@ module pipelined_processor #(
     input instr_wr_en,
 
     //y'know
-    input clk, reset
+    input clk, reset,
     //output logic signed [`REG_RANGE] processor_out
 
     // Data Mem B port for AXI/PS use

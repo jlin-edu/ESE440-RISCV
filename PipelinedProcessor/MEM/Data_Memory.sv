@@ -38,15 +38,16 @@ module data_memory #(
     end
 
     //B port for AXI use
+    integer j;
     always_ff @(posedge clk) begin
         //maybe leave out the reset, if we want to prefill data memory with data, then we can hold reset, leaving the B port open write
         //if(reset) begin
         //    data_out_B <= 0;
         //end
         //else begin
-            for(i=0;i<NUM_COL;i=i+1) begin
-                if(byte_wr_en_B[i])
-                    mem[word_addr_B][i*COL_WIDTH +: COL_WIDTH] <= data_in_B[i*COL_WIDTH +: COL_WIDTH];
+            for(j=0;j<NUM_COL;j=j+1) begin
+                if(byte_wr_en_B[j])
+                    mem[word_addr_B][j*COL_WIDTH +: COL_WIDTH] <= data_in_B[j*COL_WIDTH +: COL_WIDTH];
             end
             data_out_B <= mem[word_addr_B];
         //end
