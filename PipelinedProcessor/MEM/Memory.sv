@@ -41,7 +41,7 @@ module memory #(
     // ---------------- Data Mem B port for AXI/PS use ---------------
     input [WIDTH-1:0]           AXI_dmem_data_in,
     output logic [WIDTH-1:0]    AXI_dmem_data_out,
-    input [LOGSIZE-1:0]         AXI_dmem_word_addr,
+    input [(LOGSIZE-1)+2:0]     AXI_dmem_word_addr,
     input [NUM_COL-1:0]         AXI_dmem_byte_wr_en
 );
     logic [LOGSIZE-1:0] word_addr;
