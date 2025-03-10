@@ -47,7 +47,7 @@ module single_cycle_tb ();
             $fgets(line, fd);
             $sscanf(line, "%b\n", bram_din);
             @(posedge clk);
-            instr_wr_addr += 4;
+            shared_bram_addr += 4;
             @(negedge clk);
         end
         $fclose(fd);
