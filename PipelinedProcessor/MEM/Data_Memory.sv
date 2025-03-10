@@ -16,7 +16,7 @@ module data_memory #(
     //Port B signals for AXI use
     input [WIDTH-1:0]           data_in_B,
     output logic [WIDTH-1:0]    data_out_B,
-    input [LOGSIZE-1:0]         word_addr_B,
+    input [(LOGSIZE-1)+2:0]         word_addr_B,
     input [NUM_COL-1:0]         byte_wr_en_B
 );
 
