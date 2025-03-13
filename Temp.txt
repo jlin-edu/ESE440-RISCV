@@ -1,8 +1,0 @@
-To get dump of simulation:
-
-open_vcd NAME.vcd
-log_vcd /TB FILE/dut/*
-run all (make sure to restart sim)
-close_vcd
-
-find NAME.vcd in Vivado directory

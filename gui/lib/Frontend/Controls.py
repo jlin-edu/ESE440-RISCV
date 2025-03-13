@@ -17,14 +17,14 @@ class Controls:
             self.init_buttons()
             
         def init_buttons(self):
-            self.run = ttk.Button(self, text="Play")
-            self.pause = ttk.Button(self, text="Pause")
-            self.forward = ttk.Button(self, text="Step Forward")
-            self.backward = ttk.Button(self, text="Step Back")
+            self.run = ttk.Button(self, text="Play", command=self.master.controller.play)
+            self.reset = ttk.Button(self, text="Reset", command=self.master.controller.reset)
+            self.forward = ttk.Button(self, text="Step Forward", command=self.master.controller.step_forward)
+            self.backward = ttk.Button(self, text="Step Back", command=self.master.controller.step_backward)
         
         def grid(self, **kwargs):
             super().grid(**kwargs)
             self.run.grid(column=0, row=0)
-            self.pause.grid(column=1, row=0)
+            self.reset.grid(column=1, row=0)
             self.forward.grid(column=2, row=0)
             self.backward.grid(column=3, row=0)

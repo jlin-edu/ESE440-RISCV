@@ -6,14 +6,13 @@ module single_cycle #(
 )(
     //instruction memory write port
     input [WIDTH-1:0]           instr_in,       //the write port should only be used for filling the memory with instructions in a testbench
-    input [(LOGSIZE-1):0]     instr_wr_addr, 
+    input [(LOGSIZE-1)+2:0]     instr_wr_addr, 
     input instr_wr_en,
 
     //y'know
     input clk, reset,
     output logic signed[`REG_RANGE] ALU_out_EXMEM
-);
-    // --------------- Instruction Fetch Signals ---------------
+);    // --------------- Instruction Fetch Signals ---------------
     // ---------- Inputs ----------
     // ----- EX Stage Signals -----
     logic [`REG_RANGE] jump_addr_EXIF;   //IF Input(Provided by EX Stage Mux)
@@ -79,7 +78,7 @@ module single_cycle #(
     instruction_fetch #(.WIDTH(WIDTH), .SIZE(SIZE)) IF(.clk(clk), .reset(reset),
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
-                                                        .instr_in(instr_in), .wr_addr(instr_wr_addr[LOGSIZE-1:2]), .wr_en(instr_wr_en));
+                                                        .instr_in(instr_in), .wr_addr(instr_wr_addr), .wr_en(instr_wr_en));
 
     //pipeline register here
     //instruction, pc, pc+4

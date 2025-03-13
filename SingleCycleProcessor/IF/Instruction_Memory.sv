@@ -14,7 +14,7 @@ module instr_memory #(
     input [`REG_RANGE]          pc,
     output logic [WIDTH-1:0]    instr_out
 );
-    logic [WIDTH-1:0] mem [SIZE-1:0];
+    logic [SIZE-1:0][WIDTH-1:0] mem;
 
     logic [LOGSIZE-1:0] word_offset;
     logic [LOGSIZE-1:0] write_word_offset;
