@@ -3,7 +3,7 @@
 // Single Cycle Testbench, specify the program to run in the program_file string.
 // The program will run for 256 clock cycles, this can be changed in the cycles variable
 
-module single_cycle_tb ();
+module pipelined_processor_tb ();
     parameter   WIDTH=32, SIZE=128, NUM_COL=4, COL_WIDTH=8;
     localparam  LOGSIZE=$clog2(SIZE);
 
