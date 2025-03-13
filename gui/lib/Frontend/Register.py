@@ -19,7 +19,9 @@ class Register:
         self.frame = self.RegisterFrame(master, self, width, height)
     
     # Setter method to modify the registers current value
-    def set_val(self, new_val):
+    def set_val(self, new_val, modified=None):
+        text_color = "red" if modified else "black"
+        self.frame.val_label.config(foreground=text_color)
         self.val = new_val
         self.frame.set_val()
     

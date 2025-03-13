@@ -7,10 +7,10 @@ main:
         sw      s0,72(sp)
         addi    s0,sp,80
         sw      zero,-20(s0)
-        j       .L2
+        j       156
 .L5:
         sw      zero,-24(s0)
-        j       .L3
+        j       120
 .L4:
         lw      a5,-20(s0)
         addi    a4,a5,1
@@ -43,19 +43,19 @@ main:
 .L3:
         lw      a4,-24(s0)
         li      a5,1
-        ble     a4,a5,.L4
+        ble     a4,a5,-128
         lw      a5,-20(s0)
         addi    a5,a5,1
         sw      a5,-20(s0)
 .L2:
         lw      a4,-20(s0)
         li      a5,1
-        ble     a4,a5,.L5
+        ble     a4,a5,-164
         sw      zero,-28(s0)
-        j       .L6
+        j       180
 .L9:
         sw      zero,-32(s0)
-        j       .L7
+        j       148
 .L8:
         lw      a4,-28(s0)
         addi    a5,s0,-48
@@ -95,14 +95,14 @@ main:
 .L7:
         lw      a4,-32(s0)
         li      a5,1
-        ble     a4,a5,.L8
+        ble     a4,a5,-152
         lw      a5,-28(s0)
         addi    a5,a5,1
         sw      a5,-28(s0)
 .L6:
         lw      a4,-28(s0)
         li      a5,1
-        ble     a4,a5,.L9
+        ble     a4,a5,-188
         li      a5,0
         mv      a0,a5
         lw      ra,76(sp)

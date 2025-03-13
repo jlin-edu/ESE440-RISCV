@@ -129,6 +129,8 @@
 # 
 #                    Future Additions/Changes (Potential)
 #
+# FIX JUMP ADDRESS CALCULATION!!!!!
+#
 # Create offset token with property of allowing labels
 # Have error handling as a seperate function
 # Have errors point to whole offender Ex: offender
@@ -327,7 +329,7 @@ pseudo_instruction_dict = {
     "NOP" : [[None], [None], ["ADDI", "zero", "zero", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "LI" : [[TokenType.REG, TokenType.IMM], [], ["LOAD"], [], False],
     "LA" : [[TokenType.REG, TokenType.IMM], [], ["LOAD"], [], True],
-    "MV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG,"0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
+    "MOV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG,"0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
     "NOT" : [[TokenType.REG, TokenType.REG], [1, 2], ["XORI", TokenType.REG, TokenType.REG, "-1"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "NEG" : [[TokenType.REG, TokenType.REG], [1, 2], ["SUB", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
     "SEQZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTIU", TokenType.REG, TokenType.REG, "-1"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
