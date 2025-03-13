@@ -2,6 +2,8 @@
 
 module memory #(
     parameter                   WIDTH=32, SIZE=256,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
+    parameter                   NUM_COL   = 4,
+    parameter                   COL_WIDTH = 8,
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
     input clk, reset,
@@ -26,17 +28,77 @@ module memory #(
     output logic [WIDTH-1:0] mem_rd_data_MEMWB,
     output logic [1:0] reg_wr_ctrl_MEMWB,
 
+    output logic [`FUNCT_3_RANGE] funct3_MEMWB,     //to be used to shift/mask data loaded from memory
+    output logic [1:0] byte_offset_MEMWB,
+
     // ----------------- ID Stage Signals(Outputs) -----------------
     //enable, data and address
     //output logic [`REG_RANGE] reg_wr_data_WBID,
     output logic [`REG_FIELD_RANGE] rd_MEMWB,
-    output logic reg_wr_en_MEMWB
-);
+    output logic reg_wr_en_MEMWB,
 
-    logic [WIDTH-1:0] mem_rd_data;
-    data_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) data_memory(.clk(clk),
-                                                            .data_in(rs2_data_EXMEM), .addr(ALU_out_EXMEM), .wr_en(mem_wr_en_EXMEM), .funct3(funct3_EXMEM),
-                                                            .data_out(mem_rd_data));    //replace mem_rd_data with mem_rd_data_MEMWB once sequential read is added
+
+    // ---------------- Data Mem B port for AXI/PS use ---------------
+    input [WIDTH-1:0]           AXI_dmem_data_in,
+    output logic [WIDTH-1:0]    AXI_dmem_data_out,
+    input [(LOGSIZE-1)+2:0]     AXI_dmem_word_addr,
+    input [NUM_COL-1:0]         AXI_dmem_byte_wr_en
+);
+    logic [LOGSIZE-1:0] word_addr;
+    logic [1:0] byte_offset;
+
+    assign word_addr = ALU_out_EXMEM[(LOGSIZE-1)+2:2];
+    assign byte_offset = ALU_out_EXMEM[1:0];
+
+    logic [3:0]        byte_wr_en;
+    logic [`REG_RANGE] mem_data_in;
+    always_comb begin
+        if((funct3_EXMEM == `SW) & (mem_wr_en_EXMEM == 1)) begin
+            byte_wr_en = 4'b1111;
+            mem_data_in = rs2_data_EXMEM;
+        end
+        else if((funct3_EXMEM == `SH) & (mem_wr_en_EXMEM == 1)) begin
+            byte_wr_en  = byte_offset[1] ? 4'b1100 : 4'b0011;
+            mem_data_in = byte_offset[1] ? (rs2_data_EXMEM<<(COL_WIDTH*2)) : rs2_data_EXMEM;
+        end
+        else if((funct3_EXMEM == `SB) & (mem_wr_en_EXMEM == 1)) begin
+            case(byte_offset)
+                2'b00: begin 
+                    byte_wr_en  = 4'b0001;
+                    mem_data_in = rs2_data_EXMEM;
+                end
+                2'b01: begin
+                    byte_wr_en  = 4'b0010;
+                    mem_data_in = (rs2_data_EXMEM<<(COL_WIDTH));
+                end
+                2'b10: begin
+                    byte_wr_en  = 4'b0100;
+                    mem_data_in = (rs2_data_EXMEM<<(COL_WIDTH*2));
+                end
+                2'b11: begin
+                    byte_wr_en  = 4'b1000;
+                    mem_data_in = (rs2_data_EXMEM<<(COL_WIDTH*3));
+                end
+                default: begin
+                    byte_wr_en  = 4'b0000;
+                    mem_data_in = 0;
+                end
+            endcase
+        end
+        else begin
+            byte_wr_en  = 4'b0000;
+            mem_data_in = 0;
+        end
+    end
+
+    //logic [] mem_data_in;
+
+
+    //logic [WIDTH-1:0] mem_rd_data;
+    data_memory #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL), 
+                    .COL_WIDTH(COL_WIDTH)) data_memory(.clk(clk), .data_in(mem_data_in), .word_addr(word_addr), 
+                                                        .byte_wr_en(byte_wr_en), .reset(reset), .data_out(mem_rd_data_MEMWB),
+                                                        .data_in_B(AXI_dmem_data_in), .data_out_B(AXI_dmem_data_out), .word_addr_B(AXI_dmem_word_addr), .byte_wr_en_B(AXI_dmem_byte_wr_en));    //replace mem_rd_data with mem_rd_data_MEMWB once sequential read is added
 
     //Write Back(im feeling lazy so im putting this here, might move later)
     //note that when we chnage the data memory to be a squential read, 
@@ -62,20 +124,26 @@ module memory #(
         if(reset) begin
             ALU_out_MEMWB <= 0;
             pc_4_MEMWB <= 0;
-            mem_rd_data_MEMWB <= 0;   //this line needs to get deleted once we use sequial read
+            //mem_rd_data_MEMWB <= 0;   //this line needs to get deleted once we use sequial read
             reg_wr_ctrl_MEMWB <= 0;
         
             rd_MEMWB <= 0;
             reg_wr_en_MEMWB <= 0;
+
+            funct3_MEMWB <= 0;
+            byte_offset_MEMWB <= 0;
         end
         else begin
             ALU_out_MEMWB <= ALU_out_EXMEM;
             pc_4_MEMWB <= pc_4_EXMEM;
-            mem_rd_data_MEMWB <= mem_rd_data;   //this line needs to get deleted once we use sequial read
+            //mem_rd_data_MEMWB <= mem_rd_data;   //this line needs to get deleted once we use sequial read
             reg_wr_ctrl_MEMWB <= reg_wr_ctrl_EXMEM;
 
             rd_MEMWB <= rd_EXMEM;
             reg_wr_en_MEMWB <= reg_wr_en_EXMEM;
+
+            funct3_MEMWB <= funct3_EXMEM;
+            byte_offset_MEMWB <= byte_offset;
         end
     end
 

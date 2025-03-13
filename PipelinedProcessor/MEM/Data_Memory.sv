@@ -2,65 +2,55 @@
 
 module data_memory #(   
     parameter                   WIDTH=32, SIZE=256,         //WIDTH is bits per word, SIZE is # of WORDS
-    parameter NUM_COL   = 4,
-    parameter COL_WIDTH = 8,
+    parameter                   NUM_COL   = 4,
+    parameter                   COL_WIDTH = 8,
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
     input [WIDTH-1:0]           data_in,
     output logic [WIDTH-1:0]    data_out,
-    //input [(LOGSIZE-1)+2:0]     addr,       //need plus 2 bits because the bottom 2 bits are byte offsets
-    input [`REG_RANGE]          addr,
-    input                       clk, wr_en,
-    //input [`OP_SIZE]            opcode,
-    input [`FUNCT_3_RANGE]      funct3
+    input [LOGSIZE-1:0]         word_addr,
+    input                       clk,
+    input [NUM_COL-1:0]         byte_wr_en,
+    input                       reset,
+
+    //Port B signals for AXI use
+    input [WIDTH-1:0]           data_in_B,
+    output logic [WIDTH-1:0]    data_out_B,
+    input [(LOGSIZE-1)+2:0]         word_addr_B,
+    input [NUM_COL-1:0]         byte_wr_en_B
 );
 
-    logic [SIZE-1:0][WIDTH-1:0] mem;
+    logic [WIDTH-1:0] mem [SIZE-1:0];
 
-    logic [LOGSIZE-1:0] word_offset;
-    logic [1:0] byte_offset;
-
-    assign word_offset = addr[(LOGSIZE-1)+2:2];
-    assign byte_offset = addr[1:0];
-
-    //we can do (byte_offset & wr_en) to get a 4 bit write enable i think, this will then be used in the sequential memory
-    //also remember to use the funct 3 field to know which bits
     
-    
-    
+    integer i;
     always_ff @(posedge clk) begin
-        //data_out <= mem[addr];
-
-        //note that misaligned stores are not supported
-        //able to load byte from any location without restriction
-        //only able to load half-word from %2 address locations
-        //only able to load words from %4 address locations
-        if (wr_en) begin
-            case(funct3)
-                `SW:  mem[word_offset]       <= data_in;
-                `SH:  mem[word_offset][(8*byte_offset) +: 16] <= data_in[15:0];
-                `SB:  mem[word_offset][(8*byte_offset) +: 8]  <= data_in[7:0];
-            endcase
+        if(reset) begin
+            data_out <= 0;
+        end
+        else begin
+            for(i=0;i<NUM_COL;i=i+1) begin
+                if(byte_wr_en[i])
+                    mem[word_addr][i*COL_WIDTH +: COL_WIDTH] <= data_in[i*COL_WIDTH +: COL_WIDTH];
+            end
+            data_out <= mem[word_addr];
         end
     end
 
-    //read logic
-    always_comb begin
-        //note that misaligned loads and stores are not supported
-        //able to load byte from any location without restriction
-        //only able to load half-word from %2 address locations
-        //only able to load words from %4 address locations
-        case(funct3)
-            `LW:  data_out = mem[word_offset];
-            `LH:  data_out = 32'(signed'(mem[word_offset][(8*byte_offset) +: 16]));
-            `LB:  data_out = 32'(signed'(mem[word_offset][(8*byte_offset) +: 8]));
-            `LHU: data_out = mem[word_offset][(8*byte_offset) +: 16];
-            `LBU: data_out = mem[word_offset][(8*byte_offset) +: 8];
-            default: begin
-                //ASSERT STATEMENT
-                data_out = 0;
+    //B port for AXI use
+    integer j;
+    always_ff @(posedge clk) begin
+        //maybe leave out the reset, if we want to prefill data memory with data, then we can hold reset, leaving the B port open write
+        //if(reset) begin
+        //    data_out_B <= 0;
+        //end
+        //else begin
+            for(j=0;j<NUM_COL;j=j+1) begin
+                if(byte_wr_en_B[j])
+                    mem[word_addr_B][j*COL_WIDTH +: COL_WIDTH] <= data_in_B[j*COL_WIDTH +: COL_WIDTH];
             end
-        endcase
+            data_out_B <= mem[word_addr_B];
+        //end
     end
     
 endmodule

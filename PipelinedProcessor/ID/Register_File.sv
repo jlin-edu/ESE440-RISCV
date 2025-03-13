@@ -33,11 +33,15 @@ module register_file #(
     always_comb begin
         if(rs1_rd_addr == 0)
             rs1_rd_data = 0;
+        else if((wr_en == 1) & (wr_addr == rs1_rd_addr))// & (wr_addr != 0)
+            rs1_rd_data = wr_data;
         else
             rs1_rd_data = register_file[rs1_rd_addr];
 
         if(rs2_rd_addr == 0)
             rs2_rd_data = 0;
+        else if((wr_en == 1) & (wr_addr == rs2_rd_addr))// & (wr_addr != 0)
+            rs2_rd_data = wr_data;
         else
             rs2_rd_data = register_file[rs2_rd_addr];
     end
