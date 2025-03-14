@@ -109,7 +109,7 @@ module pipelined_processor #(
     assign block_wr_addr = shared_bram_addr[(LOGSIZE-1)+2:0];
 
     logic [NUM_COL-1:0] instr_wr_en;
-    assign instr_wr_en = ~shared_bram_addr[(LOGSIZE)+2] & {4{bram_wr_en}};    //instruction mem is BRAM0
+    assign instr_wr_en = {4{~shared_bram_addr[(LOGSIZE)+2]}} & bram_wr_en;    //instruction mem is BRAM0
 
     instruction_fetch #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL)) IF(.clk(clk), .reset(reset),
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
@@ -149,7 +149,7 @@ module pipelined_processor #(
 
 
     logic [NUM_COL-1:0] data_wr_en;
-    assign data_wr_en = shared_bram_addr[(LOGSIZE)+2] & {4{bram_wr_en}};    //instruction mem is BRAM0
+    assign data_wr_en = {4{shared_bram_addr[(LOGSIZE)+2]}} & bram_wr_en;    //instruction mem is BRAM0
     memory #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL), .COL_WIDTH(COL_WIDTH)) 
                                         MEM(.clk(clk), .reset(reset),
                                             .ALU_out_EXMEM(ALU_out_EXMEM), .funct3_EXMEM(funct3_EXMEM), .mem_wr_en_EXMEM(mem_wr_en_EXMEM), .rs2_data_EXMEM(rs2_data_EXMEM),
@@ -157,7 +157,7 @@ module pipelined_processor #(
                                             .rd_MEMWB(rd_MEMWB), .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
                                             .ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
                                             .funct3_MEMWB(funct3_MEMWB), .byte_offset_MEMWB(byte_offset_MEMWB),
-                                            .AXI_dmem_data_in(bram_din), .AXI_dmem_data_out(dmem_dout), .AXI_dmem_word_addr(block_wr_addr), .AXI_dmem_byte_wr_en(data_wr_en));    
+                                            .AXI_dmem_data_in(bram_din), .AXI_dmem_data_out(dmem_dout), .AXI_dmem_byte_addr(block_wr_addr), .AXI_dmem_byte_wr_en(data_wr_en));    
 
     write_back #(.WIDTH(WIDTH)) WB(.ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
                 .rd_MEMWB(rd_MEMWB), .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
@@ -167,10 +167,10 @@ module pipelined_processor #(
     //assign processor_out = ALU_out_EXMEM;
     logic bram_sel;
     always_ff @(posedge clk) begin
-        if(reset)
-            bram_sel <= 0;
-        else
-            bram_sel <= shared_bram_addr[(LOGSIZE)+2];
+        //if(reset)
+        //    bram_sel <= 0;
+        //else
+        bram_sel <= shared_bram_addr[(LOGSIZE)+2];
     end
 
     always_comb begin
