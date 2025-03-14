@@ -9,12 +9,12 @@ module hazard_unit(
 );
     logic memRead, isRS1, isRS2;
     assign memRead = (reg_wr_ctrl_IDEX == 2);
-    assign isRS1  = (pc_rs1_sel == 0);
-    assign isRS2  = (imm_rs2_sel == 0);
+    //assign isRS1  = (pc_rs1_sel == 0);
+    //assign isRS2  = (imm_rs2_sel == 0);
 
     logic rs1Hazard, rs2Hazard;
-    assign rs1Hazard = isRS1 & (rs1_ID == rd_IDEX);
-    assign rs2Hazard = isRS2 & (rs2_ID == rd_IDEX);
+    assign rs1Hazard = (rs1_ID == rd_IDEX);
+    assign rs2Hazard = (rs2_ID == rd_IDEX);
 
     always_comb begin
         if(memRead & ((rs1Hazard) | (rs2Hazard)))
