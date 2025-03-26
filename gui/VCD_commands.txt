@@ -23,12 +23,12 @@ close_vcd
 TCL COMMANDS FOR GETTING REQUIRED DATA FOR PIPELINE GUI:
 restart
 open_vcd test.vcd
-log_vcd /single_cycle_tb/dut/clk
-log_vcd /single_cycle_tb/dut/reset
-log_vcd /single_cycle_tb/dut/IF/pc_module/pc
-log_vcd /single_cycle_tb/dut/IF/instruction_buffer/mem
-log_vcd /single_cycle_tb/dut/ID/register_file/register_file
-log_vcd /single_cycle_tb/dut/MEM/data_memory/mem
+log_vcd /pipelined_processor_tb/dut/clk
+log_vcd /pipelined_processor_tb/dut/reset
+log_vcd /pipelined_processor_tb/dut/IF/pc_module/pc
+log_vcd /pipelined_processor_tb/dut/IF/instruction_buffer/mem
+log_vcd /pipelined_processor_tb/dut/ID/register_file/register_file
+log_vcd /pipelined_processor_tb/dut/MEM/data_memory/mem
 run all
 close_vcd
 
