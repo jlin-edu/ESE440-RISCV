@@ -37,8 +37,8 @@ class GUI(tk.Tk):
         s.configure("Treeview", rowheight=20)
         s.map("Treeview", foreground=self.fixed_map('foreground', s), background=self.fixed_map('background', s))
         
-        self.instruction_mem = Memory(self, 1024, "Instruction Memory", highlight=True)
-        self.data_mem = Memory(self, 1024, "Data Memory")
+        self.instruction_mem = Memory(self, 128, "Instruction Memory", highlight=True)
+        self.data_mem = Memory(self, 128, "Data Memory")
         
         self.controls = Controls(self)
         
@@ -54,7 +54,7 @@ class GUI(tk.Tk):
         self.controls.grid(column=1, row=0, columnspan=1, sticky="nsew")
         
         self.stages.grid(column=2, row=0, rowspan=3, sticky="nsew")
-        self.temp2.grid(sticky="nsew")
+        #self.temp2.grid(sticky="nsew")
         
     def load_menu(self):
         self.menu = tk.Menu(self)
