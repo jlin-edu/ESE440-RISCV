@@ -78,6 +78,7 @@ class VCDInterface:
             print("Error: No file open")
             return
         self.file.close()
+        self.file = None
     
     def quit(self):
         self.close()
@@ -92,6 +93,4 @@ class VCDInterface:
                 last_time = int(file_line[1:-1])
             file_line = self.file.readline()
         return last_time
-
-    
         

@@ -1,3 +1,5 @@
+import os
+
 from lib.Backend.Controller import Controller
 from lib.Frontend.GUI import GUI
 
@@ -8,7 +10,6 @@ windll.shcore.SetProcessDpiAwareness(1) # This improves the resolution of the Tk
 TODO:
 - Pipeline status view
 - Change data view (hex, bin, dec, signed, unsigned)
-- Highlight value changes
 - Manually set time to go to + show current time
 - Run TCL commands
 - Change program file + display name (either through DPI or change SV file)
@@ -23,7 +24,11 @@ TODO:
 
 
 if __name__ == "__main__":
-    control = Controller()
+    current_file_path = __file__
+    current_file_abs_path = os.path.abspath(current_file_path)
+    current_directory_path = os.path.dirname(current_file_abs_path)
+    
+    control = Controller(current_directory_path)
     gui = GUI(control)
     
     

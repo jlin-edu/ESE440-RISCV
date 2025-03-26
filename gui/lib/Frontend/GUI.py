@@ -24,7 +24,7 @@ class GUI(tk.Tk):
         self.option_add("*tearOff", False)
         
         self.VCDfile = filedialog.askopenfilename(title="Select VCD File", filetypes=(("VCD Files", "*.vcd"), ("All Files", "*.*")))
-        self.controller.open(self.VCDfile)
+        self.controller.open_vcd(self.VCDfile)
         
         self.mainloop()
     
@@ -43,7 +43,7 @@ class GUI(tk.Tk):
         self.controls = Controls(self)
         
         self.stages = ttk.Frame(self, relief="solid", borderwidth=2)
-        self.temp2 = ttk.Label(self.stages, text="Pipeline Stages", anchor="center") #TODO
+        #self.temp2 = ttk.Label(self.stages, text="Pipeline Stages", anchor="center") #TODO
     
     def grid_all(self):
         self.pc.grid(col=0, row=0, sticky="w")
@@ -54,7 +54,7 @@ class GUI(tk.Tk):
         self.controls.grid(column=1, row=0, columnspan=1, sticky="nsew")
         
         self.stages.grid(column=2, row=0, rowspan=3, sticky="nsew")
-        #self.temp2.grid(sticky="nsew")
+        self.temp2.grid(sticky="nsew")
         
     def load_menu(self):
         self.menu = tk.Menu(self)

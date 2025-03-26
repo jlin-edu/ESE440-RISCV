@@ -2,19 +2,25 @@ from .VCDInterpreter import VCDInterpreter
 from .VCDInterface import VCDInterface
 
 class Controller:
-    def __init__(self):
+    def __init__(self, path):
         self.VCD_inter = VCDInterface() # TODO: Functions to change VCDinterface file
         self.VCD_interp = VCDInterpreter() # TODO: Functions to change VCDInterpreter data
         self.GUI = None
         
+        self.path = path
+        
         self.reset_time = -1 # In future save times to make lookup faster
         self.time = -1
     
-    def open(self, file_name):
+    def open_vcd(self, file_name):
         self.VCD_inter.open(file_name)
         self.read()
         self.time = self.VCD_interp.get_reset()
         self.run()
+        self.close_vcd()
+    
+    def close_vcd(self):
+        self.VCD_inter.close()
     
     def read(self):
         self.VCD_data = self.VCD_inter.read()
@@ -39,3 +45,54 @@ class Controller:
     def run(self):
         self.VCD_state = self.VCD_interp.extract(self.time)
         self.GUI.write(self.VCD_state)
+        
+    def test(self):
+        self.play()
+        self.VCD_inter.open(f"{self.path}\\Regression_Test.vcd")
+        test_data = self.VCD_inter.read()
+        self.VCD_interp.load(test_data)
+        time = self.VCD_interp.get_time()
+        test_state = self.VCD_interp.extract(time)
+        self.VCD_inter.close()
+        
+        if self.VCD_state != test_state:
+            print("Test Failed: Mismatching state")
+        elif self.VCD_data != test_data:
+            print("Test Failed: Signal Incorrect")
+            
+            failed_net = None
+            fail_time = -1
+            expected_val = None
+            found_val = None
+            for test_key, data_key in zip(test_data, self.VCD_data):
+                test_values = test_data[test_key]
+                data_values = self.VCD_data[data_key]
+                
+                if isinstance(test_values, list) and isinstance(data_values, list):
+                    test_net = test_values[0]
+                    test_times = test_values[1]
+                    
+                    data_net = data_values[0]
+                    data_times = data_values[1]
+                    
+                    for i in range(len(test_times)):
+                        test_time = list(test_times.keys())[i]
+                        test_value = test_times[test_time]
+                        
+                        data_time = list(data_times.keys())[i]
+                        data_value = data_times[data_time]
+                        
+                        if test_time != data_time:
+                            print(f"Error: Missing time data at time {test_time} in net {test_net}")
+                            break
+                        
+                        if test_value != data_value and (fail_time < 0 or test_time < fail_time):
+                            fail_time = test_time
+                            failed_net = test_net
+                            expected_val = test_value
+                            found_val = data_value
+                        
+            print(f"Error: net {failed_net} has incorrect value of {found_val} at time {fail_time}, expected {expected_val}")
+                    
+        else:
+            print("Test Success!")

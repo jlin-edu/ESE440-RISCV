@@ -21,6 +21,7 @@ class Controls:
             self.reset = ttk.Button(self, text="Reset", command=self.master.controller.reset)
             self.forward = ttk.Button(self, text="Step Forward", command=self.master.controller.step_forward)
             self.backward = ttk.Button(self, text="Step Back", command=self.master.controller.step_backward)
+            self.test = ttk.Button(self, text="Test", command=self.master.controller.test)
         
         def grid(self, **kwargs):
             super().grid(**kwargs)
@@ -28,3 +29,4 @@ class Controls:
             self.reset.grid(column=1, row=0)
             self.forward.grid(column=2, row=0)
             self.backward.grid(column=3, row=0)
+            self.test.grid(column=4, row=0)
