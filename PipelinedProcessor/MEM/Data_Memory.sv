@@ -16,7 +16,7 @@ module data_memory #(
     //Port B signals for AXI use
     input [WIDTH-1:0]           data_in_B,
     output logic [WIDTH-1:0]    data_out_B,
-    input [(LOGSIZE-1)+2:0]         word_addr_B,
+    input [(LOGSIZE-1)+2:0]     byte_addr_B,
     input [NUM_COL-1:0]         byte_wr_en_B
 );
 
@@ -38,6 +38,8 @@ module data_memory #(
     end
 
     //B port for AXI use
+    logic [LOGSIZE-1:0] word_addr_B;
+    assign word_addr_B = byte_addr_B[(LOGSIZE-1)+2:2];
     integer j;
     always_ff @(posedge clk) begin
         //maybe leave out the reset, if we want to prefill data memory with data, then we can hold reset, leaving the B port open write
