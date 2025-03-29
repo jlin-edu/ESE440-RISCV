@@ -4,21 +4,22 @@
 // Outputs: quotient = q (32 bits, but will be 16), remainder = s (32 bits, but will be 16), running (1 bit)
 
 module division_wrapper (
-    input logic unsigned [`REG_RANGE] dividend, divisor,
+    input logic [`REG_RANGE] dividend, divisor,
     input logic start, reset, clk,
-    output logic unsigned [`REG_RANGE] quotient, remainder,
+    output logic [`REG_RANGE] quotient, remainder,
     output logic status, divide_by_zero, overflow
 );
 
-    logic start_wrap;
+    logic unsigned [`REG_RANGE] dividend_u, divisor_u, quotient_u;
+    logic start_wrap, sign;
 
     restoring_division divider (
-        .dividend(dividend),
-        .divisor(divisor),
+        .dividend(dividend_u),
+        .divisor(divisor_u),
         .start(start_wrap),
         .reset(reset),
         .clk(clk),
-        .quotient(quotient),
+        .quotient(quotient_u),
         .remainder(remainder),
         .status(status)
     );
@@ -28,20 +29,23 @@ module division_wrapper (
         divide_by_zero = 0;
         if (divisor == 0)
             divide_by_zero = 1;
-        else if (dividend[`REG_SIZE-1:(`REG_SIZE/2)-1] > divisor)
+        else if (dividend[`REG_SIZE-1:(`REG_SIZE/2)-1] > divisor || divisor[`REG_SIZE-1:`REG_SIZE/2] > 0)
             overflow = 1;
         else
             start_wrap = start;
+        
+        sign = dividend[`REG_SIZE-1] ^ divisor[(`REG_SIZE/2)-1];
+        dividend_u = (dividend[`REG_SIZE-1]) ? `unsigned(~dividend + 1) : `unsigned(dividend);
+        divisor_u = (divisor_u[(`REG_SIZE/2)-1]) ? `unsigned(~divisor + 1) : `unsigned(divisor);
+        quotient = (sign) ? ~quotient_u + 1 : quotient_u;
     end
-
-
 endmodule
 
 
 
 
 // Restoring division algorithm.
-// Time: 32 cycles
+// Time: 16 cycles
 // Size: 3, 32-bit registers, add/subtrator
 module restoring_division (
     input logic unsigned [`REG_RANGE] dividend, divisor,
@@ -51,7 +55,7 @@ module restoring_division (
     );  
 
     logic [(`REG_SIZE/2)-1:0] dividend_reg_high, dividend_reg_low, divisor_reg;
-    logic [4:0] counter_reg;
+    logic [3:0] counter_reg;
     logic status_reg;
 
     logic [(`REG_SIZE/2)-1:0] shift, result;
