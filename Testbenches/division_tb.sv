@@ -2,8 +2,8 @@
 
 module division_tb;
 
-    logic unsigned [`REG_RANGE] dividend_tb, divisor_tb, quotient_tb, remainder_tb;
-    logic status_tb, reset_tb, clk_tb, start_tb, divide_by_zero_tb, overflow_tb;
+    logic [`REG_RANGE] dividend_tb, divisor_tb, quotient_tb, remainder_tb;
+    logic status_tb, reset_tb, clk_tb, signed_div_tb, start_tb, divide_by_zero_tb, overflow_tb;
 
     division_wrapper UUT (
         .dividend(dividend_tb),
@@ -13,6 +13,7 @@ module division_tb;
         .status(status_tb),
         .reset(reset_tb),
         .clk(clk_tb),
+        .signed_div(signed_div_tb),
         .start(start_tb),
         .divide_by_zero(divide_by_zero_tb),
         .overflow(overflow_tb)
@@ -26,6 +27,7 @@ module division_tb;
         divisor_tb = 0;
         start_tb = 0;
         reset_tb = 0;
+        signed_div_tb = 0; // Set this to change un/signed division
 
         @(posedge clk_tb);
         reset_tb = 1;
