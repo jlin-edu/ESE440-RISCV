@@ -5,12 +5,12 @@
 
 module division_wrapper (
     input logic [`REG_RANGE] dividend, divisor,
-    input logic start, reset, clk,
+    input logic start, reset, clk, signed_div,
     output logic [`REG_RANGE] quotient, remainder,
     output logic status, divide_by_zero, overflow
 );
 
-    logic unsigned [`REG_RANGE] dividend_u, divisor_u, quotient_u;
+    logic unsigned [`REG_RANGE] dividend_u, divisor_u, quotient_u, remainder_u;
     logic start_wrap, sign;
 
     restoring_division divider (
@@ -20,7 +20,7 @@ module division_wrapper (
         .reset(reset),
         .clk(clk),
         .quotient(quotient_u),
-        .remainder(remainder),
+        .remainder(remainder_u),
         .status(status)
     );
 
@@ -35,9 +35,21 @@ module division_wrapper (
             start_wrap = start;
         
         sign = dividend[`REG_SIZE-1] ^ divisor[(`REG_SIZE/2)-1];
-        dividend_u = (dividend[`REG_SIZE-1]) ? `unsigned(~dividend + 1) : `unsigned(dividend);
-        divisor_u = (divisor_u[(`REG_SIZE/2)-1]) ? `unsigned(~divisor + 1) : `unsigned(divisor);
-        quotient = (sign) ? ~quotient_u + 1 : quotient_u;
+        dividend_u = (signed_div && dividend[`REG_SIZE-1]) ? `unsigned(~dividend + 1) : `unsigned(dividend);
+        divisor_u = (signed_div && divisor_u[(`REG_SIZE/2)-1]) ? `unsigned(~divisor + 1) : `unsigned(divisor);
+
+        if (signed_div && sign) begin
+            if (!remainder_u) begin // If remainder < 0 -> remainder += divisor, quotient -= 1
+                quotient = ~quotient_u;
+                remainder ~remainder_u + 1 + divisor_u;
+            end else begin
+                quotient = ~quotient_u + 1;
+                remainder = remainder_u;
+            end
+        end else begin
+            quotient = quotient_u;
+            remainder = remainder_u;
+        end
     end
 endmodule
 
@@ -46,7 +58,7 @@ endmodule
 
 // Restoring division algorithm.
 // Time: 16 cycles
-// Size: 3, 32-bit registers, add/subtrator
+// Size: 3x32-bit registers, add/subtrator
 module restoring_division (
     input logic unsigned [`REG_RANGE] dividend, divisor,
     input logic start, reset, clk,
