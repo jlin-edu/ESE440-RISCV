@@ -38,7 +38,12 @@ module division_wrapper (
         dividend_u = (signed_div && dividend[`REG_SIZE-1]) ? `unsigned(~dividend + 1) : `unsigned(dividend);
         divisor_u = (signed_div && divisor_u[(`REG_SIZE/2)-1]) ? `unsigned(~divisor + 1) : `unsigned(divisor);
 
-        if (signed_div && sign) begin
+        quotient = (signed_div && sign) ? ~quotient_u + 1 : quotient_u;
+        remainder = (signed_div && sign) ? ~remainder_u + 1 : remainder_u;
+
+
+        // Need to check if remainder has to be positive!!!!!
+        /* if (signed_div && sign) begin
             if (!remainder_u) begin // If remainder < 0 -> remainder += divisor, quotient -= 1
                 quotient = ~quotient_u;
                 remainder ~remainder_u + 1 + divisor_u;
@@ -49,7 +54,7 @@ module division_wrapper (
         end else begin
             quotient = quotient_u;
             remainder = remainder_u;
-        end
+        end */
     end
 endmodule
 
