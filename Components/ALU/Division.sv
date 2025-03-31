@@ -110,15 +110,70 @@ module restoring_division (
         shift = {dividend_reg_high[(`REG_SIZE/2)-2:0], dividend_reg_low[(`REG_SIZE/2)-1]};
         sub = shift - divisor_reg;
         q = dividend_reg_high[(`REG_SIZE/2)-1] || ~sub[`REG_SIZE/2];
-        if (q == 0) begin
-            result = shift;
-        end
-        else begin
-            result = sub[(`REG_SIZE/2)-1:0];
-        end
+        result = (q) ? sub[(`REG_SIZE/2)-1:0] : shift;
 
         quotient = {16'b0 , dividend_reg_low};
         remainder = {16'b0 , dividend_reg_high};
+        status = status_reg;
+    end
+
+endmodule
+
+// Restoring division algorithm but allows for 32-bit divisors WIP
+module restoring_division_32 (
+    input logic unsigned [`REG_RANGE] dividend, divisor,
+    input logic start, reset, clk,
+    output logic unsigned [`REG_RANGE] quotient, remainder,
+    output logic status
+    );  
+
+    logic [`REG_RANGE] dividend_reg, divisor_reg;
+    logic [4:0] counter_reg, div_size_reg;
+    logic status_reg;
+
+    logic [`REG_RANGE] shift, result;
+    logic [`REG_SIZE:0] sub;
+    logic q;
+
+    always_ff @(posedge clk) begin
+        if (reset) begin
+            dividend_reg <= 0;
+            divisor_reg <= 0;
+
+            status_reg <= 0;
+            counter_reg <= 0;
+            div_size_reg <= 0;
+        end
+        else if (!status && start) begin
+            status_reg <= 1;
+            counter_reg <= 0;
+            dividend_reg <= dividend;
+            divisor_reg <= divisor;
+            for (int i = `REG_SIZE-1; i >= 0; i--) begin
+                if (divisor[i]) begin
+                    div_size_reg <= i;
+                    break;
+                end
+            end
+        end
+        else if (status) begin
+            dividend_reg <= {result[div_size_reg:0], dividend[div_size_reg:0], q}
+
+            counter_reg <= counter_reg + 1;
+            if (counter_reg == div_size_reg) begin
+                status_reg <= 0;
+            end
+        end
+    end
+
+    always_comb begin
+        shift = {(`REG_SIZE - div_size_reg-1){1'b0}, dividend_reg[`REG_SIZE-2:div_size_reg]};
+        sub = shift - divisor_reg;
+        q = dividend_reg[REG_SIZE-1] || ~sub[`REG_SIZE];
+        result = (q) ? sub[`REG_RANGE] : shift;
+
+        quotient = {(`REG_SIZE - div_size_reg-1){1'b0} , dividend[div_size_reg:0]};
+        remainder = {(div_size_reg+1){1'b0} , dividend[`REG_SIZE-1:div_size_reg+1]};
         status = status_reg;
     end
 
