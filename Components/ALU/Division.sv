@@ -7,7 +7,7 @@ module division_wrapper (
     input logic [`REG_RANGE] dividend, divisor,
     input logic start, reset, clk, signed_div,
     output logic [`REG_RANGE] quotient, remainder,
-    output logic status, divide_by_zero
+    output logic status
     );
 
     logic unsigned [`REG_RANGE] dividend_u, divisor_u, quotient_u, remainder_u;
@@ -25,18 +25,19 @@ module division_wrapper (
     );
 
     always_comb begin
-        divide_by_zero = 0;
-        if (divisor == 0)
-            divide_by_zero = 1;
-        else
+        if (divisor)
             start_wrap = start;
-        
+            
         sign = dividend[`REG_SIZE-1] ^ divisor[`REG_SIZE-1];
         dividend_u = (signed_div && dividend[`REG_SIZE-1]) ? ~dividend + 1 : dividend;
         divisor_u = (signed_div && divisor[`REG_SIZE-1]) ? ~divisor + 1 : divisor;
 
-        quotient = (signed_div && sign) ? ~quotient_u + 1 : quotient_u;
-        remainder = (signed_div && dividend[`REG_SIZE-1]) ? ~remainder_u + 1 : remainder_u;
+        if (divisor)
+            quotient = (signed_div && sign) ? ~quotient_u + 1 : quotient_u;
+            remainder = (signed_div && dividend[`REG_SIZE-1]) ? ~remainder_u + 1 : remainder_u;
+        else
+            quotient = -1;
+            remainder = dividend;
     end
 endmodule
 
