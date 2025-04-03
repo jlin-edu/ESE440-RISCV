@@ -54,7 +54,7 @@ class GUI(tk.Tk):
         self.controls.grid(column=1, row=0, columnspan=1, sticky="nsew")
         
         self.stages.grid(column=2, row=0, rowspan=3, sticky="nsew")
-        self.temp2.grid(sticky="nsew")
+        #self.temp2.grid(sticky="nsew")
         
     def load_menu(self):
         self.menu = tk.Menu(self)
