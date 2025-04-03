@@ -329,7 +329,7 @@ pseudo_instruction_dict = {
     "NOP" : [[None], [None], ["ADDI", "zero", "zero", "0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "LI" : [[TokenType.REG, TokenType.IMM], [], ["LOAD"], [], False],
     "LA" : [[TokenType.REG, TokenType.IMM], [], ["LOAD"], [], True],
-    "MOV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG,"0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
+    "MV" : [[TokenType.REG, TokenType.REG], [1, 2], ["ADDI", TokenType.REG, TokenType.REG,"0"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False], # TODO: REFACTOR FORMAT LISTS TO REFERENCE A STANDARD SET AND THE DICT OF NORMAL INSTS
     "NOT" : [[TokenType.REG, TokenType.REG], [1, 2], ["XORI", TokenType.REG, TokenType.REG, "-1"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
     "NEG" : [[TokenType.REG, TokenType.REG], [1, 2], ["SUB", TokenType.REG, "x0", TokenType.REG], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.REG], False],
     "SEQZ" : [[TokenType.REG, TokenType.REG], [1, 2], ["SLTIU", TokenType.REG, TokenType.REG, "-1"], [TokenType.MNEMONIC, TokenType.REG, TokenType.REG, TokenType.IMM], False],
