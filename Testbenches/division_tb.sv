@@ -3,7 +3,7 @@
 module division_tb;
 
     logic signed [`REG_RANGE] dividend_tb, divisor_tb, quotient_tb, remainder_tb;
-    logic status_tb, reset_tb, clk_tb, signed_div_tb, start_tb, divide_by_zero_tb;
+    logic status_tb, reset_tb, clk_tb, signed_div_tb, start_tb;
 
     division_wrapper UUT (
         .dividend(dividend_tb),
@@ -14,8 +14,7 @@ module division_tb;
         .reset(reset_tb),
         .clk(clk_tb),
         .signed_div(signed_div_tb),
-        .start(start_tb),
-        .divide_by_zero(divide_by_zero_tb)
+        .start(start_tb)
     );
 
     initial clk_tb = 0;

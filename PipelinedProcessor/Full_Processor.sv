@@ -73,7 +73,7 @@ module pipelined_processor #(
     logic [`REG_FIELD_RANGE] rs1_IDEX, rs2_IDEX;
     logic pc_rs1_sel_IDEX, imm_rs2_sel_IDEX;
 
-    logic stall;
+    logic stall, div_stall;
 
 
     // --------------- Execute Signals ---------------
@@ -115,7 +115,7 @@ module pipelined_processor #(
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
                                                         .instr_in(bram_din), .wr_addr(block_wr_addr), .wr_en(instr_wr_en),
-                                                        .stall(stall));
+                                                        .stall(stall | div_stall));
 
     //pipeline register here
     //instruction, pc, pc+4
@@ -130,7 +130,7 @@ module pipelined_processor #(
                                             .pc_sel_EXIF(pc_sel_EXIF),
                                             .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
                                             .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
-                                            .stall(stall));
+                                            .stall(stall), .div_stall(div_stall));
 
     //pipeline register here
     //
@@ -145,7 +145,7 @@ module pipelined_processor #(
                 .pc_sel_EXIF(pc_sel_EXIF), .jump_addr_EXIF(jump_addr_EXIF),
                 .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
                 .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
-                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID));
+                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID), .div_stall(div_stall));
 
 
     logic [NUM_COL-1:0] data_wr_en;

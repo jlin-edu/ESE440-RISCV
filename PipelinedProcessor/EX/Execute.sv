@@ -54,6 +54,8 @@ module execute (
     output logic              pc_sel_EXIF,
     output logic [`REG_RANGE] jump_addr_EXIF //these are from the branch adder and mux
 
+    output logic div_stall;
+
     //input signed        [`REG_RANGE]     in1, in2,
     //input               [`OP_RANGE]      op,
     //input               [`FUNCT_3_RANGE] funct_3,
@@ -76,7 +78,7 @@ module execute (
 
     logic signed [`REG_RANGE] ALU_out_EX;
     always_ff @(posedge clk) begin
-        if(reset == 1) begin
+        if(reset == 1 || div_stall) begin
             //MEM Stage
             ALU_out_EXMEM <= 0;
             funct3_EXMEM <= 0;
@@ -147,10 +149,48 @@ module execute (
     end
 
 
-
+    logic [`REG_RANGE] alu_out;
     alu alu(.in1(in1), .in2(in2),
             .op(op_IDEX), .funct_3(funct3_IDEX), .funct_7(funct7_IDEX),
-            .out(ALU_out_EX), .pc_sel(pc_sel_EXIF));
+            .out(alu_out), .pc_sel(pc_sel_EXIF));
+
+    logic [`REG_RANGE] quotient, remainder;
+    logic div_start, div_status;
+    division_wrapper divider(
+        .dividend(in1), .divisor(in2), .start(div_start), .clk(clk), .reset(reset),
+        .signed_div(signed_div), .quotient(quotient), .remainder(remainder), .status(div_status), .finished(div_fin)
+    );
+
+    always_comb begin
+        div_start = 0;
+        signed_div = 0;
+        ALU_out_EX = alu_out;
+        if (op_IDEX == `OP_R3 && funct7_IDEX == `M) begin
+            case(funct3_IDEX)
+                `XOR: begin
+                    div_start = 1;
+                    signed_div = 1;
+                    ALU_out_EX = quotient;
+                end
+                `SRL_SRA: begin
+                    div_start = 1;
+                    signed_div = 0;
+                    ALU_out_EX = quotient;
+                end
+                `OR: begin
+                    div_start = 1;
+                    signed_div = 1;
+                    ALU_out_EX = remainder;
+                end
+                `AND: begin
+                    div_start = 1;
+                    signed_div = 0;
+                    ALU_out_EX = remainder;
+                end
+            endcase
+        end
+        div_stall = div_status || (div_start && ~div_fin)
+    end
 
     //branch adder
     logic [`REG_RANGE] branch_addr;

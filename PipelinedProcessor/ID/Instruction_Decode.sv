@@ -3,18 +3,19 @@
 module instruction_decode #(
     parameter WIDTH=32
 )(
-    input clk, reset,
+    input clk, reset, 
 
     // ----------------- Inputs to this stage -----------------
     // ----------------- IF Stage Signals(Inputs) -----------------
     input [`REG_RANGE] instruction_IFID, pc_IFID, pc_4_IFID,
+    input div_stall,
 
     // ----------------- WB Stage Signals(Inputs) -----------------
     input [`REG_RANGE] reg_wr_data_WBID,        //these signals are responsible for writing to the register file
     input [`REG_FIELD_RANGE] rd_WBID,
     input reg_wr_en_WBID,
 
-    input pc_sel_EXIF,    //utilized for flushing, Hazard Handling
+    input pc_sel_EXIF, div_stall    //utilized for flushing, Hazard Handling
 
     // ----------------- Outputs of this stage -----------------
     // ----------------- EX Stage Signals(Outputs) -----------------
@@ -97,7 +98,7 @@ module instruction_decode #(
             pc_rs1_sel_IDEX  <= 0;
             imm_rs2_sel_IDEX <= 0;
         end
-        else begin
+        else if (~div_stall) begin
             //EX Stage
             op_IDEX        <= op_ID;
             funct7_IDEX    <= funct7_ID;

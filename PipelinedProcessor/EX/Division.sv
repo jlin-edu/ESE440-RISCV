@@ -7,7 +7,7 @@ module division_wrapper (
     input logic [`REG_RANGE] dividend, divisor,
     input logic start, reset, clk, signed_div,
     output logic [`REG_RANGE] quotient, remainder,
-    output logic status
+    output logic status, finished;
     );
 
     logic unsigned [`REG_RANGE] dividend_u, divisor_u, quotient_u, remainder_u;
@@ -32,12 +32,13 @@ module division_wrapper (
         dividend_u = (signed_div && dividend[`REG_SIZE-1]) ? ~dividend + 1 : dividend;
         divisor_u = (signed_div && divisor[`REG_SIZE-1]) ? ~divisor + 1 : divisor;
 
-        if (divisor)
+        if (divisor) begin
             quotient = (signed_div && sign) ? ~quotient_u + 1 : quotient_u;
             remainder = (signed_div && dividend[`REG_SIZE-1]) ? ~remainder_u + 1 : remainder_u;
-        else
+        end else begin
             quotient = -1;
             remainder = dividend;
+        end
     end
 endmodule
 
@@ -56,7 +57,7 @@ module restoring_division (
 
     logic [`REG_RANGE] dividend_reg_high, dividend_reg_low, divisor_reg;
     logic [`REG_FIELD_RANGE] counter_reg;
-    logic status_reg;
+    logic status_reg, finished_reg;
 
     logic [`REG_RANGE] shift, result;
     logic [`REG_SIZE:0] sub;
@@ -69,23 +70,29 @@ module restoring_division (
             divisor_reg <= 0;
 
             status_reg <= 0;
+            finished_reg <= 0;
             counter_reg <= 0;
         end
-        else if (!status && start) begin
+        else if (!status_reg && !finished_reg && start) begin
             status_reg <= 1;
+            finished_reg <= 0;
             counter_reg <= 0;
             dividend_reg_high <= 0;
             dividend_reg_low <= dividend;
             divisor_reg <= divisor;
         end
-        else if (status) begin
+        else if (status_reg) begin
             dividend_reg_high <= result;
             dividend_reg_low <= {dividend_reg_low[`REG_SIZE-2:0], q};
 
             counter_reg <= counter_reg + 1;
             if (counter_reg == 31) begin
                 status_reg <= 0;
+                finished_reg <= 1;
             end
+        end
+        else if (finished_reg) begin
+            finished_reg <= 0;
         end
     end
 
@@ -98,6 +105,7 @@ module restoring_division (
         quotient = dividend_reg_low;
         remainder = dividend_reg_high;
         status = status_reg;
+        finished = finished_reg;
     end
 
 endmodule
