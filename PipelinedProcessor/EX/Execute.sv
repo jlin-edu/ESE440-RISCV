@@ -189,7 +189,7 @@ module execute (
                 end
             endcase
         end
-        div_stall = div_status || (div_start && ~div_fin);
+        div_stall = (div_status | (div_start & ~div_fin)) & in2;
     end
 
     //branch adder
