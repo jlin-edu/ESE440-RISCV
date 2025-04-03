@@ -7,7 +7,7 @@ module division_wrapper (
     input logic [`REG_RANGE] dividend, divisor,
     input logic start, reset, clk, signed_div,
     output logic [`REG_RANGE] quotient, remainder,
-    output logic status, finished;
+    output logic status, finished
     );
 
     logic unsigned [`REG_RANGE] dividend_u, divisor_u, quotient_u, remainder_u;
@@ -21,7 +21,8 @@ module division_wrapper (
         .clk(clk),
         .quotient(quotient_u),
         .remainder(remainder_u),
-        .status(status)
+        .status(status),
+        .finished(finished)
     );
 
     always_comb begin
@@ -52,7 +53,7 @@ module restoring_division (
     input logic unsigned [`REG_RANGE] dividend, divisor,
     input logic start, reset, clk,
     output logic unsigned [`REG_RANGE] quotient, remainder,
-    output logic status
+    output logic status, finished
     );  
 
     logic [`REG_RANGE] dividend_reg_high, dividend_reg_low, divisor_reg;

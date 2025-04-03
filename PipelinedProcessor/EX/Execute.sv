@@ -52,9 +52,9 @@ module execute (
     
      // ----------------- IF Stage Signals(Outputs) -----------------
     output logic              pc_sel_EXIF,
-    output logic [`REG_RANGE] jump_addr_EXIF //these are from the branch adder and mux
+    output logic [`REG_RANGE] jump_addr_EXIF, //these are from the branch adder and mux
 
-    output logic div_stall;
+    output logic div_stall
 
     //input signed        [`REG_RANGE]     in1, in2,
     //input               [`OP_RANGE]      op,
@@ -77,6 +77,7 @@ module execute (
     //assign pc_4_EXMEM = pc_4_IDEX;
 
     logic signed [`REG_RANGE] ALU_out_EX;
+    logic [`REG_RANGE] rs2_data_forward;
     always_ff @(posedge clk) begin
         if(reset == 1 || div_stall) begin
             //MEM Stage
@@ -114,7 +115,6 @@ module execute (
                             .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
                             .in1_sel(in1_sel), .in2_sel(in2_sel));
 
-    logic [`REG_RANGE] rs2_data_forward;
     always_comb begin
         rs2_data_forward = rs2_data_IDEX;
         if((reg_wr_en_EXMEM == 1) && (rs2_IDEX == rd_EXMEM) && (rd_EXMEM != 0))
@@ -155,7 +155,7 @@ module execute (
             .out(alu_out), .pc_sel(pc_sel_EXIF));
 
     logic [`REG_RANGE] quotient, remainder;
-    logic div_start, div_status;
+    logic div_start, div_status, signed_div;
     division_wrapper divider(
         .dividend(in1), .divisor(in2), .start(div_start), .clk(clk), .reset(reset),
         .signed_div(signed_div), .quotient(quotient), .remainder(remainder), .status(div_status), .finished(div_fin)
@@ -189,7 +189,7 @@ module execute (
                 end
             endcase
         end
-        div_stall = div_status || (div_start && ~div_fin)
+        div_stall = div_status || (div_start && ~div_fin);
     end
 
     //branch adder

@@ -15,7 +15,7 @@ module instruction_decode #(
     input [`REG_FIELD_RANGE] rd_WBID,
     input reg_wr_en_WBID,
 
-    input pc_sel_EXIF, div_stall    //utilized for flushing, Hazard Handling
+    input pc_sel_EXIF,    //utilized for flushing, Hazard Handling
 
     // ----------------- Outputs of this stage -----------------
     // ----------------- EX Stage Signals(Outputs) -----------------
@@ -66,6 +66,20 @@ module instruction_decode #(
     logic reg_wr_en_ID;
     logic [1:0] reg_wr_ctrl_ID;
     logic [`REG_FIELD_RANGE] rd_ID;
+
+    //logic [`OP_RANGE] op;
+    //logic [`FUNCT_3_RANGE] funct3;
+    //logic [`FUNCT_7_RANGE] funct7;
+    logic [`REG_FIELD_RANGE] rs1_ID, rs2_ID;
+    assign op_ID     = instruction_IFID[`OP_FIELD];
+    assign funct3_ID = instruction_IFID[`FUNCT_3_FIELD];
+    assign funct7_ID = instruction_IFID[`FUNCT_7_FIELD];
+    assign rs1_ID    = instruction_IFID[`REG_RS1];          //for the pipelined variant, we will most likely need to pass rs1, rs2 and rd for hazard detection
+    assign rs2_ID    = instruction_IFID[`REG_RS2];
+    assign rd_ID     = instruction_IFID[`REG_RD];      //this rd signal will need to be sent through the pipeline
+    logic [`REG_RANGE] rs1_data;
+    logic pc_rs1_sel, imm_rs2_sel;
+
 
     //assign pc_IDEX = pc_IFID;
     //assign pc_4_IDEX = pc_4_IFID;
@@ -129,25 +143,13 @@ module instruction_decode #(
     end
 
 
-    //logic [`OP_RANGE] op;
-    //logic [`FUNCT_3_RANGE] funct3;
-    //logic [`FUNCT_7_RANGE] funct7;
-    logic [`REG_FIELD_RANGE] rs1_ID, rs2_ID;
-    assign op_ID     = instruction_IFID[`OP_FIELD];
-    assign funct3_ID = instruction_IFID[`FUNCT_3_FIELD];
-    assign funct7_ID = instruction_IFID[`FUNCT_7_FIELD];
-    assign rs1_ID    = instruction_IFID[`REG_RS1];          //for the pipelined variant, we will most likely need to pass rs1, rs2 and rd for hazard detection
-    assign rs2_ID    = instruction_IFID[`REG_RS2];
-    assign rd_ID     = instruction_IFID[`REG_RD];      //this rd signal will need to be sent through the pipeline
     inst_splitter inst_splitter (.inst(instruction_IFID), .op(op_ID), 
                                 .imm(immediate_ID));
 
-    logic pc_rs1_sel, imm_rs2_sel;
     control_unit  control_unit  (.opcode(op_ID),
                                 .pc_rs1_sel(pc_rs1_sel), .imm_rs2_sel(imm_rs2_sel),
                                 .jump_branch_sel(jump_branch_sel_ID), .mem_wr_en(mem_wr_en_ID), .reg_write_ctrl(reg_wr_ctrl_ID), .reg_wr_en(reg_wr_en_ID));
 
-    logic [`REG_RANGE] rs1_data;
     register_file #(.WIDTH(WIDTH)) register_file(.clk(clk), .reset(reset),
                                                 .wr_addr(rd_WBID), .wr_data(reg_wr_data_WBID), .wr_en(reg_wr_en_WBID),     //dont use rd directly as the write address when pipelined, same with reg_wr_en
                                                 .rs1_rd_addr(rs1_ID), .rs1_rd_data(rs1_data),
