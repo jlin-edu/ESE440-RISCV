@@ -51,7 +51,7 @@ module addr_ctr #(
         if(reset)
             output_col_index <= 0;
         else if(incr_col == 1)begin
-            if(last_acc == 1) 
+            if(last_col == 1) 
                 output_col_index <= 0;
             else
                 output_col_index <= output_col_index+1;
@@ -71,14 +71,29 @@ module addr_ctr #(
         if(reset)
             out_addr <= 0;
         else if(incr_outaddr == 1) begin
-            if(last_index == 1)
+            if(last_index_pipeout2 == 1)
                 out_addr <= 0;
             else
                 out_addr <= out_addr+1;
         end
     end
+    
+    //due to incr_outaddr being delayed by 2 pipeline stages due to mac pipeline and synchronous data input mem read
+    //we also need to delay last index by 2 cycles for the checking of when to clear the out_addr, or else on the last index
+    //the when the input counters are computing the last index at the same time we are writing the 2nd last index, it will clear the out_addr
+    logic last_index_pipeout1, last_index_pipeout2;
+    always_ff @(posedge clk) begin
+        if(reset) begin
+            last_index_pipeout1 <= 0;
+            last_index_pipeout2 <= 0;
+        end
+        else begin
+            last_index_pipeout1 <= last_index;
+            last_index_pipeout2 <= last_index_pipeout1;
+        end
+    end
 
-    assign compute_finished = (incr_outaddr & last_index);
+    assign compute_finished = (incr_outaddr & last_index_pipeout2);  //this needs to rely on when the last write occurs so it uses the 2 time register delayed last index
     assign last_index = (last_col & last_row);
     assign A_addr = accumulate_iteration+(output_row_index*K);
     assign B_addr = output_col_index+(accumulate_iteration*N);

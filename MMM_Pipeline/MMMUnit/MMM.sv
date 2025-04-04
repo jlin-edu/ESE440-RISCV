@@ -9,7 +9,7 @@ module MMM_fsm(
     output logic load_K,                        //load in new k
     output logic incr_inaddr,                   //address counter control signals
     output logic valid_input, clear_acc,        //mac control signals
-    output logic outmat_wren,                   //write control signal
+    output logic outmat_wren                   //write control signal
    // output logic compute_finished               //needs to be pipelined twice to match up with the wren
                                                  //actually we can generate this signal through datapath inside counters instead
 );
@@ -220,33 +220,33 @@ module MMM #(
 
     //handle an exception when K=0? just don't start and immediately clear the start input
 
-    addr_ctr #(.*) addr_ctr(.clk(clk),
-                            .reset(reset),
+    addr_ctr #(.INW(INW), .OUTW(OUTW), .M(M), .N(N), .MAXK(MAXK)) addr_ctr(.clk(clk),
+                                                                           .reset(reset),
                             
-                            //inputs
-                            .K(K),
-                            .incr_acc(incr_inaddr),
-                            .incr_outaddr(wren_pipeout2),
-                            
-                            //outputs
-                            .A_addr(mata_rdaddr),
-                            .B_addr(matb_rdaddr),
-                            .out_addr(outmat_wraddr),
-                            
-                            .last_acc(last_acc),
-                            .last_index(last_index),
-                            .compute_finished(compute_finished));
+                                                                            //inputs
+                                                                            .K(K),
+                                                                            .incr_acc(incr_inaddr),
+                                                                            .incr_outaddr(wren_pipeout2),
+                                                                            
+                                                                            //outputs
+                                                                            .A_addr(mata_rdaddr),
+                                                                            .B_addr(matb_rdaddr),
+                                                                            .out_addr(outmat_wraddr),
+                                                                            
+                                                                            .last_acc(last_acc),
+                                                                            .last_index(last_index),
+                                                                            .compute_finished(compute_finished));
 
-    mac_pipe #(.*) mac_pipe(.clk(clk),
-                            .reset(reset),
-                            
-                            //inputs
-                            .in0(mata_data),
-                            .in1(matb_data),
-                            .clear_acc(clear_acc_pipeout2),
-                            .valid_input(valid_input_pipeout),
-                            
-                            //outputs
-                            .out(outmat_data));
+    mac_pipe #(.INW(INW), .OUTW(OUTW)) mac_pipe(.clk(clk),
+                                                .reset(reset),
+                                                
+                                                //inputs
+                                                .in0(mata_data),
+                                                .in1(matb_data),
+                                                .clear_acc(clear_acc_pipeout2),
+                                                .valid_input(valid_input_pipeout),
+                                                
+                                                //outputs
+                                                .out(outmat_data));
 
 endmodule
