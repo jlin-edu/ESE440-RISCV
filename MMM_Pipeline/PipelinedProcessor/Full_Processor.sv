@@ -1,7 +1,7 @@
 `include "inst_defs.sv"
 
 module pipelined_processor #(
-    parameter                   WIDTH=32, SIZE=64,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
+    parameter                   WIDTH=32, SIZE=1024,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
     parameter                   NUM_COL   = 4,
     parameter                   COL_WIDTH = 8,
     localparam                  LOGSIZE=$clog2(SIZE)
@@ -89,13 +89,20 @@ module pipelined_processor #(
     logic [`REG_FIELD_RANGE] rd_EXMEM;
     logic [`REG_RANGE] pc_4_EXMEM;
 
-    logic [WIDTH-1:0] dmem_dout;
+    logic [WIDTH-1:0] dmem0_dout;
+    logic [WIDTH-1:0] dmem1_dout;
+    logic [WIDTH-1:0] dmem2_dout;
+    logic [WIDTH-1:0] dmem3_dout;
     
     // ----------------- WB Stage Signals(Outputs) -----------------
     logic [`REG_RANGE] ALU_out_MEMWB;
     logic [`REG_RANGE] pc_4_MEMWB;
-    logic [WIDTH-1:0] mem_rd_data_MEMWB;
-    logic [1:0] reg_wr_ctrl_MEMWB;
+    logic [WIDTH-1:0] mem0_rd_data_MEMWB;
+    logic [WIDTH-1:0] mem1_rd_data_MEMWB;   //remove this when integrating MMM
+    logic [WIDTH-1:0] mem2_rd_data_MEMWB;   //remove this when integrating MMM
+    logic [WIDTH-1:0] mem3_rd_data_MEMWB;
+    logic [1:0]       mem_sel;
+    logic [1:0]       reg_wr_ctrl_MEMWB;
 
     logic [`FUNCT_3_RANGE] funct3_MEMWB;
     logic [1:0] byte_offset_MEMWB;
@@ -117,9 +124,6 @@ module pipelined_processor #(
                                                         .instr_in(bram_din), .wr_addr(block_wr_addr), .wr_en(instr_wr_en),
                                                         .stall(stall));
 
-    //pipeline register here
-    //instruction, pc, pc+4
-
     instruction_decode #(.WIDTH(WIDTH)) ID(.clk(clk), .reset(reset),
                                             .instruction_IFID(instruction_IFID), .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID),
                                             .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
@@ -131,9 +135,6 @@ module pipelined_processor #(
                                             .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
                                             .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
                                             .stall(stall));
-
-    //pipeline register here
-    //
 
     execute EX( .clk(clk), .reset(reset),
                 .rs1_data_IDEX(rs1_data_IDEX), .funct7_IDEX(funct7_IDEX), .funct3_IDEX(funct3_IDEX), .op_IDEX(op_IDEX),
@@ -152,30 +153,66 @@ module pipelined_processor #(
     assign data_wr_en = {4{shared_bram_addr[(LOGSIZE)+2]}} & bram_wr_en;    //instruction mem is BRAM0
     memory #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL), .COL_WIDTH(COL_WIDTH)) 
                                         MEM(.clk(clk), .reset(reset),
-                                            .ALU_out_EXMEM(ALU_out_EXMEM), .funct3_EXMEM(funct3_EXMEM), .mem_wr_en_EXMEM(mem_wr_en_EXMEM), .rs2_data_EXMEM(rs2_data_EXMEM),
-                                            .reg_wr_en_EXMEM(reg_wr_en_EXMEM), .reg_wr_ctrl_EXMEM(reg_wr_ctrl_EXMEM), .rd_EXMEM(rd_EXMEM), .pc_4_EXMEM(pc_4_EXMEM),
-                                            .rd_MEMWB(rd_MEMWB), .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
-                                            .ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
-                                            .funct3_MEMWB(funct3_MEMWB), .byte_offset_MEMWB(byte_offset_MEMWB),
-                                            .AXI_dmem_data_in(bram_din), .AXI_dmem_data_out(dmem_dout), .AXI_dmem_byte_addr(block_wr_addr), .AXI_dmem_byte_wr_en(data_wr_en));    
+                                            .ALU_out_EXMEM(ALU_out_EXMEM), 
+                                            .funct3_EXMEM(funct3_EXMEM), 
+                                            .mem_wr_en_EXMEM(mem_wr_en_EXMEM), 
+                                            .rs2_data_EXMEM(rs2_data_EXMEM),
+                                            .reg_wr_en_EXMEM(reg_wr_en_EXMEM), 
+                                            .reg_wr_ctrl_EXMEM(reg_wr_ctrl_EXMEM), 
+                                            .rd_EXMEM(rd_EXMEM), 
+                                            .pc_4_EXMEM(pc_4_EXMEM),
 
-    write_back #(.WIDTH(WIDTH)) WB(.ALU_out_MEMWB(ALU_out_MEMWB), .pc_4_MEMWB(pc_4_MEMWB), .mem_rd_data_MEMWB(mem_rd_data_MEMWB), .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
-                .rd_MEMWB(rd_MEMWB), .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
-                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
-                .funct3_MEMWB(funct3_MEMWB), .byte_offset_MEMWB(byte_offset_MEMWB));
+                                            .rd_MEMWB(rd_MEMWB), 
+                                            .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
+                                            .ALU_out_MEMWB(ALU_out_MEMWB), 
+                                            .pc_4_MEMWB(pc_4_MEMWB), 
+                                            .mem0_rd_data_MEMWB(mem0_rd_data_MEMWB), 
+                                            .mem1_rd_data_MEMWB(mem1_rd_data_MEMWB),
+                                            .mem2_rd_data_MEMWB(mem2_rd_data_MEMWB),
+                                            .mem3_rd_data_MEMWB(mem3_rd_data_MEMWB),
+                                            .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
+                                            .funct3_MEMWB(funct3_MEMWB), 
+                                            .byte_offset_MEMWB(byte_offset_MEMWB),
+                                            .AXI_dmem_data_in(bram_din), 
+                                            .AXI_dmem0_data_out(dmem0_dout), 
+                                            .AXI_dmem1_data_out(dmem1_dout),
+                                            .AXI_dmem2_data_out(dmem2_dout),
+                                            .AXI_dmem3_data_out(dmem3_dout),
+                                            .AXI_dmem_byte_addr(block_wr_addr), 
+                                            .AXI_dmem_byte_wr_en(data_wr_en));    
+
+    write_back #(.WIDTH(WIDTH)) WB(.ALU_out_MEMWB(ALU_out_MEMWB), 
+                                   .pc_4_MEMWB(pc_4_MEMWB), 
+                                   .mem0_rd_data_MEMWB(mem0_rd_data_MEMWB),
+                                   .mem1_rd_data_MEMWB(mem1_rd_data_MEMWB),
+                                   .mem2_rd_data_MEMWB(mem2_rd_data_MEMWB),
+                                   .mem3_rd_data_MEMWB(mem3_rd_data_MEMWB),
+                                   .mem_sel(mem_sel), 
+                                   .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
+                                   .rd_MEMWB(rd_MEMWB), 
+                                   .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
+                                   .reg_wr_data_WBID(reg_wr_data_WBID), 
+                                   .rd_WBID(rd_WBID), 
+                                   .reg_wr_en_WBID(reg_wr_en_WBID),
+                                   .funct3_MEMWB(funct3_MEMWB), 
+                                   .byte_offset_MEMWB(byte_offset_MEMWB));
     
     //assign processor_out = ALU_out_EXMEM;
-    logic bram_sel;
+    logic [2:0] bram_sel;   //topmost 1 bit to select Instr or data, next 2 bits to select which data_mem
     always_ff @(posedge clk) begin
-        //if(reset)
-        //    bram_sel <= 0;
-        //else
-        bram_sel <= shared_bram_addr[(LOGSIZE)+2];
+        bram_sel <= shared_bram_addr[(LOGSIZE)+2:(LOGSIZE)+2-2];
     end
 
     always_comb begin
-        if(bram_sel)
-            bram_dout = dmem_dout;
+        if(bram_sel[2] == 1)
+            if(bram_sel[1:0] == 2'b11)
+                bram_dout = dmem3_dout;
+            else if(bram_sel[1:0] == 2'b10)
+                bram_dout = dmem2_dout;
+            else if(bram_sel[1:0] == 2'b01)
+                bram_dout = dmem1_dout;
+            else
+                bram_dout = dmem0_dout;
         else
             bram_dout = instruction_IFID;
     end
