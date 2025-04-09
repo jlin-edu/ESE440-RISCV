@@ -4,7 +4,7 @@
 // The program will run for 256 clock cycles, this can be changed in the cycles variable
 
 module single_cycle_tb ();
-    parameter   WIDTH=32, SIZE=128, NUM_COL=4, COL_WIDTH=8;
+    parameter   WIDTH=32, SIZE=256, NUM_COL=4, COL_WIDTH=8;
     localparam  LOGSIZE=$clog2(SIZE);
 
     //logic [WIDTH-1:0]       instr_in;
@@ -60,6 +60,17 @@ module single_cycle_tb ();
         for (int i = 0; i < (SIZE*4*2); i+=4) begin
             shared_bram_addr = i;
             bram_din = i;
+            @(posedge clk);
+            #1;
+        end
+        
+        //read values and verify that they are correct
+        bram_wr_en = 4'b0000;
+        /*
+        
+        */
+        for (int i = 0; i < (SIZE*4*2); i+=4) begin
+            shared_bram_addr = i;
             @(posedge clk);
             #1;
         end

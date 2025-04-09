@@ -27,6 +27,7 @@ module write_back#(
     assign reg_wr_en_WBID = reg_wr_en_MEMWB;
 
     //use the mem_sel signal to determine which memory's value to load
+    logic [WIDTH-1:0] mem_rd_data_MEMWB;
     always_comb begin
         mem_rd_data_MEMWB = 0; 
         if(mem_sel == 2'b00)

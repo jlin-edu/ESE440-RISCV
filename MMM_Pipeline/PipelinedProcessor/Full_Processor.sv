@@ -170,6 +170,7 @@ module pipelined_processor #(
                                             .mem1_rd_data_MEMWB(mem1_rd_data_MEMWB),
                                             .mem2_rd_data_MEMWB(mem2_rd_data_MEMWB),
                                             .mem3_rd_data_MEMWB(mem3_rd_data_MEMWB),
+                                            .mem_sel_MEMWB(mem_sel),
                                             .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
                                             .funct3_MEMWB(funct3_MEMWB), 
                                             .byte_offset_MEMWB(byte_offset_MEMWB),

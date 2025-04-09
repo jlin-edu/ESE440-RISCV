@@ -32,7 +32,7 @@ module memory #(
     output logic [WIDTH-1:0] mem1_rd_data_MEMWB, 
     output logic [WIDTH-1:0] mem2_rd_data_MEMWB,
     output logic [WIDTH-1:0] mem3_rd_data_MEMWB,
-    output logic [1:0]       mem_sel;            //passed into WB stage to mux between data read from all 4 memories(only 2)
+    output logic [1:0]       mem_sel_MEMWB,            //passed into WB stage to mux between data read from all 4 memories(only 2)
 
     output logic [`FUNCT_3_RANGE] funct3_MEMWB,     //to be used to shift/mask data loaded from memory
     output logic [1:0] byte_offset_MEMWB,
@@ -152,6 +152,7 @@ module memory #(
             ALU_out_MEMWB <= 0;
             pc_4_MEMWB <= 0;
             reg_wr_ctrl_MEMWB <= 0;
+            mem_sel_MEMWB     <= 0;
         
             rd_MEMWB <= 0;
             reg_wr_en_MEMWB <= 0;
@@ -163,6 +164,7 @@ module memory #(
             ALU_out_MEMWB <= ALU_out_EXMEM;
             pc_4_MEMWB <= pc_4_EXMEM;
             reg_wr_ctrl_MEMWB <= reg_wr_ctrl_EXMEM;
+            mem_sel_MEMWB     <= mem_sel;
 
             rd_MEMWB <= rd_EXMEM;
             reg_wr_en_MEMWB <= reg_wr_en_EXMEM;

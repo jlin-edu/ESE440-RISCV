@@ -4,7 +4,7 @@
 // The program will run for 256 clock cycles, this can be changed in the cycles variable
 
 module pipelined_processor_tb ();
-    parameter   WIDTH=32, SIZE=128, NUM_COL=4, COL_WIDTH=8;
+    parameter   WIDTH=32, SIZE=256, NUM_COL=4, COL_WIDTH=8;
     localparam  LOGSIZE=$clog2(SIZE);
 
     //logic [WIDTH-1:0]       instr_in;
@@ -35,7 +35,7 @@ module pipelined_processor_tb ();
     int fd;
     string line;
 
-    string program_file = "Mat_mul.txt";
+    string program_file = "pub_sub.txt";
     int cycles = 1024;
 
     initial begin    
