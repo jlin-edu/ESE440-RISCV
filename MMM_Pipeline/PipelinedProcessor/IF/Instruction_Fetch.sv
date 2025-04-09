@@ -19,7 +19,7 @@ module instruction_fetch #(
     input stall,    //hazard handling
 
     //outputs of IF, inputs of other stages (ID uses instruction, EX uses PC, WB uses PC+4)
-    output logic [`REG_RANGE] pc_IFID, pc_4_IFID, instruction_IFID
+    output logic [`REG_RANGE] pc_IFID, pc_4_IFID, instruction_IFID, AXI_data_out
 );
     logic [`REG_RANGE] pc_IF, pc_4_IF;
     
@@ -31,7 +31,8 @@ module instruction_fetch #(
     assign instr_wr_en = wr_en[0];
     instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .reset(reset), .stall(stall),
                                                                 .pc(pc_IF), .instr_out(instruction_IFID),
-                                                                .instr_in(instr_in), .wr_addr(wr_addr), .wr_en(instr_wr_en), .flush(pc_sel_EXIF)
+                                                                .instr_in(instr_in), .AXI_addr(wr_addr), .wr_en(instr_wr_en), .flush(pc_sel_EXIF),
+                                                                .AXI_data_out(AXI_data_out)
                                                                 );
 
     //pipeline register

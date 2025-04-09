@@ -63,17 +63,17 @@ module single_cycle_tb ();
             @(posedge clk);
             #1;
         end
+        $display("Completed Writing values into Instruction and Data Memory");
         
         //read values and verify that they are correct
+        $display("Starting Read Test for values in Instruction and Data Memory");
         bram_wr_en = 4'b0000;
-        /*
-        
-        */
         for (int i = 0; i < (SIZE*4*2); i+=4) begin
             shared_bram_addr = i;
             @(posedge clk);
-            #1;
+            #1; `assert(bram_dout, i);
         end
+        $display("Read Test Passed!!!");
 
         $finish;
     end

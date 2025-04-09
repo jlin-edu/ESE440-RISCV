@@ -36,7 +36,7 @@ module pipelined_processor #(
 
     // ---------- Outputs ----------
     // ----- ID Stage Signals -----
-    logic [`REG_RANGE] pc_IFID, pc_4_IFID, instruction_IFID;    //IF Outputs(ID uses instruction, EX uses PC, WB uses PC+4)
+    logic [`REG_RANGE] pc_IFID, pc_4_IFID, instruction_IFID, AXI_data_out;    //IF Outputs(ID uses instruction, EX uses PC, WB uses PC+4)
 
 
 
@@ -121,7 +121,7 @@ module pipelined_processor #(
     instruction_fetch #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL)) IF(.clk(clk), .reset(reset),
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
-                                                        .instr_in(bram_din), .wr_addr(block_wr_addr), .wr_en(instr_wr_en),
+                                                        .instr_in(bram_din), .wr_addr(block_wr_addr), .wr_en(instr_wr_en), .AXI_data_out(AXI_data_out),
                                                         .stall(stall));
 
     instruction_decode #(.WIDTH(WIDTH)) ID(.clk(clk), .reset(reset),
@@ -215,7 +215,7 @@ module pipelined_processor #(
             else
                 bram_dout = dmem0_dout;
         else
-            bram_dout = instruction_IFID;
+            bram_dout = AXI_data_out;
     end
 
 endmodule

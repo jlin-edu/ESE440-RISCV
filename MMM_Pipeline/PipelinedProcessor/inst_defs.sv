@@ -154,6 +154,13 @@
 
 // ===============================
 
+`define assert(signal, value) \
+        $display("Checking bram_out == i: bram_out = 0x%h, i == 0x%h", signal, value); \
+        if(signal !== value) begin \
+            $display("ASSERTION FAILED: (bram_out)0x%h != 0x%h(i)", signal, value); \
+            $finish();  \
+        end
+
 // ===============================
 
 `endif
