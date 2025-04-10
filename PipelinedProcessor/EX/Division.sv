@@ -26,6 +26,7 @@ module division_wrapper (
     );
 
     always_comb begin
+        start_wrap = 0;
         if (divisor)
             start_wrap = start;
             
