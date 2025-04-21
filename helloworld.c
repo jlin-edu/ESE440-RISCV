@@ -46,43 +46,35 @@
  */
 
 #include <stdio.h>
-#include "xparameters.h"
 #include "platform.h"
 #include "xil_printf.h"
-//#include "xscugic.h"
-//#include "xil_exception.h"
 #include "xuartps.h"
 #include "sleep.h"
 
-#define size 40
-#define DATA_MEM 512
 #define MEM_SIZE 1024
+#define INSTR_SIZE (MEM_SIZE/2)
+#define DATA_SIZE (MEM_SIZE/2)
+#define DATA_BLOCK_SIZE (DATA_SIZE/4)
+
+#define INSTR_MEM 0
+#define DATA_MEM (MEM_SIZE/2)
+#define DATA_BLOCK_0 DATA_MEM
+#define DATA_BLOCK_1 (DATA_BLOCK_0 + DATA_BLOCK_SIZE)
+#define DATA_BLOCK_2 (DATA_BLOCK_1 + DATA_BLOCK_SIZE)
+#define DATA_BLOCK_3 (DATA_BLOCK_2 + DATA_BLOCK_SIZE)
+
+#define INSTRUCTION_COUNT 2 // 2 bytes
+#define INSTRUCTION_SIZE 4 	// 4 bytes per word
 
 #define UART_DEVICE_ID XPAR_XUARTPS_0_DEVICE_ID
-//#define INTC_DEVICE_ID XPAR_SCUGIC_SINGLE_DEVICE_ID
-//#define UART_INT_IRQ_ID XPAR_XUARTPS_1_INTR
 
 volatile unsigned int* bram = (volatile unsigned int*)XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR;
 volatile unsigned int* hw = (volatile unsigned int*)XPAR_PIPELINED_NEW_0_S00_AXI_BASEADDR;
 
-int instructions[512]; // Array to write all instructions to from UART
 static u8 SendBuffer[32];
-static u8 RecvBuffer[32];
-
-//volatile int TotalReceivedCount;
-//volatile int TotalSentCount;
+static u8 RecvBuffer[4];
 
 XUartPs Uart_PS;
-//XScuGic InterruptController;
-
-//void Handler(void* CallbeckRef, u32 Event, unsigned int EventData) {
-//	if (Event == XUARTPS_EVENT_SENT_DATA)
-//		TotalSentCount = EventData;
-//
-//	if (Event == XUARTPS_EVENT_RECV_DATA || Event == XUARTPS_EVENT_RECV_TOUT)
-//		TotalReceivedCount = EventData;
-//}
-
 void setupUart() {
 	XUartPs_Config* Config = XUartPs_LookupConfig(UART_DEVICE_ID);
 	XUartPs_CfgInitialize(&Uart_PS, Config, Config->BaseAddress);
@@ -90,30 +82,57 @@ void setupUart() {
 		SendBuffer[i] = '0' + i;
 		RecvBuffer[i] = 0;
 	}
+}
 
-//	//Setup Interrupts
-//	XScuGic_Config *IntcConfig = XScuGic_LookupConfig(INTC_DEVICE_ID);
-//	XScuGic_CfgInitialize(&InterruptController, IntcConfig, IntcConfig->CpuBaseAddress);
-//	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT, (Xil_ExceptionHandler)XScuGic_InterruptHandler, &InterruptController);
-//	XScuGic_Connect(&InterruptController, UART_INT_IRQ_ID, (Xil_ExceptionHandler)XUartPs_InterruptHandler, (void*)&Uart_PS);
-//	XScuGic_Enable(&InterruptController, UART_INT_IRQ_ID);
-//	Xil_ExceptionEnable();
-//
-//	XUartPs_SetHandler(&Uart_PS, (XUartPs_Handler)Handler, &Uart_PS);
-//	u32 IntrMask = XUARTPS_IXR_TOUT | XUARTPS_IXR_PARITY | XUARTPS_IXR_FRAMING |
-//			XUARTPS_IXR_OVER | XUARTPS_IXR_TXEMPTY | XUARTPS_IXR_RXFULL |
-//			XUARTPS_IXR_RXOVR;
-//	XUartPs_SetInterruptMask(&Uart_PS, IntrMask);
-//
-//	XUartPs_SetRecvTimeout(&Uart_PS, 8);
+void resetMem() {
+	xil_printf("\r\nClearing BRAM values:\r\n");
+	for (int i = 0 ; i < MEM_SIZE; i++)
+		bram[i] = 0;
+}
+
+void printMem(int start, int count) {
+	for (int i = start; i < start + count; i++)
+		xil_printf("bram[%d] = 0x%x\r\n", i, bram[i]);
+}
+
+void printMemN(int N) {
+	xil_printf("After writing, BRAM values:\r\n");
+	printMem(0, N);
+}
+
+void printInst() {
+	xil_printf("Instruction memory:\r\n");
+	printMem(INSTR_MEM, INSTR_SIZE);
+}
+
+void printData() {
+	xil_printf("Data memory:\r\n");
+	printMem(DATA_MEM, DATA_SIZE);
+}
+
+
+void receiveInstructions() {
+	int RecvCount = 0;
+	while (RecvCount < INSTRUCTION_COUNT) // Get number of instructions (2 bytes)
+		RecvCount += XUartPs_Recv(&Uart_PS, &RecvBuffer[RecvCount], INSTRUCTION_COUNT - RecvCount);
+	int NumInstructions = (RecvBuffer[0] << 8) + RecvBuffer[1];// MSB first
+
+	for (int i = 0; i < NumInstructions; i++) {
+		RecvCount = 0;
+		while (RecvCount < INSTRUCTION_SIZE)
+			RecvCount += XUartPs_Recv(&Uart_PS, &RecvBuffer[RecvCount], INSTRUCTION_SIZE - RecvCount);
+		int instruction = 0;
+		for (int j = 0; j < INSTRUCTION_SIZE; j++)
+			instruction = (instruction << 8) + RecvBuffer[j];
+		bram[i] = instruction;
+	}
 }
 
 int main() {
     init_platform();
-
     hw[0] = 1;
-
     setupUart();
+
 
     int RecvCount = 0;
     while (RecvCount < 11)
@@ -129,18 +148,13 @@ int main() {
     for (int i = 0; i < RecvCount; i++)
     	xil_printf("%c", RecvBuffer[i]);
 
-    xil_printf("\r\nClearing BRAM values:\r\n");
-    for (int i = 0 ; i < MEM_SIZE; i++)
-    	bram[i] = 0;
+    resetMem();
 
     xil_printf("Writing to BRAM...\r\n");
     bram[0] = 0x0ff00093;
     bram[1] = 0x00102023;
 
-
-    xil_printf("After writing, BRAM values:\r\n");
-    for (int i = 0; i < size; i++)
-    	xil_printf("bram[%d] = %x\r\n", i, bram[i]);
+    printMemN(40);
 
     xil_printf("Running program...\r\n");
     hw[0] = 0;
