@@ -1,9 +1,9 @@
 module MMM_wrapper #(
     parameter  INW              = 32,
     parameter  OUTW             = 32,
-    parameter  M                = 16,
-    parameter  N                = 16,
-    parameter  MAXK             = 16,
+    parameter  M                = 6,
+    parameter  N                = 6,
+    parameter  MAXK             = 6,
     localparam K_BITS           = $clog2(MAXK+1),
     localparam A_ADDR_BITS      = $clog2(M*MAXK),
     localparam B_ADDR_BITS      = $clog2(MAXK*N),
