@@ -99,21 +99,17 @@ void resetData() {
 		bram[i] = 0;
 }
 
-void printMem(int start, int count) {
+void printMem(int start, int count, char* name) {
 	for (int i = start; i < start + count; i++)
-		xil_printf("bram[%d] = 0x%x\r\n", i, bram[i]);
-}
-
-void printMemN(int N) {
-	printMem(0, N);
+		xil_printf("%s[%d] = 0x%x\r\n", name, i - start, bram[i]);
 }
 
 void printInst() {
-	printMem(INSTR_MEM, INSTR_SIZE);
+	printMem(INSTR_MEM, INSTR_SIZE, "INSTR");
 }
 
 void printData() {
-	printMem(DATA_MEM, DATA_SIZE);
+	printMem(DATA_MEM, DATA_SIZE, "DATA");
 }
 
 int isCommand(char command[COMMAND_SIZE + 1]) {
@@ -160,22 +156,24 @@ int main() {
 
     while(1) {
     	receiveN(COMMAND_SIZE); // Get command
-    	if (isCommand("LOAD")) {
+    	if(isCommand("LOAD")) {
     		ASSERT_RESET;
     		resetMem();
     		receiveInstructions();
-    		for (int i = 0; i < INSTR_SIZE; i++)
-    		    	xil_printf("INST[%d] = 0x%x\r\n", i, bram[i]);
+    		printInst();
 
-    	} else if (isCommand("RUNP")) {
+    	} else if(isCommand("RUNP")) {
     		resetData();
     		DEASSERT_RESET;
     		sleep(1); // ADD HALT AND WAIT FOR HERE
     		xil_printf("PROGRAM_DONE\r\n");
-    		for (int i = DATA_MEM; i < DATA_MEM + DATA_SIZE; i++)
-    		    	xil_printf("MEM[%d] = 0x%x\r\n", i - DATA_MEM, bram[i]);
+    		printData();
 
-    	} else if (isCommand("QUIT")) {
+    	} else if(isCommand("PRIN")) {
+    		printInst();
+    		printData();
+
+    	} else if(isCommand("QUIT")) {
     		break;
     	}
     	xil_printf("DONE\r\n");

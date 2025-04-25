@@ -18,8 +18,8 @@ while True:
             break
 
 while True:
-    userCommand = input("Enter command (L = Load program, R = Run program, Q = Quit): ")
-    while not userCommand in ['L', 'R', 'Q']:
+    userCommand = input("Enter command (L = Load program, R = Run program, P = Print memory, Q = Quit): ")
+    while not userCommand in ['L', 'R', 'P', 'Q']:
         userCommand = input("Invalid commmand, try again: ")
 
     if userCommand == 'L':
@@ -62,6 +62,17 @@ while True:
             print(f"Error: {e}")
         except KeyboardInterrupt:
             print("Exiting...")
+
+    elif userCommand == 'P':
+        print("Printing memory...")
+        ser.write("PRIN".encode())
+        while True:
+            data = ser.readline()
+            if data:
+                decoded_data = data.decode('utf-8').strip()
+                if decoded_data == "DONE":
+                    break
+                print(f"{decoded_data}")
 
     elif userCommand == 'Q':
         print("Quitting...")
