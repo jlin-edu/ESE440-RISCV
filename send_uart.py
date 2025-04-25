@@ -10,36 +10,61 @@ except serial.SerialException as e:
     print(f"Error opening serial port: {e}")
     exit()
 
-"""userProgram = input("Enter the program to use:")
-with open(userProgram, 'r') as program:
-    lines = program.readlines()
-    num_lines = len(lines)
-    data = num_lines.to_bytes(2).decode()
-    ser.write(data.encode())
-    for line in lines:
-        data = "".join([int(line[8*i:8*(i+1)], 2).to_bytes(1).decode() for i in range(4)])
-        ser.write(data.encode())"""
+while True:
+    data = ser.readline()
+    if data:
+        decoded_data = data.decode('utf-8').strip()
+        if decoded_data == "READY":
+            break
 
-data = "hello world"
-try:
-    ser.write(data.encode())
-    print(f"Sent: {data}")
-except serial.SerialException as e:
-    print(f"Error writing to serial port: {e}")
+while True:
+    userCommand = input("Enter command (L = Load program, R = Run program, Q = Quit): ")
+    while not userCommand in ['L', 'R', 'Q']:
+        userCommand = input("Invalid commmand, try again: ")
 
+    if userCommand == 'L':
+        userProgram = input("Enter the program to use: ")
+        ser.write("LOAD".encode())
+        print("Loading program...")
+        with open(userProgram, 'r') as program: # May need to wait for board to be ready
+            lines = program.readlines()
+            num_lines = len(lines)
+            data = num_lines.to_bytes(2)
+            ser.write(data)
+            for line in lines:
+                data = bytearray([int(line[8*i:8*(i+1)], 2) for i in range(4)])
+                ser.write(data)
+        print("Done loading program")
 
-try:
-    while True:
-        data = ser.readline()
+        print("Instruction memory after loading:")
+        while True:
+            data = ser.readline()
+            if data:
+                decoded_data = data.decode('utf-8').strip()
+                if decoded_data == "DONE":
+                    break
+                print(f"{decoded_data}")
 
-        if data:
-            decoded_data = data.decode('utf-8').strip()
-            print(f"Received: {decoded_data}")
+    elif userCommand == 'R':
+        print("Running program...")
+        ser.write("RUNP".encode())
+        try:
+            while True:
+                data = ser.readline()
+                if data:
+                    decoded_data = data.decode('utf-8').strip()
+                    if decoded_data == "DONE":
+                        break
+                    elif decoded_data == "PROGRAM_DONE":
+                        print("Program finished, displaying results:")
+                    print(f"{decoded_data}")
+        except serial.SerialException as e:
+            print(f"Error: {e}")
+        except KeyboardInterrupt:
+            print("Exiting...")
 
-except serial.SerialException as e:
-    print(f"Error: {e}")
-except KeyboardInterrupt:
-    print("Exiting...")
-finally:
-    ser.close()
-
+    elif userCommand == 'Q':
+        print("Quitting...")
+        ser.write("QUIT".encode())
+        ser.close()
+        break

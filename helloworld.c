@@ -66,27 +66,36 @@
 #define INSTRUCTION_COUNT 2 // 2 bytes
 #define INSTRUCTION_SIZE 4 	// 4 bytes per word
 
+#define COMMAND_SIZE 4 // Size of commands (LOAD, RUNP, QUIT)
+
 #define UART_DEVICE_ID XPAR_XUARTPS_0_DEVICE_ID
+
+#define ASSERT_RESET hw[0] = 1;
+#define DEASSERT_RESET hw[0] = 0;
 
 volatile unsigned int* bram = (volatile unsigned int*)XPAR_AXI_BRAM_CTRL_0_S_AXI_BASEADDR;
 volatile unsigned int* hw = (volatile unsigned int*)XPAR_PIPELINED_NEW_0_S00_AXI_BASEADDR;
 
 static u8 SendBuffer[32];
-static u8 RecvBuffer[4];
+static u8 RecvBuffer[32];
 
 XUartPs Uart_PS;
 void setupUart() {
 	XUartPs_Config* Config = XUartPs_LookupConfig(UART_DEVICE_ID);
 	XUartPs_CfgInitialize(&Uart_PS, Config, Config->BaseAddress);
 	for (int i = 0; i < 32; i++) {
-		SendBuffer[i] = '0' + i;
+		SendBuffer[i] = 0;
 		RecvBuffer[i] = 0;
 	}
 }
 
 void resetMem() {
-	xil_printf("\r\nClearing BRAM values:\r\n");
 	for (int i = 0 ; i < MEM_SIZE; i++)
+		bram[i] = 0;
+}
+
+void resetData() {
+	for (int i = DATA_MEM; i < DATA_MEM + DATA_SIZE; i++)
 		bram[i] = 0;
 }
 
@@ -96,32 +105,46 @@ void printMem(int start, int count) {
 }
 
 void printMemN(int N) {
-	xil_printf("After writing, BRAM values:\r\n");
 	printMem(0, N);
 }
 
 void printInst() {
-	xil_printf("Instruction memory:\r\n");
 	printMem(INSTR_MEM, INSTR_SIZE);
 }
 
 void printData() {
-	xil_printf("Data memory:\r\n");
 	printMem(DATA_MEM, DATA_SIZE);
 }
 
+int isCommand(char command[COMMAND_SIZE + 1]) {
+	for (int i = 0; i < 4; i++) {
+		if (RecvBuffer[i] != command[i])
+			return 0;
+	}
+	return 1;
+}
+
+void receiveN(int numBytes) {
+	int RecvCount = 0;
+	while (RecvCount < numBytes)
+		RecvCount += XUartPs_Recv(&Uart_PS, &RecvBuffer[RecvCount], numBytes - RecvCount);
+}
+
+void sendStr(char* string, int numBytes) {
+	for (int i = 0; i < numBytes; i++)
+		SendBuffer[i] = string[i];
+	XUartPs_Send(&Uart_PS, SendBuffer, numBytes);
+	int count = 0;
+	while (XUartPs_IsSending(&Uart_PS)) count++;
+}
 
 void receiveInstructions() {
-	int RecvCount = 0;
-	while (RecvCount < INSTRUCTION_COUNT) // Get number of instructions (2 bytes)
-		RecvCount += XUartPs_Recv(&Uart_PS, &RecvBuffer[RecvCount], INSTRUCTION_COUNT - RecvCount);
+	receiveN(INSTRUCTION_COUNT); // Get number of instructions (2 bytes)
 	int NumInstructions = (RecvBuffer[0] << 8) + RecvBuffer[1];// MSB first
 
 	for (int i = 0; i < NumInstructions; i++) {
-		RecvCount = 0;
-		while (RecvCount < INSTRUCTION_SIZE)
-			RecvCount += XUartPs_Recv(&Uart_PS, &RecvBuffer[RecvCount], INSTRUCTION_SIZE - RecvCount);
-		int instruction = 0;
+		receiveN(INSTRUCTION_SIZE);
+		u32 instruction = 0;
 		for (int j = 0; j < INSTRUCTION_SIZE; j++)
 			instruction = (instruction << 8) + RecvBuffer[j];
 		bram[i] = instruction;
@@ -130,41 +153,33 @@ void receiveInstructions() {
 
 int main() {
     init_platform();
-    hw[0] = 1;
-    setupUart();
-
-
-    int RecvCount = 0;
-    while (RecvCount < 11)
-    	RecvCount += XUartPs_Recv(&Uart_PS, &RecvBuffer[RecvCount], 11-RecvCount);
-
-    XUartPs_Send(&Uart_PS, SendBuffer, 32);
-
-    int loop = 0;
-    while (XUartPs_IsSending(&Uart_PS))
-    	loop++;
-
-    xil_printf("\r\n");
-    for (int i = 0; i < RecvCount; i++)
-    	xil_printf("%c", RecvBuffer[i]);
-
+    ASSERT_RESET;
     resetMem();
+    setupUart();
+    xil_printf("READY\r\n");
 
-    xil_printf("Writing to BRAM...\r\n");
-    bram[0] = 0x0ff00093;
-    bram[1] = 0x00102023;
+    while(1) {
+    	receiveN(COMMAND_SIZE); // Get command
+    	if (isCommand("LOAD")) {
+    		ASSERT_RESET;
+    		resetMem();
+    		receiveInstructions();
+    		for (int i = 0; i < INSTR_SIZE; i++)
+    		    	xil_printf("INST[%d] = 0x%x\r\n", i, bram[i]);
 
-    printMemN(40);
+    	} else if (isCommand("RUNP")) {
+    		resetData();
+    		DEASSERT_RESET;
+    		sleep(1); // ADD HALT AND WAIT FOR HERE
+    		xil_printf("PROGRAM_DONE\r\n");
+    		for (int i = DATA_MEM; i < DATA_MEM + DATA_SIZE; i++)
+    		    	xil_printf("MEM[%d] = 0x%x\r\n", i - DATA_MEM, bram[i]);
 
-    xil_printf("Running program...\r\n");
-    hw[0] = 0;
-
-    sleep(1);
-
-    xil_printf("Program finished, displaying results:\r\n");
-    for (int i = DATA_MEM; i < DATA_MEM+15; i++)
-    	xil_printf("bram[%d] = %x\r\n", i, bram[i]);
-
+    	} else if (isCommand("QUIT")) {
+    		break;
+    	}
+    	xil_printf("DONE\r\n");
+    }
 
     cleanup_platform();
     return 0;
