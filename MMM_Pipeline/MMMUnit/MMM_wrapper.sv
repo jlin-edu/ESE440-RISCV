@@ -1,13 +1,15 @@
 module MMM_wrapper #(
+    parameter  QUARTERSIZE      = 256,
     parameter  INW              = 32,
     parameter  OUTW             = 32,
-    parameter  M                = 6,
-    parameter  N                = 6,
-    parameter  MAXK             = 6,
+    localparam M                = int'($sqrt(QUARTERSIZE)),       //M*N Must be less than quarter mem
+    localparam N                = int'($sqrt(QUARTERSIZE)),
+    localparam MAXK             = int'(QUARTERSIZE/M),       //M*MAXK and N*MAXK Must be less than quarter mem
     localparam K_BITS           = $clog2(MAXK+1),
     localparam A_ADDR_BITS      = $clog2(M*MAXK),
     localparam B_ADDR_BITS      = $clog2(MAXK*N),
-    localparam OUT_ADDR_BITS    = $clog2(M*N)
+    localparam OUT_ADDR_BITS    = $clog2(M*N),
+    localparam LOGQUARTERSIZE   = $clog2(QUARTERSIZE)
 )(
     input clk, reset,
 
@@ -16,15 +18,22 @@ module MMM_wrapper #(
     input wait_mmm_finish,
 
     input [INW-1:0]  mata_data, matb_data,
-    output logic [A_ADDR_BITS-1:0] mata_rdaddr,
-    output logic [B_ADDR_BITS-1:0] matb_rdaddr,
+    output logic [LOGQUARTERSIZE-1:0] rdaddr_mem1,     //need to extend these addresses to be [LOGSIZE-1:0] length
+    output logic [LOGQUARTERSIZE-1:0] rdaddr_mem2,     //need to extend these addresses to be [LOGSIZE-1:0] length
 
     output logic [INW-1:0] outmat_data,             
-    output logic [OUT_ADDR_BITS-1:0] outmat_wraddr,  //delay the address, and wren by 1 cycle because of pipeline
+    output logic [LOGQUARTERSIZE-1:0] wraddr_mem3,  //delay the address, and wren by 1 cycle because of pipeline //need to extend these addresses to be [LOGSIZE-1:0] length
     output logic outmat_wren,
 
     output logic stall       
 );
+    logic [A_ADDR_BITS-1:0]   mata_rdaddr;
+    logic [B_ADDR_BITS-1:0]   matb_rdaddr;
+    logic [OUT_ADDR_BITS-1:0] outmat_wraddr;
+
+    assign rdaddr_mem1 = {{(LOGQUARTERSIZE-1) - (A_ADDR_BITS-1)  {1'b0}},   mata_rdaddr};
+    assign rdaddr_mem2 = {{(LOGQUARTERSIZE-1) - (B_ADDR_BITS-1)  {1'b0}},   matb_rdaddr};
+    assign wraddr_mem3 = {{(LOGQUARTERSIZE-1) - (OUT_ADDR_BITS-1){1'b0}}, outmat_wraddr};
 
     logic compute_start, compute_finished;
     logic [K_BITS-1:0] new_K;

@@ -154,6 +154,13 @@
 
 // ===============================
 
+`define assert(signal, value, index) \
+        $display("Checking matout_mem[%d]: matout_mem[%d] == 0x%h, check_val == 0x%h\n", index, index, signal, value); \
+        if(signal !== value) begin \
+            $display("ASSERTION FAILED: (matout_mem)0x%h != 0x%h(check_val)", signal, value); \
+            $finish(); \
+        end
+
 // ===============================
 
 `endif
