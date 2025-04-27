@@ -9,6 +9,10 @@ module instruction_decode #(
     // ----------------- IF Stage Signals(Inputs) -----------------
     input [`REG_RANGE] instruction_IFID, pc_IFID, pc_4_IFID,
 
+
+    // ----------------- EX Stage Signals(Inputs) -----------------
+    input              mmm_stall,
+
     // ----------------- WB Stage Signals(Inputs) -----------------
     input [`REG_RANGE] reg_wr_data_WBID,        //these signals are responsible for writing to the register file
     input [`REG_FIELD_RANGE] rd_WBID,
@@ -30,6 +34,8 @@ module instruction_decode #(
     // ----------------- MEM Stage Signals -----------------
     output logic mem_wr_en_IDEX,                //This signal connects directly to the memory
     output logic [`REG_RANGE] rs2_data_IDEX,
+    output logic start_mmm_IDEX,
+    output logic wait_mmm_finish_IDEX,
 
     // ----------------- WB Stage Signals -----------------
     output logic reg_wr_en_IDEX,                //the rest of these signals are used for Write Back
@@ -60,6 +66,8 @@ module instruction_decode #(
     //Mem Stage
     logic mem_wr_en_ID;
     logic [`REG_RANGE] rs2_data_ID;
+    logic start_mmm_ID;
+    logic wait_mmm_finish_ID;
 
     //WB Stage
     logic reg_wr_en_ID;
@@ -84,6 +92,8 @@ module instruction_decode #(
             //MEM Stage
             mem_wr_en_IDEX <= 0;
             rs2_data_IDEX  <= 0;
+            start_mmm_IDEX <= 0;
+            wait_mmm_finish_IDEX <= 0;
 
             //WB Stage
             reg_wr_en_IDEX   <= 0;
@@ -97,7 +107,7 @@ module instruction_decode #(
             pc_rs1_sel_IDEX  <= 0;
             imm_rs2_sel_IDEX <= 0;
         end
-        else begin
+        else if (mmm_stall == 0) begin
             //EX Stage
             op_IDEX        <= op_ID;
             funct7_IDEX    <= funct7_ID;
@@ -112,6 +122,8 @@ module instruction_decode #(
             //MEM Stage
             mem_wr_en_IDEX <= mem_wr_en_ID;
             rs2_data_IDEX  <= rs2_data_ID;
+            start_mmm_IDEX <= start_mmm_ID;
+            wait_mmm_finish_IDEX <= wait_mmm_finish_ID;
 
             //WB Stage
             reg_wr_en_IDEX   <= reg_wr_en_ID;
@@ -144,7 +156,8 @@ module instruction_decode #(
     logic pc_rs1_sel, imm_rs2_sel;
     control_unit  control_unit  (.opcode(op_ID),
                                 .pc_rs1_sel(pc_rs1_sel), .imm_rs2_sel(imm_rs2_sel),
-                                .jump_branch_sel(jump_branch_sel_ID), .mem_wr_en(mem_wr_en_ID), .reg_write_ctrl(reg_wr_ctrl_ID), .reg_wr_en(reg_wr_en_ID));
+                                .jump_branch_sel(jump_branch_sel_ID), .mem_wr_en(mem_wr_en_ID), .reg_write_ctrl(reg_wr_ctrl_ID), .reg_wr_en(reg_wr_en_ID),
+                                .start_mmm(start_mmm_ID), .wait_mmm_finish(wait_mmm_finish_ID));
 
     logic [`REG_RANGE] rs1_data;
     register_file #(.WIDTH(WIDTH)) register_file(.clk(clk), .reset(reset),

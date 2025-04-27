@@ -17,6 +17,7 @@ module instruction_fetch #(
     input clk, reset,
 
     input stall,    //hazard handling
+    input mmm_stall, //when mmm_stall is asserted then we want stage outputs to be unchanged
 
     //outputs of IF, inputs of other stages (ID uses instruction, EX uses PC, WB uses PC+4)
     output logic [`REG_RANGE] pc_IFID, pc_4_IFID, instruction_IFID, AXI_data_out
@@ -25,15 +26,16 @@ module instruction_fetch #(
     
     PC pc_module(.clk(clk), .reset(reset), .stall(stall),
                 .pc_sel(pc_sel_EXIF), .jump_addr(jump_addr_EXIF),
-                .pc(pc_IF), .pc_4(pc_4_IF));
+                .pc(pc_IF), .pc_4(pc_4_IF),
+                .mmm_stall(mmm_stall));
 
     logic instr_wr_en;
     assign instr_wr_en = wr_en[0];
     instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .reset(reset), .stall(stall),
                                                                 .pc(pc_IF), .instr_out(instruction_IFID),
                                                                 .instr_in(instr_in), .AXI_addr(wr_addr), .wr_en(instr_wr_en), .flush(pc_sel_EXIF),
-                                                                .AXI_data_out(AXI_data_out)
-                                                                );
+                                                                .AXI_data_out(AXI_data_out),
+                                                                .mmm_stall(mmm_stall));
 
     //pipeline register
     //is the reset even nessecary? If the instruction memory is replaced with a NOP then shouldn't pc and pc+4 be irrelevant?
@@ -42,7 +44,7 @@ module instruction_fetch #(
             pc_IFID   <= 0;
             pc_4_IFID <= 0;
         end
-        else if(stall == 0) begin
+        else if((stall == 0) || (mmm_stall == 0)) begin
             pc_IFID   <= pc_IF;
             pc_4_IFID <= pc_4_IF;
         end

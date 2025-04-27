@@ -9,7 +9,7 @@ module instr_memory #(
     input wr_en,
     input clk, reset,            //not sure if this is needed
 
-    input flush, stall,    //hazard handling
+    input flush, stall, mmm_stall    //hazard handling
 
 
     //input  [(LOGSIZE-1)+2:0]    pc,             //should this we REG_RANGE or should it rely on LOGSIZE??
@@ -31,7 +31,7 @@ module instr_memory #(
 
         if((reset == 1) || (flush == 1))    //Note that the signal used for flushing is pc_sel_EXIF, which is an output of the alu to determine whether a jump/branch has occured or not. It is also used by the PC
             instr_out <= `NOP;
-        else if(stall == 0)
+        else if((stall == 0) || (mmm_stall == 0))
             instr_out <= mem[word_offset];
     end
 endmodule

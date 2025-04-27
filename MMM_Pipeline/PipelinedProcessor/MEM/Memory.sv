@@ -43,6 +43,14 @@ module memory #(
     output logic [`REG_FIELD_RANGE] rd_MEMWB,
     output logic reg_wr_en_MEMWB,
 
+    // ----------------- MMM Connections ---------------------------
+    input [QUARTER_BITS-1:0]   mem3_wr_addr,
+    input [WIDTH-1:0]          mem3_wr_data,
+    input [NUM_COL-1:0]        mem3_byte_wren,
+
+    input [QUARTER_BITS-1:0] mem1_rd_addr,
+    input [QUARTER_BITS-1:0] mem2_rd_addr,
+
 
     // ---------------- Data Mem B port for AXI/PS use ---------------
     input [WIDTH-1:0]           AXI_dmem_data_in,
@@ -124,6 +132,15 @@ module memory #(
     assign AXI_dmem_byte_wr_en_mem3 = (AXI_mem_sel == 2'b11) ? AXI_dmem_byte_wr_en : 4'b0000;
     assign AXI_quarter_byte_addr    = AXI_dmem_byte_addr[((QUARTER_BITS-1)+2):0]; //remove top 2 bits that are used for memory selection, so we use quarter bits which is LOGSIZE-2
 
+    //muxing between read and write addresses for datamem1/2/3
+    logic [QUARTER_BITS-1:0] data_mem1_addr;
+    logic [QUARTER_BITS-1:0] data_mem2_addr;
+    logic [QUARTER_BITS-1:0] data_mem3_addr;
+
+    assign data_mem1_addr = (byte_wr_en_mem1 == 0) ? mem1_rd_addr : quarter_word_addr; //if we are reading then pick MMM read address, if we are writing pick processor write addr
+    assign data_mem2_addr = (byte_wr_en_mem2 == 0) ? mem2_rd_addr : quarter_word_addr;
+    assign data_mem3_addr = (mem3_byte_wren == 0)  ? quarter_word_addr : mem3_wr_addr; //if we are reading, pick processor read address, if we are writing pick MMM write address
+
     //data_memory_0(general use), data_memory_1(matrix_a), data_memory_2(matrix_b), data_memory_3(output_matrix)
     data_memory #(.WIDTH(WIDTH), .SIZE(QUARTER_SIZE), .NUM_COL(NUM_COL), 
                     .COL_WIDTH(COL_WIDTH)) data_mem0(.clk(clk), .data_in(mem_data_in), .word_addr(quarter_word_addr), 
@@ -131,18 +148,18 @@ module memory #(
                                                      .data_in_B(AXI_dmem_data_in), .data_out_B(AXI_dmem0_data_out), .byte_addr_B(AXI_quarter_byte_addr), .byte_wr_en_B(AXI_dmem_byte_wr_en_mem0));    //replace mem_rd_data with mem_rd_data_MEMWB once sequential read is added
 
     data_memory #(.WIDTH(WIDTH), .SIZE(QUARTER_SIZE), .NUM_COL(NUM_COL), 
-                    .COL_WIDTH(COL_WIDTH)) data_mem1(.clk(clk), .data_in(mem_data_in), .word_addr(quarter_word_addr), 
+                    .COL_WIDTH(COL_WIDTH)) data_mem1(.clk(clk), .data_in(mem_data_in), .word_addr(data_mem1_addr), 
                                                      .byte_wr_en(byte_wr_en_mem1), .reset(reset), .data_out(mem1_rd_data_MEMWB),  //need new data out signals and add mux for that, in addition the mem_sel signal will need to be sent through pipeline to next stage
                                                      .data_in_B(AXI_dmem_data_in), .data_out_B(AXI_dmem1_data_out), .byte_addr_B(AXI_quarter_byte_addr), .byte_wr_en_B(AXI_dmem_byte_wr_en_mem1)); //same or data_out_B used for the PS                                              
 
     data_memory #(.WIDTH(WIDTH), .SIZE(QUARTER_SIZE), .NUM_COL(NUM_COL), 
-                    .COL_WIDTH(COL_WIDTH)) data_mem2(.clk(clk), .data_in(mem_data_in), .word_addr(quarter_word_addr), 
+                    .COL_WIDTH(COL_WIDTH)) data_mem2(.clk(clk), .data_in(mem_data_in), .word_addr(data_mem2_addr), 
                                                      .byte_wr_en(byte_wr_en_mem2), .reset(reset), .data_out(mem2_rd_data_MEMWB),  //need new data out signals and add mux for that, in addition the mem_sel signal will need to be sent through pipeline to next stage
                                                      .data_in_B(AXI_dmem_data_in), .data_out_B(AXI_dmem2_data_out), .byte_addr_B(AXI_quarter_byte_addr), .byte_wr_en_B(AXI_dmem_byte_wr_en_mem2)); //same or data_out_B used for the PS 
 
     data_memory #(.WIDTH(WIDTH), .SIZE(QUARTER_SIZE), .NUM_COL(NUM_COL), 
-                    .COL_WIDTH(COL_WIDTH)) data_mem3(.clk(clk), .data_in(mem_data_in), .word_addr(quarter_word_addr), 
-                                                     .byte_wr_en(byte_wr_en_mem3), .reset(reset), .data_out(mem3_rd_data_MEMWB),  //need new data out signals and add mux for that, in addition the mem_sel signal will need to be sent through pipeline to next stage
+                    .COL_WIDTH(COL_WIDTH)) data_mem3(.clk(clk), .data_in(mem3_wr_data), .word_addr(data_mem3_addr), 
+                                                     .byte_wr_en(mem3_byte_wren), .reset(reset), .data_out(mem3_rd_data_MEMWB),  //need new data out signals and add mux for that, in addition the mem_sel signal will need to be sent through pipeline to next stage
                                                      .data_in_B(AXI_dmem_data_in), .data_out_B(AXI_dmem3_data_out), .byte_addr_B(AXI_quarter_byte_addr), .byte_wr_en_B(AXI_dmem_byte_wr_en_mem3)); //same or data_out_B used for the PS 
 
 

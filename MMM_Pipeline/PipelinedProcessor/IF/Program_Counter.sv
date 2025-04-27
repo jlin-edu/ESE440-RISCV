@@ -2,7 +2,7 @@
 
 module PC (
     input [`REG_RANGE] jump_addr,
-    input pc_sel, clk, reset, stall,
+    input pc_sel, clk, reset, stall, mmm_stall,
     output logic [`REG_RANGE] pc, pc_4
 );
 
@@ -15,7 +15,7 @@ module PC (
             pc <= 0;
         end else if (pc_sel) begin
             pc <= jump_addr;
-        end else if (stall == 0) begin
+        end else if ((stall == 0) || (mmm_stall == 0)) begin
             pc <= pc_4;
         end
     end

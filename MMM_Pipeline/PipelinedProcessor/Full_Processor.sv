@@ -4,7 +4,9 @@ module pipelined_processor #(
     parameter                   WIDTH=32, SIZE=1024,         //WIDTH is bits per word(shouldn't be changed), SIZE is # of WORDS
     parameter                   NUM_COL   = 4,
     parameter                   COL_WIDTH = 8,
-    localparam                  LOGSIZE=$clog2(SIZE)
+    localparam                  QUARTER_SIZE  = SIZE/4,
+    localparam                  LOGSIZE=$clog2(SIZE),
+    localparam                  QUARTER_BITS  = LOGSIZE-2
 )(
     //instruction memory write port
     //input [WIDTH-1:0]           instr_in,       //the write port should only be used for filling the memory with instructions in a testbench
@@ -62,6 +64,8 @@ module pipelined_processor #(
     // ----------------- MEM Stage Signals -----------------
     logic mem_wr_en_IDEX;                //This signal connects directly to the memory
     logic [`REG_RANGE] rs2_data_IDEX;
+    logic start_mmm_IDEX;
+    logic wait_mmm_finish_IDEX;
 
     // ----------------- WB Stage Signals -----------------
     logic reg_wr_en_IDEX;                //the rest of these signals are used for Write Back
@@ -74,6 +78,7 @@ module pipelined_processor #(
     logic pc_rs1_sel_IDEX, imm_rs2_sel_IDEX;
 
     logic stall;
+
 
 
     // --------------- Execute Signals ---------------
@@ -98,8 +103,6 @@ module pipelined_processor #(
     logic [`REG_RANGE] ALU_out_MEMWB;
     logic [`REG_RANGE] pc_4_MEMWB;
     logic [WIDTH-1:0] mem0_rd_data_MEMWB;
-    logic [WIDTH-1:0] mem1_rd_data_MEMWB;   //remove this when integrating MMM
-    logic [WIDTH-1:0] mem2_rd_data_MEMWB;   //remove this when integrating MMM
     logic [WIDTH-1:0] mem3_rd_data_MEMWB;
     logic [1:0]       mem_sel;
     logic [1:0]       reg_wr_ctrl_MEMWB;
@@ -110,6 +113,19 @@ module pipelined_processor #(
     logic [`REG_FIELD_RANGE] rd_MEMWB;
     logic reg_wr_en_MEMWB;
 
+    // ----------------- MMM Signals -------------------
+    logic [`REG_RANGE]       rs2_data_forward;
+
+    logic [WIDTH-1:0]        mata_data;  
+    logic [WIDTH-1:0]        matb_data;   
+    logic [QUARTER_BITS-1:0] rdaddr_mem1;
+    logic [QUARTER_BITS-1:0] rdaddr_mem2;
+
+    logic [WIDTH-1:0]        outmat_data;
+    logic [QUARTER_BITS-1:0] wraddr_mem3;
+    logic [3:0]              outmat_byte_wren
+
+    logic mmm_stall;
 
 
     logic [(LOGSIZE-1)+2:0] block_wr_addr;
@@ -122,7 +138,8 @@ module pipelined_processor #(
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
                                                         .instr_in(bram_din), .wr_addr(block_wr_addr), .wr_en(instr_wr_en), .AXI_data_out(AXI_data_out),
-                                                        .stall(stall));
+                                                        .stall(stall),
+                                                        .mmm_stall(mmm_stall));
 
     instruction_decode #(.WIDTH(WIDTH)) ID(.clk(clk), .reset(reset),
                                             .instruction_IFID(instruction_IFID), .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID),
@@ -134,7 +151,9 @@ module pipelined_processor #(
                                             .pc_sel_EXIF(pc_sel_EXIF),
                                             .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
                                             .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
-                                            .stall(stall));
+                                            .stall(stall),
+                                            .start_mmm_IDEX(start_mmm_IDEX), .wait_mmm_finish_IDEX(wait_mmm_finish_IDEX),
+                                            .mmm_stall(mmm_stall));
 
     execute EX( .clk(clk), .reset(reset),
                 .rs1_data_IDEX(rs1_data_IDEX), .funct7_IDEX(funct7_IDEX), .funct3_IDEX(funct3_IDEX), .op_IDEX(op_IDEX),
@@ -146,8 +165,29 @@ module pipelined_processor #(
                 .pc_sel_EXIF(pc_sel_EXIF), .jump_addr_EXIF(jump_addr_EXIF),
                 .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
                 .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
-                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID));
+                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
+                .mmm_stall(mmm_stall), .rs2_data_forward(rs2_data_forward));
 
+      //MMM Unit (takes in Start/Wait & rs2_data_forward signal from EX stage)
+     //(from MEM stage, takes in mem1_rd_data_MEMWB, mem2_rd_data_MEMWB)
+    //will send out signals that go to 
+    MMM_wrapper #(.QUARTERSIZE(QUARTER_SIZE), .INW(32), .OUTW(32)) 
+                MMM(.clk(clk), .reset(reset),
+
+                    .K_in(rs2_data_forward),
+                    .start_mmm(start_mmm_IDEX),
+                    .wait_mmm_finish(wait_mmm_finish_IDEX),
+                    
+                    .mata_data(mata_data),
+                    .matb_data(matb_data),
+                    .rdaddr_mem1(rdaddr_mem1), //(actually, maybe not because we can just pass in LOGSIZE signal for port A use by MMM)for read and write addresses you might need to add 2 0s to lowest bits
+                    .rdaddr_mem2(rdaddr_mem2), //INPUT ADDR OF DATA MEMORY NEEDS TO MUX BETWEEN MMM and Processor using write enable(mem1 & mem2 wren supplied by Processor, mem3 wren supplied by MMM)
+                    
+                    .outmat_data(outmat_data),
+                    .wraddr_mem3(wraddr_mem3),
+                    .outmat_byte_wren(outmat_byte_wren),//need to extend the write enable to be 4 bits long
+                    
+                    .stall(mmm_stall));
 
     logic [NUM_COL-1:0] data_wr_en;
     assign data_wr_en = {4{shared_bram_addr[(LOGSIZE)+2]}} & bram_wr_en;    //instruction mem is BRAM0
@@ -166,14 +206,22 @@ module pipelined_processor #(
                                             .reg_wr_en_MEMWB(reg_wr_en_MEMWB),
                                             .ALU_out_MEMWB(ALU_out_MEMWB), 
                                             .pc_4_MEMWB(pc_4_MEMWB), 
-                                            .mem0_rd_data_MEMWB(mem0_rd_data_MEMWB), 
-                                            .mem1_rd_data_MEMWB(mem1_rd_data_MEMWB),
-                                            .mem2_rd_data_MEMWB(mem2_rd_data_MEMWB),
-                                            .mem3_rd_data_MEMWB(mem3_rd_data_MEMWB),
                                             .mem_sel_MEMWB(mem_sel),
                                             .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
                                             .funct3_MEMWB(funct3_MEMWB), 
                                             .byte_offset_MEMWB(byte_offset_MEMWB),
+
+                                            .mem0_rd_data_MEMWB(mem0_rd_data_MEMWB), 
+                                            .mem3_wr_addr(wraddr_mem3),     //Provided by MMM
+                                            .mem3_wr_data(outmat_data),    //Provided by MMM
+                                            .mem3_byte_wren(outmat_byte_wren), //Provided by MMM
+                                            .mem3_rd_data_MEMWB(mem3_rd_data_MEMWB),
+
+                                            .mem1_rd_addr(rdaddr_mem1), //provided by MMM
+                                            .mem2_rd_addr(rdaddr_mem2),
+                                            .mem1_rd_data_MEMWB(mata_data),
+                                            .mem2_rd_data_MEMWB(matb_data),
+
                                             .AXI_dmem_data_in(bram_din), 
                                             .AXI_dmem0_data_out(dmem0_dout), 
                                             .AXI_dmem1_data_out(dmem1_dout),
@@ -185,8 +233,8 @@ module pipelined_processor #(
     write_back #(.WIDTH(WIDTH)) WB(.ALU_out_MEMWB(ALU_out_MEMWB), 
                                    .pc_4_MEMWB(pc_4_MEMWB), 
                                    .mem0_rd_data_MEMWB(mem0_rd_data_MEMWB),
-                                   .mem1_rd_data_MEMWB(mem1_rd_data_MEMWB),
-                                   .mem2_rd_data_MEMWB(mem2_rd_data_MEMWB),
+                                   //.mem1_rd_data_MEMWB(mem1_rd_data_MEMWB),
+                                   //.mem2_rd_data_MEMWB(mem2_rd_data_MEMWB),
                                    .mem3_rd_data_MEMWB(mem3_rd_data_MEMWB),
                                    .mem_sel(mem_sel), 
                                    .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),

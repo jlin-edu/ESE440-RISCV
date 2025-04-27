@@ -6,8 +6,8 @@ module write_back#(
     input [`REG_RANGE] ALU_out_MEMWB,
     input [`REG_RANGE] pc_4_MEMWB,
     input [WIDTH-1:0] mem0_rd_data_MEMWB,
-    input [WIDTH-1:0] mem1_rd_data_MEMWB,
-    input [WIDTH-1:0] mem2_rd_data_MEMWB,
+    //input [WIDTH-1:0] mem1_rd_data_MEMWB,
+    //input [WIDTH-1:0] mem2_rd_data_MEMWB,
     input [WIDTH-1:0] mem3_rd_data_MEMWB,
     input [1:0]       mem_sel,
     input [1:0]       reg_wr_ctrl_MEMWB,
@@ -29,13 +29,13 @@ module write_back#(
     //use the mem_sel signal to determine which memory's value to load
     logic [WIDTH-1:0] mem_rd_data_MEMWB;
     always_comb begin
-        mem_rd_data_MEMWB = 0; 
+        mem_rd_data_MEMWB = 0; //if you try to read from mem1 or mem2 you just get a 0
         if(mem_sel == 2'b00)
             mem_rd_data_MEMWB = mem0_rd_data_MEMWB;
-        else if(mem_sel == 2'b01)
-            mem_rd_data_MEMWB = mem1_rd_data_MEMWB;
-        else if(mem_sel == 2'b10)
-            mem_rd_data_MEMWB = mem2_rd_data_MEMWB;
+        //else if(mem_sel == 2'b01)
+        //    mem_rd_data_MEMWB = mem1_rd_data_MEMWB;
+        //else if(mem_sel == 2'b10)
+        //    mem_rd_data_MEMWB = mem2_rd_data_MEMWB;
         else if(mem_sel == 2'b11)
             mem_rd_data_MEMWB = mem3_rd_data_MEMWB;
     end

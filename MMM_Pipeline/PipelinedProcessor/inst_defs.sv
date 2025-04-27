@@ -26,6 +26,10 @@
 `define OP_JAL 7'b1101111
 `define OP_JALR 7'b1100111
 
+`define OP_MMMSTART 7'b1111111
+
+`define OP_MMMWAIT 7'b0111111
+
 // ===============================
 
 // FUNCT3 DEFINITIONS

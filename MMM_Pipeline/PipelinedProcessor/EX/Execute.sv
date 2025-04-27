@@ -14,6 +14,8 @@ module execute (
     input        [`REG_RANGE] pc_IDEX,             //does the pc need to be signed as well?
     input                     jump_branch_sel_IDEX,
 
+    input                     mmm_stall,
+
     // ----------------- MEM Stage Signals -----------------
     input mem_wr_en_IDEX,
     input [`REG_RANGE] rs2_data_IDEX,
@@ -52,15 +54,10 @@ module execute (
     
      // ----------------- IF Stage Signals(Outputs) -----------------
     output logic              pc_sel_EXIF,
-    output logic [`REG_RANGE] jump_addr_EXIF //these are from the branch adder and mux
+    output logic [`REG_RANGE] jump_addr_EXIF, //these are from the branch adder and mux
 
-    //input signed        [`REG_RANGE]     in1, in2,
-    //input               [`OP_RANGE]      op,
-    //input               [`FUNCT_3_RANGE] funct_3,
-    //input               [`FUNCT_7_RANGE] funct_7,
-
-    //output logic signed [`REG_RANGE]     out,
-    //output logic                         pc_sel
+    //USED By MMM which starts execution in EX stage
+    output logic [`REG_RANGE] rs2_data_forward
 );
     //MEM Pipeline Signals
     //ALU_out_EXMEM
@@ -76,7 +73,7 @@ module execute (
 
     logic signed [`REG_RANGE] ALU_out_EX;
     always_ff @(posedge clk) begin
-        if(reset == 1) begin
+        if((reset == 1) || (mmm_stall == 1)) begin
             //MEM Stage
             ALU_out_EXMEM <= 0;
             funct3_EXMEM <= 0;
@@ -112,7 +109,7 @@ module execute (
                             .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
                             .in1_sel(in1_sel), .in2_sel(in2_sel));
 
-    logic [`REG_RANGE] rs2_data_forward;
+    //logic [`REG_RANGE] rs2_data_forward;
     always_comb begin
         rs2_data_forward = rs2_data_IDEX;
         if((reg_wr_en_EXMEM == 1) && (rs2_IDEX == rd_EXMEM) && (rd_EXMEM != 0))

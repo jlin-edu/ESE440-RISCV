@@ -13,6 +13,9 @@ module control_unit (
 
     // ----------------- MEM stage controls ---------------------------
     output logic mem_wr_en,                       // Write enable flag
+    output logic start_mmm,
+    output logic wait_mmm_finish,
+
     // ----------------- WB stage controls ---------------------------
     output logic [1:0] reg_write_ctrl                       // 0 for ALU output, 1 is for pc+4, 2 is for memory
     );
@@ -25,6 +28,8 @@ module control_unit (
         jump_branch_sel = 0;
         mem_wr_en = 0;
         reg_write_ctrl = 0;
+        start_mmm       = 0;
+        wait_mmm_finish = 0;
 
     // check fo funct7 for multiplications and divisions
         case (opcode)
@@ -106,6 +111,23 @@ module control_unit (
                 //jump_branch_sel = 0;
                 // mem_wr_en = 0;
                 reg_write_ctrl = 1;
+            end
+
+            //doesn't use the ALU at all, just pass rs2_data & start_mmm to mem stage
+            //opcode is formatted [ *filler* [24:20(rs2)] *filler* [6:0(opcode)]]
+            `OP_MMMSTART: begin
+                // pc_rs1_sel = 0;
+                // reg_wr_en = 0;
+                //imm_rs2_sel = 0;
+                // jump_branch_sel = 0;
+                //mem_wr_en = 1;
+                // reg_write_ctrl = 0;
+                start_mmm = 1;
+            end
+
+            `OP_MMMWAIT: begin
+                //reg_write_ctrl  = 2;    //since MMM operation can be considered a store instr, we use this for hazard detection to insert
+                wait_mmm_finish = 1;
             end
             
         endcase 
