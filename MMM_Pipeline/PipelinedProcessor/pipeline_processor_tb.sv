@@ -54,6 +54,14 @@ module pipelined_processor_tb ();
         $fclose(fd);
         
         //Preload values into data memory
+        shared_bram_addr = (SIZE)*4;
+        for(int i=0; i<QUARTER_SIZE; i++) begin   //load input matrix a
+            bram_din = i;
+            @(posedge clk);
+            shared_bram_addr += 4;
+            @(negedge clk);
+        end
+        
         shared_bram_addr = (SIZE+QUARTER_SIZE)*4;
         for(int i=0; i<QUARTER_SIZE; i++) begin   //load input matrix a
             bram_din = i;
@@ -69,6 +77,16 @@ module pipelined_processor_tb ();
             shared_bram_addr += 4;
             @(negedge clk);
         end
+        
+        shared_bram_addr = (SIZE+(QUARTER_SIZE*3))*4;
+        for(int i=0; i<QUARTER_SIZE; i++) begin   //load input matrix a
+            bram_din = i;
+            @(posedge clk);
+            shared_bram_addr += 4;
+            @(negedge clk);
+        end
+        
+        //try a read test here
         
         
         
