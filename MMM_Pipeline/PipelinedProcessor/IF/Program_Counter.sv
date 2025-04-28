@@ -15,7 +15,7 @@ module PC (
             pc <= 0;
         end else if (pc_sel) begin
             pc <= jump_addr;
-        end else if ((stall == 0) || (mmm_stall == 0)) begin
+        end else if ((stall == 0) && (mmm_stall == 0)) begin
             pc <= pc_4;
         end
     end

@@ -44,7 +44,7 @@ module instruction_fetch #(
             pc_IFID   <= 0;
             pc_4_IFID <= 0;
         end
-        else if((stall == 0) || (mmm_stall == 0)) begin
+        else if((stall == 0) && (mmm_stall == 0)) begin
             pc_IFID   <= pc_IF;
             pc_4_IFID <= pc_4_IF;
         end
