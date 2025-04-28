@@ -123,7 +123,7 @@ module pipelined_processor #(
 
     logic [WIDTH-1:0]        outmat_data;
     logic [QUARTER_BITS-1:0] wraddr_mem3;
-    logic [3:0]              outmat_byte_wren
+    logic [3:0]              outmat_byte_wren;
 
     logic mmm_stall;
 

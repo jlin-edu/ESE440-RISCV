@@ -27,6 +27,7 @@ module MMM_wrapper #(
 
     output logic stall       
 );
+    logic outmat_wren;
     logic [A_ADDR_BITS-1:0]   mata_rdaddr;
     logic [B_ADDR_BITS-1:0]   matb_rdaddr;
     logic [OUT_ADDR_BITS-1:0] outmat_wraddr;

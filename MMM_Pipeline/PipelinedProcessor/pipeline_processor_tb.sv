@@ -5,6 +5,7 @@
 
 module pipelined_processor_tb ();
     parameter   WIDTH=32, SIZE=256, NUM_COL=4, COL_WIDTH=8;
+    localparam  QUARTER_SIZE=SIZE/4;
     localparam  LOGSIZE=$clog2(SIZE);
 
     //logic [WIDTH-1:0]       instr_in;
@@ -35,14 +36,14 @@ module pipelined_processor_tb ();
     int fd;
     string line;
 
-    string program_file = "pub_sub.txt";
-    int cycles = 1024;
+    string program_file = "simple_mmm_test.txt";
+    int cycles = QUARTER_SIZE*int'($sqrt(QUARTER_SIZE))*2;
 
-    initial begin    
+    initial begin 
         fd = $fopen(program_file, "r");
         shared_bram_addr = 0;
         reset = 1;
-        bram_wr_en = 1;
+        bram_wr_en = 4'b1111;
         while (!$feof(fd)) begin
             $fgets(line, fd);
             $sscanf(line, "%b\n", bram_din);
@@ -51,6 +52,26 @@ module pipelined_processor_tb ();
             @(negedge clk);
         end
         $fclose(fd);
+        
+        //Preload values into data memory
+        shared_bram_addr = (SIZE+QUARTER_SIZE)*4;
+        for(int i=0; i<QUARTER_SIZE; i++) begin   //load input matrix a
+            bram_din = i;
+            @(posedge clk);
+            shared_bram_addr += 4;
+            @(negedge clk);
+        end
+        
+        shared_bram_addr = (SIZE+(QUARTER_SIZE*2))*4;
+        for(int i=0; i<QUARTER_SIZE; i++) begin   //load input matrix b
+            bram_din = QUARTER_SIZE-i;
+            @(posedge clk)
+            shared_bram_addr += 4;
+            @(negedge clk);
+        end
+        
+        
+        
         bram_din = 0; shared_bram_addr = 0; bram_wr_en = 0;
         reset = 0;
         
