@@ -32,7 +32,8 @@ class Controller:
         self.VCD_interp.load(self.VCD_data)
     
     def play(self):
-        self.time = self.VCD_interp.get_time()
+        if self.state == "VCD":
+            self.time = self.VCD_interp.get_time()
         self.run()
         
     def reset(self):
