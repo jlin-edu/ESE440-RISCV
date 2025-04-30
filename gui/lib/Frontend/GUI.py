@@ -79,7 +79,7 @@ class GUI(tk.Tk):
         self.data_mem.load(data[3])
 
     def reset_state(self):
-        state = [0, [0 for i in range(32)], [0 for i in range(self.mem_size)], [0 for i in range(self.mem_size)]]
+        state = [0, [0 for i in range(32)], [0 for i in range(self.controller.mem_size)], [0 for i in range(self.controller.mem_size)]]
         self.write(state)
 
     def VCD_dialog(self):
