@@ -11,12 +11,13 @@ module write_back#(
     input [WIDTH-1:0] mem3_rd_data_MEMWB,
     input [1:0]       mem_sel,
     input [1:0]       reg_wr_ctrl_MEMWB,
+    input halt_MEM,
 
     input [`FUNCT_3_RANGE] funct3_MEMWB,
     input [1:0] byte_offset_MEMWB,
 
     input [`REG_FIELD_RANGE] rd_MEMWB,
-    input reg_wr_en_MEMWB,
+    input reg_wr_en_MEMWB, halt_WB
 
     //outputs
     output logic [`REG_RANGE] reg_wr_data_WBID,
@@ -25,6 +26,7 @@ module write_back#(
 );
     assign rd_WBID = rd_MEMWB;
     assign reg_wr_en_WBID = reg_wr_en_MEMWB;
+    assign halt_WB = halt_MEM;
 
     //use the mem_sel signal to determine which memory's value to load
     logic [WIDTH-1:0] mem_rd_data_MEMWB;

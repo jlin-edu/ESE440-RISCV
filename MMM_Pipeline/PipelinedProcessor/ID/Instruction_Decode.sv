@@ -8,6 +8,7 @@ module instruction_decode #(
     // ----------------- Inputs to this stage -----------------
     // ----------------- IF Stage Signals(Inputs) -----------------
     input [`REG_RANGE] instruction_IFID, pc_IFID, pc_4_IFID,
+    input div_stall,
 
 
     // ----------------- EX Stage Signals(Inputs) -----------------
@@ -30,6 +31,8 @@ module instruction_decode #(
     output logic signed [`REG_RANGE] immediate_IDEX,       //used by branch adder to determine branch address
     output logic [`REG_RANGE] pc_IDEX,              //used by branch adder to determine branch address
     output logic jump_branch_sel_IDEX,              //used by branch adder to determine whether to use branch address or jump address
+
+    output logic halt_EX,
 
     // ----------------- MEM Stage Signals -----------------
     output logic mem_wr_en_IDEX,                //This signal connects directly to the memory
@@ -89,6 +92,8 @@ module instruction_decode #(
             pc_IDEX              <= 0;
             jump_branch_sel_IDEX <= 0;
 
+            halt_EX <= 0;
+
             //MEM Stage
             mem_wr_en_IDEX <= 0;
             rs2_data_IDEX  <= 0;
@@ -107,7 +112,7 @@ module instruction_decode #(
             pc_rs1_sel_IDEX  <= 0;
             imm_rs2_sel_IDEX <= 0;
         end
-        else if (mmm_stall == 0) begin
+        else if (mmm_stall == 0 && ~div_stall) begin
             //EX Stage
             op_IDEX        <= op_ID;
             funct7_IDEX    <= funct7_ID;
@@ -136,6 +141,8 @@ module instruction_decode #(
             rs2_IDEX         <= rs2_ID;
             pc_rs1_sel_IDEX  <= pc_rs1_sel;
             imm_rs2_sel_IDEX <= imm_rs2_sel;
+
+            halt_EX <= halt;
         end
     end
 
@@ -170,6 +177,15 @@ module instruction_decode #(
     hazard_unit hazard_unit(.reg_wr_ctrl_IDEX(reg_wr_ctrl_IDEX), .rd_IDEX(rd_IDEX),
                             .rs1_ID(rs1_ID), .rs2_ID(rs2_ID), .pc_rs1_sel(pc_rs1_sel), .imm_rs2_sel(imm_rs2_sel),
                             .stall(stall));
+
+    logic halt;
+    always_comb begin
+        halt = 0;
+        if (op_ID == 0) begin
+            halt = 1;
+        end
+    end
+
     //muxes for selecting inputs of our ALU
     /*
     always_comb begin

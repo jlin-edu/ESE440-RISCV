@@ -21,7 +21,8 @@ module pipelined_processor #(
     output logic [WIDTH-1:0]    bram_dout,
 
     //y'know
-    input clk, reset
+    input clk_in, reset
+    output logic halt_reg
     //output logic signed [`REG_RANGE] processor_out
 
     // Data Mem B port for AXI/PS use
@@ -30,6 +31,9 @@ module pipelined_processor #(
     //input [LOGSIZE-1:0]         AXI_dmem_word_addr,
     //input [NUM_COL-1:0]         AXI_dmem_byte_wr_en
 );
+
+    logic clk;
+
     // --------------- Instruction Fetch Signals ---------------
     // ---------- Inputs ----------
     // ----- EX Stage Signals -----
@@ -61,6 +65,8 @@ module pipelined_processor #(
     logic [`REG_RANGE] pc_IDEX;              //used by branch adder to determine branch address
     logic jump_branch_sel_IDEX;              //used by branch adder to determine whether to use branch address or jump address
 
+    logic halt_IDEX;
+
     // ----------------- MEM Stage Signals -----------------
     logic mem_wr_en_IDEX;                //This signal connects directly to the memory
     logic [`REG_RANGE] rs2_data_IDEX;
@@ -77,7 +83,7 @@ module pipelined_processor #(
     logic [`REG_FIELD_RANGE] rs1_IDEX, rs2_IDEX;
     logic pc_rs1_sel_IDEX, imm_rs2_sel_IDEX;
 
-    logic stall;
+    logic stall, div_stall;
 
 
 
@@ -98,6 +104,8 @@ module pipelined_processor #(
     logic [WIDTH-1:0] dmem1_dout;
     logic [WIDTH-1:0] dmem2_dout;
     logic [WIDTH-1:0] dmem3_dout;
+
+    logic halt_EXMEM;
     
     // ----------------- WB Stage Signals(Outputs) -----------------
     logic [`REG_RANGE] ALU_out_MEMWB;
@@ -134,11 +142,15 @@ module pipelined_processor #(
     logic [NUM_COL-1:0] instr_wr_en;
     assign instr_wr_en = {4{~shared_bram_addr[(LOGSIZE)+2]}} & bram_wr_en;    //instruction mem is BRAM0
 
-    instruction_fetch #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL)) IF(.clk(clk), .reset(reset),
+    logic halt_MEMWB;
+
+    logic halt;
+
+    instruction_fetch #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL)) IF(.clk(clk), .reset(reset), .clk_in(clk_in),
                                                         .jump_addr_EXIF(jump_addr_EXIF), .pc_sel_EXIF(pc_sel_EXIF),
                                                         .pc_IFID(pc_IFID), .pc_4_IFID(pc_4_IFID), .instruction_IFID(instruction_IFID),
                                                         .instr_in(bram_din), .wr_addr(block_wr_addr), .wr_en(instr_wr_en), .AXI_data_out(AXI_data_out),
-                                                        .stall(stall),
+                                                        .stall(stall | div_stall),
                                                         .mmm_stall(mmm_stall));
 
     instruction_decode #(.WIDTH(WIDTH)) ID(.clk(clk), .reset(reset),
@@ -151,7 +163,7 @@ module pipelined_processor #(
                                             .pc_sel_EXIF(pc_sel_EXIF),
                                             .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
                                             .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
-                                            .stall(stall),
+                                            .stall(stall), .div_stall(div_stall), .halt_EX(halt_IDEX),
                                             .start_mmm_IDEX(start_mmm_IDEX), .wait_mmm_finish_IDEX(wait_mmm_finish_IDEX),
                                             .mmm_stall(mmm_stall));
 
@@ -165,7 +177,8 @@ module pipelined_processor #(
                 .pc_sel_EXIF(pc_sel_EXIF), .jump_addr_EXIF(jump_addr_EXIF),
                 .rs1_IDEX(rs1_IDEX), .rs2_IDEX(rs2_IDEX),
                 .pc_rs1_sel_IDEX(pc_rs1_sel_IDEX), .imm_rs2_sel_IDEX(imm_rs2_sel_IDEX),
-                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
+                .reg_wr_data_WBID(reg_wr_data_WBID), .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID), .div_stall(div_stall),
+                .halt_ID(halt_IDEX), .halt_MEM(halt_EXMEM),
                 .mmm_stall(mmm_stall), .rs2_data_forward(rs2_data_forward));
 
       //MMM Unit (takes in Start/Wait & rs2_data_forward signal from EX stage)
@@ -192,7 +205,7 @@ module pipelined_processor #(
     logic [NUM_COL-1:0] data_wr_en;
     assign data_wr_en = {4{shared_bram_addr[(LOGSIZE)+2]}} & bram_wr_en;    //instruction mem is BRAM0
     memory #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL), .COL_WIDTH(COL_WIDTH)) 
-                                        MEM(.clk(clk), .reset(reset),
+                                        MEM(.clk(clk), .reset(reset), .clk_in(clk_in),
                                             .ALU_out_EXMEM(ALU_out_EXMEM), 
                                             .funct3_EXMEM(funct3_EXMEM), 
                                             .mem_wr_en_EXMEM(mem_wr_en_EXMEM), 
@@ -210,6 +223,8 @@ module pipelined_processor #(
                                             .reg_wr_ctrl_MEMWB(reg_wr_ctrl_MEMWB),
                                             .funct3_MEMWB(funct3_MEMWB), 
                                             .byte_offset_MEMWB(byte_offset_MEMWB),
+
+                                            .halt_EX(halt_EXMEM), .halt_WB(halt_MEMWB),
 
                                             .mem0_rd_data_MEMWB(mem0_rd_data_MEMWB), 
                                             .mem3_wr_addr(wraddr_mem3),     //Provided by MMM
@@ -244,11 +259,12 @@ module pipelined_processor #(
                                    .rd_WBID(rd_WBID), 
                                    .reg_wr_en_WBID(reg_wr_en_WBID),
                                    .funct3_MEMWB(funct3_MEMWB), 
-                                   .byte_offset_MEMWB(byte_offset_MEMWB));
+                                   .byte_offset_MEMWB(byte_offset_MEMWB),
+                                   .halt_MEM(halt_MEMWB), .halt_WB(halt));
     
     //assign processor_out = ALU_out_EXMEM;
     logic [2:0] bram_sel;   //topmost 1 bit to select Instr or data, next 2 bits to select which data_mem
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk_in) begin
         bram_sel <= shared_bram_addr[(LOGSIZE)+2:(LOGSIZE)+2-2];
     end
 
@@ -264,6 +280,19 @@ module pipelined_processor #(
                 bram_dout = dmem0_dout;
         else
             bram_dout = AXI_data_out;
+    end
+
+    always_ff @(posedge(clk_in)) begin
+        if (reset) begin
+            halt_reg <= 1;
+        end
+        else if (halt) begin
+            halt_reg <= 0;
+        end
+    end
+
+    always_comb begin
+        clk = clk_in & halt_reg;
     end
 
 endmodule
