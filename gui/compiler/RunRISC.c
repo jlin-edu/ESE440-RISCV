@@ -137,7 +137,7 @@ int main() {
     		ASSERT_RESET;
     		resetData();
     		DEASSERT_RESET;
-    		sleep(1); //while(hw[1]);
+    		while(hw[1]);
     		xil_printf("PROGRAM_DONE\r\n");
 		printInst();
     		printData();
