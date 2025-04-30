@@ -13,10 +13,10 @@ class SerialUART:
         ports = serial.tools.list_ports.comports()
         for port in ports:
             if port.vid == 0x0403 and port.pid == 0x6010:
-                self.com = port.device;    
+                self.com = port.device    
     
     def open(self):
-        self.find_port();
+        self.find_port()
         self.port = serial.Serial(self.com, self.baud)
         while True:
             data = self.receive()
@@ -26,7 +26,7 @@ class SerialUART:
     def close(self):
         if self.port:
             self.send("QUIT")
-            self.port.close();
+            self.port.close()
     
     def send(self, data):
         self.port.write(data.encode())
