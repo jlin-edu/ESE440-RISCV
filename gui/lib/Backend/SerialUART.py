@@ -47,7 +47,7 @@ class SerialUART:
     
     def compileC(self, programName):
         compiler = subprocess.Popen([self.controller.path + "\\compiler\\compile.bat"], stdin=subprocess.PIPE, shell=True)
-        compiler.communicate(input=programName)
+        compiler.communicate(input=programName.encode())
         compiler.wait()
     
     def send_file(self, bin):
