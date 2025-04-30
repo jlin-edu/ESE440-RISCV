@@ -139,6 +139,7 @@ int main() {
     		DEASSERT_RESET;
     		sleep(1); //while(hw[1]);
     		xil_printf("PROGRAM_DONE\r\n");
+		printInst();
     		printData();
 
     	} else if(isCommand("PRIN")) {
