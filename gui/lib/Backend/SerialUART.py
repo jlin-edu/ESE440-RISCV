@@ -5,6 +5,7 @@ import os
 
 class SerialUART:
     def __init__(self, controller, mem_size):
+        self.controller = controller
         self.mem_size = mem_size
         self.baud = 115200
         
