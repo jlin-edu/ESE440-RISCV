@@ -62,7 +62,7 @@ class SerialUART:
                 self.port.write(bytes([0, 0, 0, 0]))
                 
     def recv_state(self):
-        state = [0, [0 for i in range(32)], [0 for i in range(self.mem_size)], [0 for i in range(self.mem_size)]]
+        state = [0, [0 for i in range(32)], [0 for i in range(self.mem_size // 2)], [0 for i in range(self.mem_size // 2)]]
         count = 0
         while True:
             data = self.receive()
@@ -75,6 +75,6 @@ class SerialUART:
                 if count < self.mem_size // 2:
                     state[2][count] = data_val
                 else:
-                    state[3][count - self.mem_size] = data_val
+                    state[3][count - (self.mem_size // 2)] = data_val
                 count += 1
         return state
