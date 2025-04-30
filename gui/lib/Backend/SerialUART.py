@@ -73,8 +73,8 @@ class SerialUART:
                     continue
                 data_val = int(data[data.find("0x")+2:], 16)
                 if count < self.mem_size // 2:
-                    self.state[2][count] = data_val
+                    state[2][count] = data_val
                 else:
-                    self.state[3][count - self.mem_size] = data_val
+                    state[3][count - self.mem_size] = data_val
                 count += 1
         return state
