@@ -6,7 +6,7 @@ module memory #(
     parameter                   COL_WIDTH = 8,
     localparam                  LOGSIZE=$clog2(SIZE)
 )(
-    input clk, reset,
+    input clk, reset, clk_in,
 
     // ----------------- Inputs to this stage -----------------
     // ----------------- MEM Stage Signals(Inputs) -----------------
@@ -14,6 +14,7 @@ module memory #(
     input [`FUNCT_3_RANGE] funct3_EXMEM,      //shifting&masking load and stores
     input mem_wr_en_EXMEM,                   //write enable
     input [`REG_RANGE] rs2_data_EXMEM,      //write data
+    input halt_EX,
 
     // ----------------- WB Stage Signals(Inputs) -----------------
     input reg_wr_en_EXMEM,
@@ -30,6 +31,8 @@ module memory #(
 
     output logic [`FUNCT_3_RANGE] funct3_MEMWB,     //to be used to shift/mask data loaded from memory
     output logic [1:0] byte_offset_MEMWB,
+
+    output logic halt_WB,
 
     // ----------------- ID Stage Signals(Outputs) -----------------
     //enable, data and address
@@ -96,7 +99,7 @@ module memory #(
 
     //logic [WIDTH-1:0] mem_rd_data;
     data_memory #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL), 
-                    .COL_WIDTH(COL_WIDTH)) data_memory(.clk(clk), .data_in(mem_data_in), .word_addr(word_addr), 
+                    .COL_WIDTH(COL_WIDTH)) data_memory(.clk(clk), .data_in(mem_data_in), .word_addr(word_addr), .clk_in(clk_in),
                                                         .byte_wr_en(byte_wr_en), .reset(reset), .data_out(mem_rd_data_MEMWB),
                                                         .data_in_B(AXI_dmem_data_in), .data_out_B(AXI_dmem_data_out), .word_addr_B(AXI_dmem_word_addr), .byte_wr_en_B(AXI_dmem_byte_wr_en));    //replace mem_rd_data with mem_rd_data_MEMWB once sequential read is added
 
@@ -132,6 +135,8 @@ module memory #(
 
             funct3_MEMWB <= 0;
             byte_offset_MEMWB <= 0;
+
+            halt_WB <= 0;
         end
         else begin
             ALU_out_MEMWB <= ALU_out_EXMEM;
@@ -144,6 +149,8 @@ module memory #(
 
             funct3_MEMWB <= funct3_EXMEM;
             byte_offset_MEMWB <= byte_offset;
+
+            halt_WB <= halt_EX;
         end
     end
 

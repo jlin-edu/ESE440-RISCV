@@ -9,7 +9,7 @@ module data_memory #(
     input [WIDTH-1:0]           data_in,
     output logic [WIDTH-1:0]    data_out,
     input [LOGSIZE-1:0]         word_addr,
-    input                       clk,
+    input                       clk, clk_in,
     input [NUM_COL-1:0]         byte_wr_en,
     input                       reset,
 
@@ -39,7 +39,7 @@ module data_memory #(
 
     //B port for AXI use
     integer j;
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk_in) begin
         //maybe leave out the reset, if we want to prefill data memory with data, then we can hold reset, leaving the B port open write
         //if(reset) begin
         //    data_out_B <= 0;

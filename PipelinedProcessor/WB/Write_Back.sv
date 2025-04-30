@@ -7,6 +7,7 @@ module write_back#(
     input [`REG_RANGE] pc_4_MEMWB,
     input [WIDTH-1:0] mem_rd_data_MEMWB,
     input [1:0] reg_wr_ctrl_MEMWB,
+    input halt_MEM,
 
     input [`FUNCT_3_RANGE] funct3_MEMWB,
     input [1:0] byte_offset_MEMWB,
@@ -17,10 +18,11 @@ module write_back#(
     //outputs
     output logic [`REG_RANGE] reg_wr_data_WBID,
     output logic [`REG_FIELD_RANGE] rd_WBID,
-    output logic reg_wr_en_WBID
+    output logic reg_wr_en_WBID, halt_WB
 );
     assign rd_WBID = rd_MEMWB;
     assign reg_wr_en_WBID = reg_wr_en_MEMWB;
+    assign halt_WB = halt_MEM;
 
     logic [WIDTH-1:0] mem_rd_data_masked;
     always_comb begin

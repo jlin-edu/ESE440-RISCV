@@ -14,7 +14,7 @@ module instruction_fetch #(
     input [NUM_COL-1:0]         wr_en,
 
     //the dynamic duo
-    input clk, reset,
+    input clk_in, clk, reset,
 
     input stall,    //hazard handling
 
@@ -29,7 +29,7 @@ module instruction_fetch #(
 
     logic instr_wr_en;
     assign instr_wr_en = wr_en[0];
-    instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk), .reset(reset), .stall(stall),
+    instr_memory #(.WIDTH(WIDTH), .SIZE(SIZE)) instruction_buffer(.clk(clk_in), .reset(reset), .stall(stall),
                                                                 .pc(pc_IF), .instr_out(instruction_IFID),
                                                                 .instr_in(instr_in), .wr_addr(wr_addr), .wr_en(instr_wr_en), .flush(pc_sel_EXIF)
                                                                 );

@@ -14,6 +14,8 @@ module execute (
     input        [`REG_RANGE] pc_IDEX,             //does the pc need to be signed as well?
     input                     jump_branch_sel_IDEX,
 
+    input halt_ID,
+
     // ----------------- MEM Stage Signals -----------------
     input mem_wr_en_IDEX,
     input [`REG_RANGE] rs2_data_IDEX,
@@ -42,6 +44,7 @@ module execute (
     output logic [`FUNCT_3_RANGE] funct3_EXMEM,
     output logic mem_wr_en_EXMEM,
     output logic [`REG_RANGE] rs2_data_EXMEM,
+    output logic halt_MEM,
 
     // ----------------- WB Stage Signals(Outputs) -----------------
     output logic reg_wr_en_EXMEM,
@@ -86,6 +89,8 @@ module execute (
             mem_wr_en_EXMEM <= 0;
             rs2_data_EXMEM <= 0;
 
+            halt_MEM <= 0;
+
             //WB Stage
             reg_wr_en_EXMEM <= 0;
             reg_wr_ctrl_EXMEM <= 0;
@@ -98,6 +103,8 @@ module execute (
             funct3_EXMEM <= funct3_IDEX;
             mem_wr_en_EXMEM <= mem_wr_en_IDEX;
             rs2_data_EXMEM <= rs2_data_forward;
+
+            halt_MEM <= halt_ID;
 
             //WB Stage
             reg_wr_en_EXMEM <= reg_wr_en_IDEX;
