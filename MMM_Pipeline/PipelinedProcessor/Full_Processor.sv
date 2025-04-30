@@ -77,7 +77,7 @@ module pipelined_processor #(
     logic [`REG_FIELD_RANGE] rs1_IDEX, rs2_IDEX;
     logic pc_rs1_sel_IDEX, imm_rs2_sel_IDEX;
 
-    logic stall;
+    logic stall, div_stall, mmm_stall;
 
 
 
@@ -124,8 +124,6 @@ module pipelined_processor #(
     logic [WIDTH-1:0]        outmat_data;
     logic [QUARTER_BITS-1:0] wraddr_mem3;
     logic [3:0]              outmat_byte_wren;
-
-    logic mmm_stall;
 
 
     logic [(LOGSIZE-1)+2:0] block_wr_addr;
