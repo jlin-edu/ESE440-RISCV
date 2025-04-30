@@ -32,7 +32,7 @@ class Controller:
         self.VCD_interp.load(self.VCD_data)
     
     def play(self):
-        if self.state == "VCD":
+        if self.mode == "VCD":
             self.time = self.VCD_interp.get_time()
         self.run()
         
@@ -49,7 +49,7 @@ class Controller:
         self.run()
     
     def run(self):
-        if self.state == "VCD":
+        if self.mode == "VCD":
             self.VCD_state = self.VCD_interp.extract(self.time)
             self.GUI.write(self.VCD_state)
         else:
