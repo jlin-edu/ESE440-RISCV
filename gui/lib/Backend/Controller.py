@@ -1,13 +1,18 @@
 from .VCDInterpreter import VCDInterpreter
 from .VCDInterface import VCDInterface
+from .SerialUART import SerialUART
 
 class Controller:
-    def __init__(self, path):
+    def __init__(self, path, mem_size):
         self.VCD_inter = VCDInterface() # TODO: Functions to change VCDinterface file
-        self.VCD_interp = VCDInterpreter() # TODO: Functions to change VCDInterpreter data
+        self.VCD_interp = VCDInterpreter(memsize=mem_size) # TODO: Functions to change VCDInterpreter data
+        self.UART = SerialUART(self, mem_size)
         self.GUI = None
+        self.mode = "VCD" # VCD or serial mode
         
         self.path = path
+        
+        self.mem_size = mem_size
         
         self.reset_time = -1 # In future save times to make lookup faster
         self.time = -1
@@ -43,9 +48,46 @@ class Controller:
         self.run()
     
     def run(self):
-        self.VCD_state = self.VCD_interp.extract(self.time)
-        self.GUI.write(self.VCD_state)
+        if self.state == "VCD":
+            self.VCD_state = self.VCD_interp.extract(self.time)
+            self.GUI.write(self.VCD_state)
+        else:
+            self.UART.send("RUNP")
+            hardware_state = self.UART.recv_state()
+            self.GUI.write(hardware_state)
         
+    def file_open(self):
+        if self.mode == "VCD":
+            self.GUI.VCD_dialog()
+        else:
+            self.GUI.C_dialog()
+    
+    def connect(self):
+        if self.mode == "VCD":
+            self.mode = "SERIAL"
+            self.GUI.change_mode()
+            self.UART.open()
+            self.GUI.reset_state()
+    
+    def disconnect(self):
+        if self.mode == "SERIAL":
+            self.mode = "VCD"
+            self.GUI.change_mode()
+            self.UART.close()
+            self.GUI.reset_state()
+    
+    def send_file(self, Cfile):
+        programName = self.UART.getName(Cfile)
+        binFile = self.UART.CtoBin(Cfile)
+        if not self.UART.binUTD(binFile, Cfile):
+            self.UART.compileC(programName)
+            
+        self.UART.send("LOAD")
+        self.UART.send_file(binFile)
+        
+        hardware_state = self.UART.recv_state()
+        self.GUI.write(hardware_state)
+    
     def test(self):
         self.play()
         self.VCD_inter.open(f"{self.path}\\Regression_Test.vcd")

@@ -7,6 +7,16 @@ class Controls:
     
     def grid(self, **kwargs):
         self.frame.grid(**kwargs)
+        self.frame.grid_all()
+        
+    def regrid(self, **kwargs):
+        self.frame.grid(**kwargs)
+        
+    def disable(self):
+        self.frame.disable_buttons()
+        
+    def enable(self):
+        self.frame.enable_buttons()
     
     class ControlFrame(ttk.Frame):
         def __init__(self, master, controller, **kwargs):
@@ -25,8 +35,22 @@ class Controls:
         
         def grid(self, **kwargs):
             super().grid(**kwargs)
+        
+        def grid_all(self):
             self.run.grid(column=0, row=0)
             self.reset.grid(column=1, row=0)
             self.forward.grid(column=2, row=0)
             self.backward.grid(column=3, row=0)
             self.test.grid(column=4, row=0)
+
+        def disable_buttons(self):
+            self.reset.config(state="disabled")
+            self.forward.config(state="disabled")
+            self.backward.config(state="disabled")
+            self.test.config(state="disabled")
+            
+        def enable_buttons(self):
+            self.reset.config(state="normal")
+            self.forward.config(state="normal")
+            self.backward.config(state="normal")
+            self.test.config(state="normal")
