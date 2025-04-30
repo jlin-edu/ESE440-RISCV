@@ -117,7 +117,7 @@ module pipelined_processor #(
     assign block_wr_addr = shared_bram_addr[(LOGSIZE-1)+2:0];
 
     logic [NUM_COL-1:0] instr_wr_en;
-    assign instr_wr_en = ~shared_bram_addr[(LOGSIZE)+2] & {4{bram_wr_en}};    //instruction mem is BRAM0
+    assign instr_wr_en = {4{~shared_bram_addr[(LOGSIZE)+2]}} & bram_wr_en;    //instruction mem is BRAM0
 
     logic halt_MEMWB;
 
@@ -162,7 +162,7 @@ module pipelined_processor #(
 
 
     logic [NUM_COL-1:0] data_wr_en;
-    assign data_wr_en = shared_bram_addr[(LOGSIZE)+2] & {4{bram_wr_en}};    //instruction mem is BRAM0
+    assign data_wr_en = {4{shared_bram_addr[(LOGSIZE)+2]}} & bram_wr_en;    //instruction mem is BRAM0
     memory #(.WIDTH(WIDTH), .SIZE(SIZE), .NUM_COL(NUM_COL), .COL_WIDTH(COL_WIDTH)) 
                                         MEM(.clk(clk), .reset(reset), .clk_in(clk_in),
                                             .ALU_out_EXMEM(ALU_out_EXMEM), .funct3_EXMEM(funct3_EXMEM), .mem_wr_en_EXMEM(mem_wr_en_EXMEM), .rs2_data_EXMEM(rs2_data_EXMEM),
