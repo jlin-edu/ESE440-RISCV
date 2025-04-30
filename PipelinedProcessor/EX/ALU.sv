@@ -103,7 +103,7 @@ module alu(
                     `XOR: begin
                         case(funct_7)  
                             `DEFAULT_7: out = in1 ^ in2;
-                            `M:         out = (in2 == 0) ? -1 : (in1 == -`MAX_32 && in2 == -1) ? -`MAX_32 : in1 / in2; //DIV
+                            //`M:         out = (in2 == 0) ? -1 : (in1 == -`MAX_32 && in2 == -1) ? -`MAX_32 : in1 / in2; //DIV
                             default: begin
                                 //ASSERT STATEMENT
                                 out    = 0;
@@ -115,7 +115,7 @@ module alu(
                         case(funct_7)
                             `SRL: out = in1 >>  in2[4:0];
                             `SRA: out = in1 >>> in2[4:0];
-                            `M:   out = (in2 == 0) ? -1 : $unsigned(in1) / $unsigned(in2);   //DIVU
+                            //`M:   out = (in2 == 0) ? -1 : $unsigned(in1) / $unsigned(in2);   //DIVU
                             default: begin
                                 //ASSERT STATEMENT
                                 out    = 0;
@@ -126,7 +126,7 @@ module alu(
                     `OR: begin
                         case(funct_7)  
                             `DEFAULT_7: out = in1 | in2;
-                            `M:         out = (in2 == 0) ? in1 : (in1 == -`MAX_32 && in2 == -1) ? 0 : in1 % in2; //REM
+                            //`M:         out = (in2 == 0) ? in1 : (in1 == -`MAX_32 && in2 == -1) ? 0 : in1 % in2; //REM
                             default: begin
                                 //ASSERT STATEMENT
                                 out    = 0;
@@ -137,7 +137,7 @@ module alu(
                     `AND: begin
                         case(funct_7)  
                             `DEFAULT_7: out = in1 & in2;
-                            `M:         out = (in2 == 0) ? in1 : $unsigned(in1) % $unsigned(in2); //REMU
+                            //`M:         out = (in2 == 0) ? in1 : $unsigned(in1) % $unsigned(in2); //REMU
                             default: begin
                                 //ASSERT STATEMENT
                                 out    = 0;

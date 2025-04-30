@@ -20,6 +20,9 @@ class Memory:
     def grid(self, col=0, row=0):
         self.frame.grid(column=col, row=row)
         self.frame.grid_all()
+        
+    def regrid(self, col=0, row=0):
+        self.frame.grid(column=col, row=row)
     
     def load(self, data):
         self.modified = [False for i in range(self.size)]
@@ -30,6 +33,9 @@ class Memory:
     
     def highlight_pos(self, pos):
         self.frame.change_highlight(pos)
+        
+    def resize(self, height):
+        self.frame.change_height(height)
     class MemoryFrame(ttk.LabelFrame):
         def __init__(self, memory, master, width, height):
             self.width = width
@@ -43,7 +49,7 @@ class Memory:
             
             
         def init_tree_scroll(self):
-            self.tree = ttk.Treeview(self, columns=("address", "data"), selectmode="none")
+            self.tree = ttk.Treeview(self, columns=("address", "data"), selectmode="none", height=10)
             self.tree.column("#0", width=10, stretch=False)
             self.tree.column("address", width=75, anchor="center", stretch=False)
             self.tree.heading("address", text="Address")
@@ -89,4 +95,7 @@ class Memory:
                 self.tree.item(self.memory.highlight_idx, tags=("focus",))
                 self.tree.see(self.memory.highlight_idx)
                 
-        
+        def change_height(self, new_height):
+            self.height = new_height
+            self.config(height=new_height)
+            self.tree.config(height=new_height//10)

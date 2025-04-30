@@ -20,6 +20,12 @@ class RegisterFile:
             for j in range(self.cols):
                 self.registers[i][j].grid(j, i)
     
+    def regrid(self, row, column, **kwargs):
+        self.frame.grid(row=row, column=column, **kwargs)
+    
+    def grid_forget(self):
+        self.frame.grid_forget()
+    
     def set_val(self, value, row=0, column=0, modified=None):
         if row >= self.rows:
             print(f"Error: Row index out of range - Index: {row}, Rows:{self.rows}")

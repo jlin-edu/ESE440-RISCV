@@ -14,6 +14,8 @@ module execute (
     input        [`REG_RANGE] pc_IDEX,             //does the pc need to be signed as well?
     input                     jump_branch_sel_IDEX,
 
+    input halt_ID,
+
     // ----------------- MEM Stage Signals -----------------
     input mem_wr_en_IDEX,
     input [`REG_RANGE] rs2_data_IDEX,
@@ -42,6 +44,7 @@ module execute (
     output logic [`FUNCT_3_RANGE] funct3_EXMEM,
     output logic mem_wr_en_EXMEM,
     output logic [`REG_RANGE] rs2_data_EXMEM,
+    output logic halt_MEM,
 
     // ----------------- WB Stage Signals(Outputs) -----------------
     output logic reg_wr_en_EXMEM,
@@ -52,7 +55,9 @@ module execute (
     
      // ----------------- IF Stage Signals(Outputs) -----------------
     output logic              pc_sel_EXIF,
-    output logic [`REG_RANGE] jump_addr_EXIF //these are from the branch adder and mux
+    output logic [`REG_RANGE] jump_addr_EXIF, //these are from the branch adder and mux
+
+    output logic div_stall
 
     //input signed        [`REG_RANGE]     in1, in2,
     //input               [`OP_RANGE]      op,
@@ -75,13 +80,16 @@ module execute (
     //assign pc_4_EXMEM = pc_4_IDEX;
 
     logic signed [`REG_RANGE] ALU_out_EX;
+    logic [`REG_RANGE] rs2_data_forward;
     always_ff @(posedge clk) begin
-        if(reset == 1) begin
+        if(reset == 1 || div_stall) begin
             //MEM Stage
             ALU_out_EXMEM <= 0;
             funct3_EXMEM <= 0;
             mem_wr_en_EXMEM <= 0;
             rs2_data_EXMEM <= 0;
+
+            halt_MEM <= 0;
 
             //WB Stage
             reg_wr_en_EXMEM <= 0;
@@ -95,6 +103,8 @@ module execute (
             funct3_EXMEM <= funct3_IDEX;
             mem_wr_en_EXMEM <= mem_wr_en_IDEX;
             rs2_data_EXMEM <= rs2_data_forward;
+
+            halt_MEM <= halt_ID;
 
             //WB Stage
             reg_wr_en_EXMEM <= reg_wr_en_IDEX;
@@ -112,7 +122,6 @@ module execute (
                             .rd_WBID(rd_WBID), .reg_wr_en_WBID(reg_wr_en_WBID),
                             .in1_sel(in1_sel), .in2_sel(in2_sel));
 
-    logic [`REG_RANGE] rs2_data_forward;
     always_comb begin
         rs2_data_forward = rs2_data_IDEX;
         if((reg_wr_en_EXMEM == 1) && (rs2_IDEX == rd_EXMEM) && (rd_EXMEM != 0))
@@ -147,10 +156,48 @@ module execute (
     end
 
 
-
+    logic [`REG_RANGE] alu_out;
     alu alu(.in1(in1), .in2(in2),
             .op(op_IDEX), .funct_3(funct3_IDEX), .funct_7(funct7_IDEX),
-            .out(ALU_out_EX), .pc_sel(pc_sel_EXIF));
+            .out(alu_out), .pc_sel(pc_sel_EXIF));
+
+    logic [`REG_RANGE] quotient, remainder;
+    logic div_start, div_status, signed_div;
+    division_wrapper divider(
+        .dividend(in1), .divisor(in2), .start(div_start), .clk(clk), .reset(reset),
+        .signed_div(signed_div), .quotient(quotient), .remainder(remainder), .status(div_status), .finished(div_fin)
+    );
+
+    always_comb begin
+        div_start = 0;
+        signed_div = 0;
+        ALU_out_EX = alu_out;
+        if (op_IDEX == `OP_R3 && funct7_IDEX == `M) begin
+            case(funct3_IDEX)
+                `XOR: begin
+                    div_start = 1;
+                    signed_div = 1;
+                    ALU_out_EX = quotient;
+                end
+                `SRL_SRA: begin
+                    div_start = 1;
+                    signed_div = 0;
+                    ALU_out_EX = quotient;
+                end
+                `OR: begin
+                    div_start = 1;
+                    signed_div = 1;
+                    ALU_out_EX = remainder;
+                end
+                `AND: begin
+                    div_start = 1;
+                    signed_div = 0;
+                    ALU_out_EX = remainder;
+                end
+            endcase
+        end
+        div_stall = (in2) ? (div_status | (div_start & ~div_fin)) : 0;
+    end
 
     //branch adder
     logic [`REG_RANGE] branch_addr;

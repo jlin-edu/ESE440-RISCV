@@ -35,8 +35,8 @@ module pipelined_processor_tb ();
     int fd;
     string line;
 
-    string program_file = "Mat_mul.txt";
-    int cycles = 1024;
+    string program_file = "fibonacci.txt";
+    int cycles = 2048;
 
     initial begin    
         fd = $fopen(program_file, "r");

@@ -3,11 +3,12 @@
 module instruction_decode #(
     parameter WIDTH=32
 )(
-    input clk, reset,
+    input clk, reset, 
 
     // ----------------- Inputs to this stage -----------------
     // ----------------- IF Stage Signals(Inputs) -----------------
     input [`REG_RANGE] instruction_IFID, pc_IFID, pc_4_IFID,
+    input div_stall,
 
     // ----------------- WB Stage Signals(Inputs) -----------------
     input [`REG_RANGE] reg_wr_data_WBID,        //these signals are responsible for writing to the register file
@@ -26,6 +27,8 @@ module instruction_decode #(
     output logic signed [`REG_RANGE] immediate_IDEX,       //used by branch adder to determine branch address
     output logic [`REG_RANGE] pc_IDEX,              //used by branch adder to determine branch address
     output logic jump_branch_sel_IDEX,              //used by branch adder to determine whether to use branch address or jump address
+
+    output logic halt_EX,
 
     // ----------------- MEM Stage Signals -----------------
     output logic mem_wr_en_IDEX,                //This signal connects directly to the memory
@@ -66,6 +69,20 @@ module instruction_decode #(
     logic [1:0] reg_wr_ctrl_ID;
     logic [`REG_FIELD_RANGE] rd_ID;
 
+    //logic [`OP_RANGE] op;
+    //logic [`FUNCT_3_RANGE] funct3;
+    //logic [`FUNCT_7_RANGE] funct7;
+    logic [`REG_FIELD_RANGE] rs1_ID, rs2_ID;
+    assign op_ID     = instruction_IFID[`OP_FIELD];
+    assign funct3_ID = instruction_IFID[`FUNCT_3_FIELD];
+    assign funct7_ID = instruction_IFID[`FUNCT_7_FIELD];
+    assign rs1_ID    = instruction_IFID[`REG_RS1];          //for the pipelined variant, we will most likely need to pass rs1, rs2 and rd for hazard detection
+    assign rs2_ID    = instruction_IFID[`REG_RS2];
+    assign rd_ID     = instruction_IFID[`REG_RD];      //this rd signal will need to be sent through the pipeline
+    logic [`REG_RANGE] rs1_data;
+    logic pc_rs1_sel, imm_rs2_sel;
+
+
     //assign pc_IDEX = pc_IFID;
     //assign pc_4_IDEX = pc_4_IFID;
     always_ff @(posedge clk) begin
@@ -80,6 +97,8 @@ module instruction_decode #(
             immediate_IDEX       <= 0;
             pc_IDEX              <= 0;
             jump_branch_sel_IDEX <= 0;
+
+            halt_EX <= 0;
 
             //MEM Stage
             mem_wr_en_IDEX <= 0;
@@ -97,7 +116,7 @@ module instruction_decode #(
             pc_rs1_sel_IDEX  <= 0;
             imm_rs2_sel_IDEX <= 0;
         end
-        else begin
+        else if (~div_stall) begin
             //EX Stage
             op_IDEX        <= op_ID;
             funct7_IDEX    <= funct7_ID;
@@ -124,29 +143,19 @@ module instruction_decode #(
             rs2_IDEX         <= rs2_ID;
             pc_rs1_sel_IDEX  <= pc_rs1_sel;
             imm_rs2_sel_IDEX <= imm_rs2_sel;
+
+            halt_EX <= halt;
         end
     end
 
 
-    //logic [`OP_RANGE] op;
-    //logic [`FUNCT_3_RANGE] funct3;
-    //logic [`FUNCT_7_RANGE] funct7;
-    logic [`REG_FIELD_RANGE] rs1_ID, rs2_ID;
-    assign op_ID     = instruction_IFID[`OP_FIELD];
-    assign funct3_ID = instruction_IFID[`FUNCT_3_FIELD];
-    assign funct7_ID = instruction_IFID[`FUNCT_7_FIELD];
-    assign rs1_ID    = instruction_IFID[`REG_RS1];          //for the pipelined variant, we will most likely need to pass rs1, rs2 and rd for hazard detection
-    assign rs2_ID    = instruction_IFID[`REG_RS2];
-    assign rd_ID     = instruction_IFID[`REG_RD];      //this rd signal will need to be sent through the pipeline
     inst_splitter inst_splitter (.inst(instruction_IFID), .op(op_ID), 
                                 .imm(immediate_ID));
 
-    logic pc_rs1_sel, imm_rs2_sel;
     control_unit  control_unit  (.opcode(op_ID),
                                 .pc_rs1_sel(pc_rs1_sel), .imm_rs2_sel(imm_rs2_sel),
                                 .jump_branch_sel(jump_branch_sel_ID), .mem_wr_en(mem_wr_en_ID), .reg_write_ctrl(reg_wr_ctrl_ID), .reg_wr_en(reg_wr_en_ID));
 
-    logic [`REG_RANGE] rs1_data;
     register_file #(.WIDTH(WIDTH)) register_file(.clk(clk), .reset(reset),
                                                 .wr_addr(rd_WBID), .wr_data(reg_wr_data_WBID), .wr_en(reg_wr_en_WBID),     //dont use rd directly as the write address when pipelined, same with reg_wr_en
                                                 .rs1_rd_addr(rs1_ID), .rs1_rd_data(rs1_data),
@@ -157,6 +166,14 @@ module instruction_decode #(
     hazard_unit hazard_unit(.reg_wr_ctrl_IDEX(reg_wr_ctrl_IDEX), .rd_IDEX(rd_IDEX),
                             .rs1_ID(rs1_ID), .rs2_ID(rs2_ID), .pc_rs1_sel(pc_rs1_sel), .imm_rs2_sel(imm_rs2_sel),
                             .stall(stall));
+
+    logic halt;
+    always_comb begin
+        halt = 0;
+        if (op_ID == 0) begin
+            halt = 1;
+        end
+    end
     //muxes for selecting inputs of our ALU
     /*
     always_comb begin

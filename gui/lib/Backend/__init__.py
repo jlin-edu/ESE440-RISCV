@@ -1,1 +1,1 @@
-__all__ = ["CommandIssuer", "Controller", "VCDInterface", "VCDInterpreter"]
+__all__ = ["CommandIssuer", "Controller", "VCDInterface", "VCDInterpreter", "SerialUART"]

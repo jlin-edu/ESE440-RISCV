@@ -31,6 +31,12 @@ class Register:
         self.frame.grid(column=col, row=row, **kwargs)
         self.frame.grid_all()
     
+    def regrid(self, col=0, row=0, **kwargs):
+        self.frame.grid(column=col, row=row, **kwargs)
+    
+    def grid_forget(self):
+        self.frame.grid_forget()
+    
     # RegisterFrame inner class, used to manage the frame and widgets associated
     # with an external Register instance
     # Is a subclass of the tk.Frame class, thus inherently includes a Frame widget
