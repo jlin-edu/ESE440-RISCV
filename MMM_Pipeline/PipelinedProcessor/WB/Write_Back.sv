@@ -17,7 +17,7 @@ module write_back#(
     input [1:0] byte_offset_MEMWB,
 
     input [`REG_FIELD_RANGE] rd_MEMWB,
-    input reg_wr_en_MEMWB, halt_WB
+    input reg_wr_en_MEMWB, halt_WB,
 
     //outputs
     output logic [`REG_RANGE] reg_wr_data_WBID,
