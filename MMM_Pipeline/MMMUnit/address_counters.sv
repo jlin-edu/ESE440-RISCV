@@ -28,7 +28,7 @@ module addr_ctr #(
     logic [$clog2(N)-1:0] output_col_index;         //essentially the middle loop, goes from 0 to N-1, increments, cleared when N-1 and K-1 is reached and increments the row
     logic [K_BITS-1:0]    accumulate_iteration;     //essentially the innermost loop, goes from 0 to K-1, increments every clock, cleared when K-1 is reached and data is written
 
-    logic last_acc, last_col, last_row;
+    logic last_col, last_row;
     assign last_acc = (accumulate_iteration == K-1) ? 1 : 0;
     assign last_col = (output_col_index == N-1) ? 1 : 0;
     assign last_row = (output_row_index == M-1) ? 1 : 0;
