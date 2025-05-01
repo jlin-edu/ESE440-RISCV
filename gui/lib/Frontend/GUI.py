@@ -89,7 +89,11 @@ class GUI(tk.Tk):
     def C_dialog(self):
         self.Cfile = filedialog.askopenfilename(title="Select C File", filetypes=(("C Files", "*.c"), ("All Files", "*.*")))
         self.controller.send_file(self.Cfile)
-        
+
+     def XPR_dialog(self):
+        self.XPRfile = filedialog.askopenfilename(title="Select Vivado XPR Project", filetypes=(("XPR Files", "*.xpr"), ("All Files", "*.*")))
+        return self.XPRfile
+    
     def change_mode(self):
         if self.controller.mode == "VCD":
             self.menu_serial.entryconfig("Connect", state="normal")
