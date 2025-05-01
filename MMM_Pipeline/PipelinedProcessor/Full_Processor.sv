@@ -21,7 +21,7 @@ module pipelined_processor #(
     output logic [WIDTH-1:0]    bram_dout,
 
     //y'know
-    input clk_in, reset
+    input clk_in, reset,
     output logic halt_reg
     //output logic signed [`REG_RANGE] processor_out
 
