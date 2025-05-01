@@ -18,6 +18,7 @@ class SerialUART:
     def open(self):
         self.find_port()
         self.port = serial.Serial(self.com, self.baud)
+        self.controller.startSDK()
         while True:
             data = self.receive()
             if data and data == "READY":
