@@ -69,6 +69,37 @@ class Controller:
             self.GUI.change_mode()
             self.UART.open()
             self.GUI.reset_state()
+
+    def startSDK(self):
+        xsct_path = "C:/Xilinx/SDK/2018.2/bin/xsct"
+        template_path = self.path + "/xsct_commands_template.tcl"
+        script_path = self.path + "/xsct_commands.tcl"
+        xpr_path = self.GUI.XPR_dialog()
+        project_path = xpr_path[:xpr_path.rfind('/')]
+        project_name = xpr_path[xpr_path.rfind('/')+1:xpr_path.rfind('.')]
+        sdk_path = project_path + '/' + project_name + ".sdk"
+
+        hw_path = sdk_path + "/base_zynq_wrapper_hw_platform_0/system.hdf"
+        bit_path = sdk_path + "/base_zynq_wrapper_hw_platform_0/base_zynq_wrapper.bit"
+        ps7_init_path = sdk_path + "/base_zynq_wrapper_hw_platform_0/ps7_init.tcl"
+        elf_path = sdk_path + "/test/Debug/test.elf"
+        with open(script_path, 'w') as command_script:
+            with open(template_path, 'r') as template_script:
+                for line in template_script:
+                    if line.find("HARDWARE") > 0:
+                        pos = line.find("HARDWARE")
+                        line = line[:pos] + hw_path + line[pos+len("HARDWARE"):]
+                    elif line.find("BITSTREAM") > 0:
+                        pos = line.find("BITSTREAM")
+                        line = line[:pos] + bit_path + line[pos+len("BITSTREAM"):]
+                    elif line.find("PS7_INIT") > 0:
+                        pos = line.find("PS7_INIT")
+                        line = line[:pos] + ps7_init_path + line[pos+len("PS7_INIT"):]
+                    elif line.find("ELF") > 0:
+                        pos = line.find("ELF")
+                        line = line[:pos] + elf_path + line[pos+len("ELF"):]
+                    command_script.write(line)
+        subprocess.run([xsct_path, script_path], shell=True)
     
     def disconnect(self):
         if self.mode == "SERIAL":
