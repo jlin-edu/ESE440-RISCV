@@ -77,7 +77,7 @@ module execute (
 
     logic signed [`REG_RANGE] ALU_out_EX;
     always_ff @(posedge clk) begin
-        if((reset == 1) || (mmm_stall == 1 || div_stall)) begin
+        if((reset == 1) || (mmm_stall == 1) || (div_stall == 1)) begin
             //MEM Stage
             ALU_out_EXMEM <= 0;
             funct3_EXMEM <= 0;
