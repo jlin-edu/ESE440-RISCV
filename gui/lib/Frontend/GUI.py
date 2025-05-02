@@ -23,6 +23,9 @@ class GUI(tk.Tk):
         self.resizable(False, False)
         self.option_add("*tearOff", False)
         self.load_menu()
+
+        logo = tk.PhotoImage(file=controller.path + "/Logo.png")
+        self.iconphoto(True, logo)
         
         self.reset_state()
         
@@ -47,11 +50,11 @@ class GUI(tk.Tk):
     
     def grid_all(self):
         self.pc.grid(col=0, row=0, sticky="w")
-        self.registers.grid(column=0, row=1, rowspan=2)
-        self.instruction_mem.grid(col=1, row=1)
-        self.data_mem.grid(col=1, row=2)
+        self.registers.grid(column=0, row=1, rowspan=2, columnspan=2)
+        self.instruction_mem.grid(col=2, row=1)
+        self.data_mem.grid(col=2, row=2)
         
-        self.controls.grid(column=1, row=0, columnspan=1, sticky="nsew")
+        self.controls.grid(column=1, row=0, columnspan=2, sticky="nsew")
         
         #self.stages.grid(column=2, row=0, rowspan=3, sticky="nsew")
         #self.temp2.grid(sticky="nsew")
@@ -105,10 +108,10 @@ class GUI(tk.Tk):
             self.data_mem.resize(height=100)
             
             self.pc.regrid(col=0, row=0, sticky="w")
-            self.registers.regrid(column=0, row=1, rowspan=2)
-            self.instruction_mem.regrid(col=1, row=1)
-            self.data_mem.regrid(col=1, row=2)
-            self.controls.regrid(column=1, row=0, columnspan=1, sticky="nwse")
+            self.registers.regrid(column=0, row=1, rowspan=2, columnspan=2)
+            self.instruction_mem.regrid(col=2, row=1)
+            self.data_mem.regrid(col=2, row=2)
+            self.controls.regrid(column=1, row=0, columnspan=2, sticky="nwse")
             
         else:
             self.menu_serial.entryconfig("Connect", state="disabled")
