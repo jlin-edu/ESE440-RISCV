@@ -17,12 +17,13 @@ module write_back#(
     input [1:0] byte_offset_MEMWB,
 
     input [`REG_FIELD_RANGE] rd_MEMWB,
-    input reg_wr_en_MEMWB, halt_WB,
+    input reg_wr_en_MEMWB,
 
     //outputs
     output logic [`REG_RANGE] reg_wr_data_WBID,
     output logic [`REG_FIELD_RANGE] rd_WBID,
-    output logic reg_wr_en_WBID
+    output logic reg_wr_en_WBID,
+    output logic halt_WB
 );
     assign rd_WBID = rd_MEMWB;
     assign reg_wr_en_WBID = reg_wr_en_MEMWB;
