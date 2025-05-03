@@ -76,7 +76,7 @@ class Memory:
             return f"0x{val:08x}"
         
         def str_addr(self, addr):
-            address = f"{addr:x}"
+            address = f"{addr*4:x}"
             address_length = ceil(log(self.memory.size, 2)/4.0)
             padding = ['0' for i in range(address_length - len(address))]
             return "0x" + "".join(padding) + address
