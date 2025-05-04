@@ -192,7 +192,7 @@ module execute (
                 end
             endcase
         end
-        div_stall = (in2) ? (div_status | (div_start & ~div_fin)) : 0;
+        div_stall = ((in2 == 0) && ~div_status) ? 0 : (div_status | (div_start & ~div_fin));
     end
 
     //branch adder
