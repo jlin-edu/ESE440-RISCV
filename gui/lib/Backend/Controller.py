@@ -1,3 +1,5 @@
+import subprocess
+
 from .VCDInterpreter import VCDInterpreter
 from .VCDInterface import VCDInterface
 from .SerialUART import SerialUART
