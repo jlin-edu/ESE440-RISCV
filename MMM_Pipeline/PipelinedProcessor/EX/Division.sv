@@ -34,13 +34,12 @@ module division_wrapper (
         dividend_u = (signed_div && dividend[`REG_SIZE-1]) ? ~dividend + 1 : dividend;
         divisor_u = (signed_div && divisor[`REG_SIZE-1]) ? ~divisor + 1 : divisor;
 
-        if (divisor) begin
-            quotient = (signed_div && sign) ? ~quotient_u + 1 : quotient_u;
-            remainder = (signed_div && dividend[`REG_SIZE-1]) ? ~remainder_u + 1 : remainder_u;
-        end else begin
+        quotient = (signed_div && sign) ? ~quotient_u + 1 : quotient_u;
+        remainder = (signed_div && dividend[`REG_SIZE-1]) ? ~remainder_u + 1 : remainder_u;
+        if (divisor == 0 && ~status && ~finished) begin
             quotient = -1;
             remainder = dividend;
-        end
+        end 
     end
 endmodule
 
