@@ -158,7 +158,7 @@ module execute (
             .out(alu_out), .pc_sel(pc_sel_EXIF));
 
     logic [`REG_RANGE] quotient, remainder;
-    logic div_start, div_status, signed_div;
+    logic div_start, div_status, signed_div, div_fin;
     division_wrapper divider(
         .dividend(in1), .divisor(in2), .start(div_start), .clk(clk), .reset(reset),
         .signed_div(signed_div), .quotient(quotient), .remainder(remainder), .status(div_status), .finished(div_fin)
