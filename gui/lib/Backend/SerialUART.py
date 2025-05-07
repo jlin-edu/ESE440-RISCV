@@ -11,7 +11,7 @@ class SerialUART:
         
     def find_port(self):
         ports = serial.tools.list_ports.comports()
-        for port in ports:
+        for port in ports[::-1]:
             if port.vid == 0x0403 and port.pid == 0x6010:
                 self.com = port.device    
     
