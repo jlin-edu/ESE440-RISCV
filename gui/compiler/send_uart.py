@@ -2,7 +2,7 @@ import serial
 import subprocess
 import os
 
-port = "COM5"
+port = "COM4"
 baudrate = 115200
 
 try:
