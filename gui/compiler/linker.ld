@@ -1,10 +1,10 @@
 ENTRY(start);
 MEMORY {
-    instruction (rx) : ORIGIN = 0x0000000, LENGTH = 2048
-    general_data (rw) : ORIGIN = 0x00000800, LENGTH = 512
-    matrix_A (w) : ORIGIN = 0x00000A00, LENGTH = 512
-    matrix_B (w) : ORIGIN = 0x00000C00, LENGTH = 512
-    matrix_O (r) : ORIGIN = 0x00000E00, LENGTH = 512
+    instruction (rx) : ORIGIN = 0x0000000, LENGTH = 4096
+    general_data (rw) : ORIGIN = 0x00001000, LENGTH = 1024
+    matrix_A (w) : ORIGIN = 0x00001400, LENGTH = 1024
+    matrix_B (w) : ORIGIN = 0x00001800, LENGTH = 1024
+    matrix_O (r) : ORIGIN = 0x00001C00, LENGTH = 1024
 }
 
 SECTIONS {

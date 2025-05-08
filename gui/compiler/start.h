@@ -1,6 +1,11 @@
 #ifndef START
 #define START
 
+
+#define stack_str(sp) #sp
+#define stack stack_str(0x1400)
+
+
 #define hlt asm volatile(".word 0x0000000\n\t")
 
 #define MMS(K)                                      \
@@ -19,7 +24,7 @@
 void main(void);
 
 __attribute__((naked, noreturn, section(".start"))) void start(void) {
-    asm volatile("li sp, 0xA00\n\t"); // Init stack pointer
+    asm volatile("li sp, " stack "\n\t"); // Init stack pointer
     main();
     hlt;
 }

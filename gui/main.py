@@ -28,7 +28,7 @@ if __name__ == "__main__":
     current_file_abs_path = os.path.abspath(current_file_path)
     current_directory_path = os.path.dirname(current_file_abs_path)
     
-    control = Controller(current_directory_path, mem_size=8196)
+    control = Controller(current_directory_path, mem_size=2048)
     gui = GUI(control)
     
     
