@@ -1,7 +1,9 @@
 #include <start.h>
 
+MATA m1[] = {1, 2, 2, 1};
+MATB m2[] = {2, 3, 8, 4};
+
 void main() {
-    int a = 10;
-    int b = 2;
-    int c = a / b;
+    MMS(2);
+    MMW;
 }
