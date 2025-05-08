@@ -97,6 +97,14 @@ class GUI(tk.Tk):
         self.XPRfile = filedialog.askopenfilename(title="Select Vivado XPR Project", filetypes=(("XPR Files", "*.xpr"), ("All Files", "*.*")))
         return self.XPRfile
     
+    def Xilinx_dialog(self):
+        xilinx = filedialog.askdirectory(title="Navigate to your Xilinx folder", initialdir=self.controller.path + "/compiler/Test_Programs")
+        return xilinx
+    
+    def sdk_dialog(self, sdk_path):
+        elfFile = filedialog.askopenfilename(title="Select ELF file to run on ARM", initialdir=sdk_path);
+        return elfFile
+    
     def change_mode(self):
         if self.controller.mode == "VCD":
             self.menu_serial.entryconfig("Connect", state="normal")

@@ -1,4 +1,5 @@
 import subprocess
+import os
 
 from .VCDInterpreter import VCDInterpreter
 from .VCDInterface import VCDInterface
@@ -72,19 +73,47 @@ class Controller:
             self.UART.open()
             self.GUI.reset_state()
 
-    def startSDK(self):
-        xsct_path = "C:/Xilinx/SDK/2018.2/bin/xsct"
-        template_path = self.path + "/xsct_commands_template.tcl"
-        script_path = self.path + "/xsct_commands.tcl"
-        xpr_path = self.GUI.XPR_dialog()
-        project_path = xpr_path[:xpr_path.rfind('/')]
-        project_name = xpr_path[xpr_path.rfind('/')+1:xpr_path.rfind('.')]
-        sdk_path = project_path + '/' + project_name + ".sdk"
+    def get_Xil(self):
+        if os.path.exists("C:/Xilinx"):
+            return "C:/Xilinx"
+        appdata_path = os.path.join(os.path.expanduser('~'), "AppData")
+        for root, directories, _ in os.walk(appdata_path):
+            for directory in directories:
+                if directory == "Xilinx":
+                    return os.path.join(root, directory)
+        return self.GUI.Xilinx_dialog()
 
-        hw_path = sdk_path + "/base_zynq_wrapper_hw_platform_0/system.hdf"
-        bit_path = sdk_path + "/base_zynq_wrapper_hw_platform_0/base_zynq_wrapper.bit"
-        ps7_init_path = sdk_path + "/base_zynq_wrapper_hw_platform_0/ps7_init.tcl"
-        elf_path = sdk_path + "/test/Debug/test.elf"
+    def get_XPR(self):
+        project_dir = self.path
+        for _ in range(2):
+            project_dir = os.path.dirname(project_dir)
+        for root, _, files in os.walk(project_dir):
+            for file in files:
+                if file.find(".xpr") != -1:
+                    return os.path.join(root, file)
+        return self.GUI.XPR_dialog()
+    
+    def get_ELF(self, sdk_path):
+        directories = [directory for directory in os.listdir(sdk_path) if os.path.isdir(os.path.join(sdk_path, directory))]
+        for directory in directories:
+            if directory + "_bsp" in directories and directory != "fsbl":
+                return os.path.join(sdk_path, directory, "Debug", directory + ".elf")
+        return self.GUI.sdk_dialog(sdk_path)
+
+    def startSDK(self):
+        xsct_path = os.path.join(self.get_Xil(), "SDK", "2018.2", "bin", "xsct").replace('\\', '/')
+        template_path = os.path.join(self.path, "xsct_commands_template.tcl").replace('\\', '/')
+        script_path = os.path.join(self.path, "xsct_commands.tcl").replace('\\', '/')
+        
+        xpr_path = self.get_XPR()
+        project_path = os.path.dirname(xpr_path)
+        project_name = os.path.basename(project_path)
+        sdk_path = os.path.join(project_path, project_name + ".sdk")
+
+        hw_path = os.path.join(sdk_path, "base_zynq_wrapper_hw_platform_0", "system.hdf").replace('\\', '/')
+        bit_path = os.path.join(sdk_path, "base_zynq_wrapper_hw_platform_0", "base_zynq_wrapper.bit").replace('\\', '/')
+        ps7_init_path = os.path.join(sdk_path, "base_zynq_wrapper_hw_platform_0", "ps7_init.tcl").replace('\\', '/')
+        elf_path = self.get_ELF(sdk_path).replace('\\', '/')
         with open(script_path, 'w') as command_script:
             with open(template_path, 'r') as template_script:
                 for line in template_script:
