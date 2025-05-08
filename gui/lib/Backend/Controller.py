@@ -57,7 +57,8 @@ class Controller:
             self.GUI.write(self.VCD_state)
         else:
             self.UART.send("RUNP")
-            hardware_state = self.UART.recv_state()
+            hardware_state = self.UART.recv_state_packet()
+            #hardware_state = self.UART.recv_state()
             self.GUI.write(hardware_state)
         
     def file_open(self):
@@ -146,9 +147,10 @@ class Controller:
             self.UART.compileC(programName)
             
         self.UART.send("LOAD")
-        self.UART.send_file(binFile)
+        #self.UART.send_file(binFile)
+        self.UART.send_file_packet(binFile)
         
-        hardware_state = self.UART.recv_state()
+        hardware_state = self.UART.recv_state_packet() #self.UART.recv_state()
         self.GUI.write(hardware_state)
     
     def test(self):
