@@ -117,6 +117,6 @@ class SerialUART:
             
             for j in range(0, len(total_bytes), 4):
                 word_bytes = bytes(total_bytes[j:j+4])
-                word = int.from_bytes(word_bytes)
+                word = int.from_bytes(word_bytes, "big")
                 state[i][j//4] = word
         return state
